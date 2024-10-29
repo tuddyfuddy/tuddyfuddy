@@ -33,7 +33,9 @@ fun TopBar() {
                         .size(60.dp)
                         .offset(y = 20.dp, x = 10.dp)
                 )
+
                 Spacer(modifier = Modifier.width(150.dp))
+                
                 Text(
                     text = "Tuddy Fuddy",
                     color = Color.White,
