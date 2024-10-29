@@ -1,5 +1,6 @@
 package com.survivalcoding.a510
 
+import androidx.compose.ui.tooling.preview.Preview
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -11,10 +12,14 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.survivalcoding.a510.ui.theme.A510Theme
 import com.survivalcoding.a510.components.NextButton
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.survivalcoding.a510.pages.ChatListPage
 
 
 class MainActivity : ComponentActivity() {
@@ -22,8 +27,22 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             A510Theme {
+                val navController = rememberNavController()
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    ContentScreen(modifier = Modifier.padding(innerPadding))
+                    NavHost(
+                        navController = navController,
+                        startDestination = "contentScreen"
+                    ) {
+                        composable("contentScreen") {
+                            ContentScreen(
+                                modifier = Modifier.padding(innerPadding),
+                                navController = navController
+                            )
+                        }
+                        composable("chatListPage") {
+                            ChatListPage(navController)
+                        }
+                    }
                 }
             }
         }
@@ -31,7 +50,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun ContentScreen(modifier: Modifier = Modifier) {
+fun ContentScreen(modifier: Modifier = Modifier, navController: NavController) {
     Column(
         modifier = modifier.fillMaxSize(),
         verticalArrangement = Arrangement.SpaceBetween
@@ -43,8 +62,9 @@ fun ContentScreen(modifier: Modifier = Modifier) {
                 .padding(start = 120.dp)
         )
         NextButton(
-            onClick = { /* 여기에 동작 넣기 */ },
-            modifier = Modifier.padding(bottom = 16.dp))
+            onClick = { navController.navigate("chatListPage") },
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
     }
 }
 
@@ -57,10 +77,3 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
 }
 
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    A510Theme {
-        ContentScreen()
-    }
-}
