@@ -35,7 +35,7 @@ fun TopBar() {
                 )
 
                 Spacer(modifier = Modifier.width(150.dp))
-                
+
                 Text(
                     text = "Tuddy Fuddy",
                     color = Color.White,
