@@ -1,0 +1,123 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: gateway-service
+  cloud:
+    gateway:
+      globalcors:
+        cors-configurations:
+          "[/**]":
+            allowedOrigins:
+              - "http://localhost:3000"
+              - "http://localhost:80"
+              - "http://localhost:8080"
+              - "https://localhost:80"
+              - "http://localhost:5173"
+              - "https://localhost:5173"
+              - "https://j11a402.q.ssafy.io:3000"
+              - "https://j11a402.q.ssafy.io"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - PATCH
+              - DELETE
+              - OPTIONS
+            allowedHeaders:
+              - "*"
+            exposedHeaders:
+              - "access"
+            allowCredentials: true
+
+      routes:
+        - id: auth-service
+          uri: lb://auth-service
+          predicates:
+            - Path=/auth-service/**
+          filters:
+            - RewritePath=/auth-service/(?<segment>.*), /$\{segment}
+
+        - id: chat-service
+          uri: lb://chat-service
+          predicates:
+            - Path=/chat-service/**
+          filters:
+            - RewritePath=/chat-service/(?<segment>.*), /$\{segment}
+
+        - id: health-service
+          uri: lb://health-service
+          predicates:
+            - Path=/health-service/**
+          filters:
+            - RewritePath=/health-service/(?<segment>.*), /$\{segment}
+
+        - id: notification-service
+          uri: lb://notification-service
+          predicates:
+            - Path=/notification-service/**
+          filters:
+            - RewritePath=/notification-service/(?<segment>.*), /$\{segment}
+
+        - id: openai-api-proxy
+          uri: lb://openai-api-proxy
+          predicates:
+            - Path=/openai-api-proxy/**
+          filters:
+            - RewritePath=/openai-api-proxy/(?<segment>.*), /$\{segment}
+
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=/user-service/**
+          filters:
+            - RewritePath=/user-service/(?<segment>.*), /$\{segment}
+
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+    path: /docs
+    config-url: /v3/api-docs/swagger-config
+    urls:
+      - url: /v3/api-docs
+        name: API Gateway Service
+      - url: /auth-service/v3/api-docs
+        name: 사용자 서비스
+      - url: /chat-service/v3/api-docs
+        name: 채팅 서비스
+      - url: /health-service/v3/api-docs
+        name: 생체 데이터 서비스
+      - url: /notification-service/v3/api-docs
+        name: 알림 서비스
+      - url: /openai-api-proxy/v3/api-docs
+        name: OpenAI API Proxy 서비스
+      - url: /user-service/v3/api-docs
+        name: 사용자 서비스
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka/}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+logging:
+  level:
+    org.springframework.web: "info"
+    org.hibernate: "info"
+  file:
+    name: /logs/gateway-service/application.log
