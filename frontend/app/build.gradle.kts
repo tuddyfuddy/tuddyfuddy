@@ -10,10 +10,11 @@ android {
 
     defaultConfig {
         applicationId = "com.survivalcoding.a510"
-        minSdk = 24
+        minSdk = 29
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
+
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -107,5 +108,6 @@ dependencies {
     implementation(libs.androidx.runtime.livedata)
     // Optional - Integration with RxJava
     implementation(libs.androidx.runtime.rxjava2)
+    implementation(libs.material.icons.extended)
 
 }
