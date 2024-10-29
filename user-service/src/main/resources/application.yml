@@ -5,6 +5,7 @@ spring:
   application:
     name: user-service
   datasource:
+    driver-class-name: org.postgresql.Driver
     url: ${DB_URL}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
