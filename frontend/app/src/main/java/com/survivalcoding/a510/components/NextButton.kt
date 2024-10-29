@@ -2,6 +2,7 @@ package com.survivalcoding.a510.components
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
@@ -23,7 +24,8 @@ fun NextButton(
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
                 elevation = ButtonDefaults.elevatedButtonElevation(defaultElevation = 4.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF04C628))
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF04C628)),
+                shape = RoundedCornerShape(10.dp),
             ) {
                 Text(text)
         }
