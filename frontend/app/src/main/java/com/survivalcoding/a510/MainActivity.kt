@@ -43,7 +43,7 @@ fun ContentScreen(modifier: Modifier = Modifier) {
                 .padding(start = 120.dp)
         )
         NextButton(
-            onClick = { /* TODO */ },
+            onClick = { /* 여기에 동작 넣기 */ },
             modifier = Modifier.padding(bottom = 16.dp))
     }
 }

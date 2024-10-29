@@ -23,8 +23,8 @@ fun NextButton(
                 onClick = onClick,
                 modifier = modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp), // 패딩 추가
-                elevation = ButtonDefaults.elevatedButtonElevation(defaultElevation = 4.dp), // 기본 그림자 적용
+                    .padding(horizontal = 16.dp),
+                elevation = ButtonDefaults.elevatedButtonElevation(defaultElevation = 4.dp),
             ) {
                 Text(text)
         }
