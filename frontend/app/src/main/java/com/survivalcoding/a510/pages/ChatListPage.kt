@@ -5,14 +5,15 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.survivalcoding.a510.R
 import com.survivalcoding.a510.components.ChatListItem
 import com.survivalcoding.a510.components.TopBar
+import com.survivalcoding.a510.components.CircleCharacter
 
-// 채팅 메시지 데이터 클래스
 data class ChatData(
     val id: Int,
     val profileImage: Int,
@@ -24,7 +25,6 @@ data class ChatData(
 
 @Composable
 fun ChatListPage(navController: NavController) {
-    // 임시 데이터로 넣어둔거 피그마 따라서
     val chatList = listOf(
         ChatData(
             id = 1,
@@ -47,24 +47,38 @@ fun ChatListPage(navController: NavController) {
     Scaffold(
         topBar = { TopBar() }
     ) { paddingValues ->
-        LazyColumn(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = 16.dp)
-                .padding(vertical = 16.dp),
         ) {
-            items(chatList) { chat ->
-                ChatListItem(
-                    profileImage = chat.profileImage,
-                    name = chat.name,
-                    message = chat.message,
-                    timestamp = chat.timestamp,
-                    unreadCount = chat.unreadCount,
-                    onClick = {
-                        // navController.navigate("chatRoom/${chat.id}")
-                    },
-                    modifier = Modifier.fillMaxWidth()
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp)
+                    .padding(vertical = 16.dp),
+            ) {
+                items(chatList) { chat ->
+                    ChatListItem(
+                        profileImage = chat.profileImage,
+                        name = chat.name,
+                        message = chat.message,
+                        timestamp = chat.timestamp,
+                        unreadCount = chat.unreadCount,
+                        onClick = {
+                            // navController.navigate("chatRoom/${chat.id}")
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(end = 25.dp, bottom = 20.dp)
+            ) {
+                CircleCharacter(
+                    onClick = {}
                 )
             }
         }
