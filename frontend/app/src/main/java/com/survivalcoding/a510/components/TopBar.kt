@@ -51,7 +51,7 @@ fun TopBar() {
             darkIcons = false
         )
     
-        // TopBar가 사용되는 페이지에서만 적용해야 함으로, 탑바가 사라지면 상태바 설정 원상복귀되도록
+        // TopBar 사용되는 페이지에서만 적용해야 함으로, 탑바가 사라지면 상태바 설정 원상복귀되도록
         onDispose {
             window.clearFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS)
             systemUiController.setStatusBarColor(Color.Transparent)
@@ -67,7 +67,7 @@ fun TopBar() {
                     moveTo(0f, 0f)
                     lineTo(size.width, 0f)
                     lineTo(size.width, size.height * 0.7f)
-                    quadraticBezierTo(
+                    quadraticTo(
                         size.width * 0.5f,
                         size.height * 1f,
                         0f,

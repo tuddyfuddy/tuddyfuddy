@@ -14,7 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.navigation.NavController
 import com.survivalcoding.a510.R
-import com.survivalcoding.a510.components.ChatBubble
 import com.survivalcoding.a510.components.ChatTopBar
 
 @Composable
@@ -49,9 +48,7 @@ fun ChatDetailPage(
     Scaffold(
         topBar = {
             ChatTopBar(
-                modifier = Modifier
-                    // 상태바 높이만큼 패딩줘서 바로 아래엥 나오게 하는거
-                    .padding(top = statusBarHeight),
+                modifier = Modifier,
                 title = chatData?.name ?: "",
                 onBackClick = { navController.popBackStack() },
                 onSearchClick = { /* 검색 기능 */ },
