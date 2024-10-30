@@ -62,6 +62,7 @@ class MainActivity : ComponentActivity() {
                             val chatId = backStackEntry.arguments?.getInt("chatId") ?: return@composable
                             ChatDetailPage(navController, chatId)
                         }
+
                     }
                 }
             }
