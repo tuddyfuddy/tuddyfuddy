@@ -26,7 +26,7 @@ fun ChatTopBar(
     title: String = "",
 ) {
     androidx.compose.material.Surface(
-        elevation = 2.dp,
+        elevation = 4.dp,
         shape = RectangleShape
     ) {
     TopAppBar(
