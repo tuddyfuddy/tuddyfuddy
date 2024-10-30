@@ -1,6 +1,7 @@
 package com.survivalcoding.a510.components
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
@@ -12,15 +13,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.survivalcoding.a510.R
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.graphics.Color
+
 
 @Composable
 fun ChatListItem(
-    profileImage: Int,  // 프로필 이미지 리소스 ID
+    modifier: Modifier = Modifier,
+    profileImage: Int,  // 프로필 이미지 ID
     name: String,       // 사용자 이름
     message: String,    // 메시지 내용
     timestamp: String,  // 메세지 도착 시간
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    unreadCount: Int = 0, // 안읽은 메세지 개수
+    onClick: () -> Unit
 ) {
     Row(
         modifier = modifier
@@ -32,19 +37,23 @@ fun ChatListItem(
             painter = painterResource(id = profileImage),
             contentDescription = "Profile Image of $name",
             modifier = Modifier
-                .size(60.dp)
+                .size(70.dp)
                 .padding(end = 16.dp)
         )
 
-        Column {
-            Row {
+        Column(
+            modifier = Modifier.weight(1f)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text(
                     text = name,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp
                 )
-
-                Spacer(modifier = Modifier.width(200.dp))
 
                 Text(
                     text = timestamp,
@@ -52,14 +61,41 @@ fun ChatListItem(
                     color = androidx.compose.ui.graphics.Color.Gray
                 )
             }
-            
+
             Spacer(modifier = Modifier.height(4.dp))
-            
-            Text(
-                text = message,
-                fontSize = 14.sp,
-                color = androidx.compose.ui.graphics.Color.Gray
-            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = message,
+                    fontSize = 14.sp,
+                    color = androidx.compose.ui.graphics.Color.Gray,
+                    modifier = Modifier.weight(1f)
+                )
+                if (unreadCount > 0) {
+                    Box(
+                        modifier = Modifier
+                            .padding(start = 8.dp)
+                            .size(18.dp)
+                            .background(
+                                color = Color(0xFF04C628),
+                                shape = CircleShape
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = unreadCount.toString(),
+                            color = Color.White,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.offset(y = (-2.5).dp, x = (0).dp)
+                        )
+                    }
+                }
+            }
         }
     }
 }

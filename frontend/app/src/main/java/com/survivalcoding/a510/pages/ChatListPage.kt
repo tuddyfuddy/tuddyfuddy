@@ -18,28 +18,30 @@ data class ChatData(
     val profileImage: Int,
     val name: String,
     val message: String,
-    val timestamp: String
+    val timestamp: String,
+    val unreadCount: Int = 0
 )
 
 @Composable
 fun ChatListPage(navController: NavController) {
-    // 임시 데이터 (나중에 백엔드에서 가져올 데이터)
+    // 임시 데이터로 넣어둔거 피그마 따라서
     val chatList = listOf(
         ChatData(
             id = 1,
             profileImage = R.drawable.cha,
             name = "활명수",
             message = "늦었다고 생각할 때가 진짜 늦은 거야",
-            timestamp = "2분 전"
+            timestamp = "2분 전",
+            unreadCount = 2
         ),
         ChatData(
             id = 2,
             profileImage = R.drawable.back,
             name = "백지현",
             message = "갑자기 비내리는거 같은데 ㅠㅠ",
-            timestamp = "오후 2:40"
+            timestamp = "오후 2:40",
+            unreadCount = 5
         ),
-        // 필요한 만큼 데이터 추가
     )
 
     Scaffold(
@@ -49,8 +51,8 @@ fun ChatListPage(navController: NavController) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+                .padding(horizontal = 16.dp)
+                .padding(vertical = 16.dp),
         ) {
             items(chatList) { chat ->
                 ChatListItem(
@@ -58,8 +60,8 @@ fun ChatListPage(navController: NavController) {
                     name = chat.name,
                     message = chat.message,
                     timestamp = chat.timestamp,
+                    unreadCount = chat.unreadCount,
                     onClick = {
-                        // 채팅방으로 이동하는 네비게이션 추가
                         // navController.navigate("chatRoom/${chat.id}")
                     },
                     modifier = Modifier.fillMaxWidth()
