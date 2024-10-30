@@ -50,6 +50,22 @@ dependencies {
 	// micrometer, actuator for prometheus metric
 	implementation 'io.micrometer:micrometer-registry-prometheus'
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+	// MongoDB
+	implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
+
+	// Redis
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+	// WebClient for external API calls (날씨 API 등)
+	implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
+	// Validation
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+	// JSON 처리
+	implementation 'com.fasterxml.jackson.core:jackson-databind'
+	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
 }
 
 dependencyManagement {
