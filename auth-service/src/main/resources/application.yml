@@ -6,13 +6,20 @@ spring:
     name: auth-service
   data:
     redis:
-      host: localhost
-      port: 6379
+      host:  ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:1234}
 
 jwt:
   secret: ${JWT_SECRET}
-  access-token-validity: 60 * 60 * 12  # 12시간
-  refresh-token-validity: 60 * 60 * 24  # 24시간
+  access-token-validity: ${JWT_ACCESS_TOKEN_VALIDITY:60 * 60 * 12} # 12시간
+  refresh-token-validity: ${JWT_REFRESH_TOKEN_VALIDITY:60 * 60 * 24} # 24시간
+  issuer: tuddyfuddy
+
+kakao:
+  client-id: ${KAKAO_CLIENT_ID}
+  client-secret: ${KAKAO_CLIENT_SECRET}
+  redirect-uri: ${KAKAO_REDIRECT_URI}
 
 eureka:
   client:
