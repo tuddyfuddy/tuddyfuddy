@@ -13,7 +13,8 @@ lifecycleCompose = "2.8.6"
 navigationComposeVersion = "2.8.3"
 accompanistSystemuicontroller = "0.32.0"
 accompanist = "0.32.0"
-
+navigationRuntimeKtx = "2.8.3"
+kakao = "2.20.6"
 
 [libraries]
 
@@ -49,6 +50,8 @@ ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest" }
 ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
 ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
 lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycleCompose" }
+androidx-navigation-runtime-ktx = { group = "androidx.navigation", name = "navigation-runtime-ktx", version.ref = "navigationRuntimeKtx" }
+kakao-sdk-all = { group = "com.kakao.sdk", name = "v2-all", version.ref = "kakao" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

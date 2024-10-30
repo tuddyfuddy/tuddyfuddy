@@ -49,9 +49,11 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+
 }
 
 dependencies {
+    implementation ("com.google.accompanist:accompanist-systemuicontroller:0.32.0")
     implementation(libs.androidx.core.ktx.v1120)
     implementation(libs.accompanist.systemuicontroller)
     implementation(libs.androidx.navigation.compose)
@@ -63,6 +65,7 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.androidx.navigation.runtime.ktx)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -112,5 +115,6 @@ dependencies {
     implementation(libs.androidx.runtime.rxjava2)
     implementation(libs.material.icons.extended)
 
-
+    // 카카오 SDK
+    implementation(libs.kakao.sdk.all)
 }
