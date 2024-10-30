@@ -42,4 +42,8 @@ public record CommonResponse<T>(
         return new CommonResponse<>(HttpStatus.FORBIDDEN.value(), message, null);
     }
 
+    public static <T> CommonResponse<T> internalServerError(String message) {
+        return new CommonResponse<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), message, null);
+    }
+
 }
