@@ -13,6 +13,7 @@ import com.survivalcoding.a510.R
 import com.survivalcoding.a510.components.ChatListItem
 import com.survivalcoding.a510.components.TopBar
 import com.survivalcoding.a510.components.CircleCharacter
+import com.survivalcoding.a510.components.SpeechBubble
 
 data class ChatData(
     val id: Int,
@@ -77,9 +78,16 @@ fun ChatListPage(navController: NavController) {
                     .align(Alignment.BottomEnd)
                     .padding(end = 25.dp, bottom = 20.dp)
             ) {
-                CircleCharacter(
-                    onClick = {}
-                )
+                Row {
+                    Box(
+                        modifier = Modifier.offset(y = -35.dp, x = 5.dp)
+                    ) {
+                        SpeechBubble(text = "권한을 허용하면 \n 더 나은 대답을 줄 수 있어요.")
+                    }
+                    Spacer(modifier = Modifier.width(14.dp))
+
+                    CircleCharacter(onClick = {})
+                }
             }
         }
     }
