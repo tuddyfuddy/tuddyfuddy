@@ -16,8 +16,6 @@ spring:
               - "https://localhost:80"
               - "http://localhost:5173"
               - "https://localhost:5173"
-              - "https://j11a402.q.ssafy.io:3000"
-              - "https://j11a402.q.ssafy.io"
             allowedMethods:
               - GET
               - POST
@@ -46,12 +44,12 @@ spring:
           filters:
             - RewritePath=/chat-service/(?<segment>.*), /$\{segment}
 
-        - id: health-service
-          uri: lb://health-service
+        - id: context-service
+          uri: lb://context-service
           predicates:
-            - Path=/health-service/**
+            - Path=/context-service/**
           filters:
-            - RewritePath=/health-service/(?<segment>.*), /$\{segment}
+            - RewritePath=/context-service/(?<segment>.*), /$\{segment}
 
         - id: notification-service
           uri: lb://notification-service
@@ -60,12 +58,12 @@ spring:
           filters:
             - RewritePath=/notification-service/(?<segment>.*), /$\{segment}
 
-        - id: openai-api-proxy
-          uri: lb://openai-api-proxy
+        - id: log-service
+          uri: lb://log-service
           predicates:
-            - Path=/openai-api-proxy/**
+            - Path=/log-service/**
           filters:
-            - RewritePath=/openai-api-proxy/(?<segment>.*), /$\{segment}
+            - RewritePath=/log-service/(?<segment>.*), /$\{segment}
 
         - id: user-service
           uri: lb://user-service
@@ -89,12 +87,12 @@ springdoc:
         name: 사용자 서비스
       - url: /chat-service/v3/api-docs
         name: 채팅 서비스
-      - url: /health-service/v3/api-docs
-        name: 생체 데이터 서비스
+      - url: /context-service/v3/api-docs
+        name: 상황 데이터 서비스
       - url: /notification-service/v3/api-docs
         name: 알림 서비스
-      - url: /openai-api-proxy/v3/api-docs
-        name: OpenAI API Proxy 서비스
+      - url: /log-service/v3/api-docs
+        name: 로그 서비스
       - url: /user-service/v3/api-docs
         name: 사용자 서비스
 
