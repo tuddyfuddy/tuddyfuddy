@@ -49,6 +49,7 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+
 }
 
 dependencies {
@@ -112,5 +113,6 @@ dependencies {
     implementation(libs.androidx.runtime.rxjava2)
     implementation(libs.material.icons.extended)
 
-
+    // 카카오 SDK
+    implementation(libs.kakao.sdk.all)
 }
