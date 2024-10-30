@@ -41,7 +41,7 @@ fun ChatListPage(navController: NavController) {
             name = "백지현",
             message = "갑자기 비내리는거 같은데 ㅠㅠ",
             timestamp = "오후 2:40",
-            unreadCount = 5
+            unreadCount = 3
         ),
     )
 
@@ -82,7 +82,7 @@ fun ChatListPage(navController: NavController) {
                     Box(
                         modifier = Modifier.offset(y = -35.dp, x = 5.dp)
                     ) {
-                        SpeechBubble(text = "권한을 허용하면 \n 더 나은 대답을 줄 수 있어요.")
+                        SpeechBubble(text = "더 많은 권한을 허용하면 \n 더 나은 대답을 줄 수 있어요.")
                     }
                     Spacer(modifier = Modifier.width(14.dp))
 
