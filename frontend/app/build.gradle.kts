@@ -53,6 +53,7 @@ android {
 }
 
 dependencies {
+    implementation ("com.google.accompanist:accompanist-systemuicontroller:0.32.0")
     implementation(libs.androidx.core.ktx.v1120)
     implementation(libs.accompanist.systemuicontroller)
     implementation(libs.androidx.navigation.compose)
