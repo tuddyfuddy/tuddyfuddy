@@ -44,7 +44,8 @@ fun ChatTopBar(
                 )
             }
         },
-        modifier = modifier.background(color = Color.White)
+        backgroundColor = Color.White,
+        modifier = modifier
     )
 }
 

@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.survivalcoding.a510.R
+import com.survivalcoding.a510.Routes
 import com.survivalcoding.a510.components.ChatListItem
 import com.survivalcoding.a510.components.TopBar
 import com.survivalcoding.a510.components.CircleCharacter
@@ -67,7 +68,7 @@ fun ChatListPage(navController: NavController) {
                         timestamp = chat.timestamp,
                         unreadCount = chat.unreadCount,
                         onClick = {
-                            // navController.navigate("chatRoom/${chat.id}")
+                            navController.navigate(Routes.chatDetail(chat.id))
                         },
                         modifier = Modifier.fillMaxWidth()
                     )
