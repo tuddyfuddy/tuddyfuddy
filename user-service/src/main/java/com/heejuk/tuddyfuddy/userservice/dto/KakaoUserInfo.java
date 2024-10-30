@@ -1,9 +1,8 @@
-package com.heejuk.tuddyfuddy.userservice.dto.request;
+package com.heejuk.tuddyfuddy.userservice.dto;
 
-public record KakaoInfoRequest(
+public record KakaoUserInfo(
 
     Long id,
-    String connectedAt,
     Properties properties,
     KakaoAccount kakaoAccount
 
@@ -21,18 +20,13 @@ public record KakaoInfoRequest(
         String email,
         Boolean isEmailValid,
         Boolean isEmailVerified,
-        Profile profile,
-        Boolean hasAgeRange,
-        String ageRange,
-        Boolean hasGender,
-        String gender
+        Profile profile
     ) {
 
         public record Profile(
             String nickname,
             String thumbnailImageUrl,
-            String profileImageUrl,
-            Boolean isDefaultImage
+            String profileImageUrl
         ) {
 
         }
