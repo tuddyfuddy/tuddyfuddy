@@ -72,7 +72,7 @@ fun ChatListItem(
                 Text(
                     text = message,
                     fontSize = 14.sp,
-                    color = androidx.compose.ui.graphics.Color.Gray,
+                    color = Color.Gray,
                     modifier = Modifier.weight(1f)
                 )
                 if (unreadCount > 0) {

@@ -80,7 +80,7 @@ fun ChatListPage(navController: NavController) {
             ) {
                 Row {
                     Box(
-                        modifier = Modifier.offset(y = -35.dp, x = 5.dp)
+                        modifier = Modifier.offset(y = (-35).dp, x = 5.dp)
                     ) {
                         SpeechBubble(text = "더 많은 권한을 허용하면 \n 더 나은 대답을 줄 수 있어요.")
                     }
