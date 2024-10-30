@@ -53,6 +53,7 @@ android {
 }
 
 dependencies {
+    implementation(libs.androidx.core.ktx.v1120)
     implementation(libs.accompanist.systemuicontroller)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.core.ktx)

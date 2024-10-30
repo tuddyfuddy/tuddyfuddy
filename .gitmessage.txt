@@ -1,6 +1,5 @@
 :Emoji: <type>: <subject>
 
-<body>
 ################
 # Feat(sparkles) : 새로운 기능 추가
 # Fix(bug) : 버그 수정
