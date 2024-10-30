@@ -3,7 +3,7 @@ server:
 
 spring:
   application:
-    name: health-service
+    name: context-service
 
 eureka:
   client:
@@ -27,4 +27,4 @@ logging:
     org.springframework.web: "info"
     org.hibernate: "info"
   file:
-    name: logs/health-service/application.log
+    name: logs/context-service/application.log

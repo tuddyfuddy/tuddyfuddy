@@ -1,10 +1,10 @@
-package com.heejuk.tuddyfuddy.healthservice;
+package com.heejuk.tuddyfuddy.contextservice;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class HealthServiceApplicationTests {
+class ContextServiceApplicationTests {
 
 	@Test
 	void contextLoads() {

@@ -1,4 +1,4 @@
-package com.heejuk.tuddyfuddy.healthservice.config;
+package com.heejuk.tuddyfuddy.contextservice.config;
 
 import io.swagger.v3.oas.annotations.*;
 import io.swagger.v3.oas.annotations.servers.*;
@@ -13,8 +13,8 @@ public class SwaggerConfig {
     @Bean
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
-            .info(new Info().title("생체 데이터 API")
+            .info(new Info().title("상황 데이터 API")
                 .version("1.0")
-                .description("생체 데이터 API 문서"));
+                .description("상황 데이터 API 문서"));
     }
 }
