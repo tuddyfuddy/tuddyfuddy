@@ -10,7 +10,6 @@ import com.heejuk.tuddyfuddy.contextservice.repository.WeatherRepository;
 import com.heejuk.tuddyfuddy.contextservice.util.GridGpsUtil.LatXLngY;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -25,7 +24,7 @@ public class WeatherService {
     private final WeatherApiClient weatherApiClient;
     private final RedisTemplate<String, Weather> redisTemplate;
 
-    private static final long CACHE_TTL_MINUTES = 70; // 기상청 API 업데이트 주기에 맞춤
+    private static final long CACHE_TTL_MINUTES = 61; // 기상청 API 업데이트 주기에 맞춤
 
     public Weather getWeatherByLocation(
         Double latitude,
@@ -36,41 +35,63 @@ public class WeatherService {
                                             longitude);
         int x = (int) latXLngY.x;
         int y = (int) latXLngY.y;
-        // 캐시된 날씨 데이터 확인
-        Optional<Weather> cachedWeather = weatherRepository
-            .findFirstByXAndYOrderByTimestampDesc(x,
-                                                  y);
-
+        // 1. redis 키
         String redisKey = generateWeatherKey(x,
                                              y);
+        // 1.1 redis 값
+        Weather cachedWeather = redisTemplate.opsForValue()
+                                             .get(redisKey);
 
-        if (cachedWeather.isPresent() && isWeatherDataFresh(cachedWeather.get())) {
-            return cachedWeather.get();
+        // 2. redis 캐시 히트
+        if (cachedWeather != null && isWeatherDataFresh(cachedWeather)) {
+            log.info("Cache hit for weather data at x:{}, y:{}",
+                     x,
+                     y);
+            return cachedWeather;
         }
 
-        // 새로운 날씨 데이터 조회
+        // 3. 새로운 날씨 데이터 조회 by API
         JsonNode newWeather = weatherApiClient.fetchWeatherData(x,
                                                                 y)
                                               .block();
         if (newWeather == null) {
-            // 에러 또는 데이터 없음 처리
+            log.error("Failed for fetching weather data at x:{}, y:{}",
+                      x,
+                      y);
             return null;
         }
 
-        // newWeather 에서 필요한 필드 추출
+        // 4. newWeather 에서 필요한 필드 추출
         Weather weather = parseJsonToWeather(newWeather,
                                              x,
                                              y);
 
-        // 데이터베이스에 저장
-        return weatherRepository.save(weather);
+        // 5. 데이터베이스에 저장(히스토리 저장용)
+        weatherRepository.save(weather);
+
+        // 6. Redis에 캐시 저장
+        redisTemplate.opsForValue()
+                     .set(redisKey,
+                          weather,
+                          Duration.ofMinutes(CACHE_TTL_MINUTES));
+
+        return weather;
     }
 
+    /**
+     * REDIS 키 만들기
+     *
+     * @param x
+     * @param y
+     * @return
+     */
     private String generateWeatherKey(
         int x,
         int y
     ) {
-        return x + " " + y;
+        return String.format("weather:%d:%d",
+                             x,
+                             y);
     }
 
     // JSON 데이터를 Weather 엔티티로 변환
@@ -146,11 +167,16 @@ public class WeatherService {
                       .build();
     }
 
-
+    /**
+     * 캐시된 값이 최근 값인지 여부
+     *
+     * @param weather
+     * @return
+     */
     private boolean isWeatherDataFresh(Weather weather) {
         return Duration.between(weather.getTimestamp(),
                                 LocalDateTime.now())
-                       .toMinutes() < 70;
+                       .toMinutes() < CACHE_TTL_MINUTES;
     }
 
 
