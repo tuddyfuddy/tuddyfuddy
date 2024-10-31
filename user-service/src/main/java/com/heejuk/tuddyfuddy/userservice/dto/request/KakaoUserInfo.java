@@ -1,4 +1,4 @@
-package com.heejuk.tuddyfuddy.authservice.dto;
+package com.heejuk.tuddyfuddy.userservice.dto.request;
 
 public record KakaoUserInfo(
 
@@ -20,13 +20,15 @@ public record KakaoUserInfo(
         String email,
         Boolean isEmailValid,
         Boolean isEmailVerified,
+        String birthday,
         Profile profile
     ) {
 
         public record Profile(
             String nickname,
             String thumbnailImageUrl,
-            String profileImageUrl
+            String profileImageUrl,
+            Boolean isDefaultImage
         ) {
 
         }
