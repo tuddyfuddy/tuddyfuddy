@@ -56,7 +56,7 @@ pipeline {
                             --name ${SERVICE_NAME} \
                             --network app-network \
                             -p 8081:8080 \
-                            ${DOCKER_REGISTRY}/${SERVICE_NAME}:latest
+                            ${DOCKER_REGISTRY}/${REPOSITORY_NAME}:${SERVICE_NAME}
                     """
                 }
             }
