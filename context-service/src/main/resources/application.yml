@@ -12,6 +12,7 @@ spring:
       username: ${CONTEXT_DB_USERNAME:contextuser}
       password: ${CONTEXT_DB_PASSWORD:contextpass}
       authentication-database: contextdb
+      time-sonze: Asia/Seoul
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6383}
@@ -22,6 +23,19 @@ spring:
           max-wait: -1ms
           max-idle: 8
           min-idle: 0
+  jackson:
+    time-zone: Asia/Seoul
+
+health:
+  threshold:
+    max-heart-rate: 180
+    min-heart-rate: 40
+    normal-stress-level: 13
+    mild-stress-level: 16
+    moderate-stress-level: 18
+    severe-stress-level: 19
+    min-sleep-minutes: 180
+    max-sleep-minutes: 600
 
 eureka:
   client:
