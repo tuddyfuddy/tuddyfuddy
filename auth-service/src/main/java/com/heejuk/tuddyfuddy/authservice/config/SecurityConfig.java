@@ -3,8 +3,10 @@ package com.heejuk.tuddyfuddy.authservice.config;
 import static com.heejuk.tuddyfuddy.authservice.constant.SECURITY_SET.*;
 import static com.heejuk.tuddyfuddy.authservice.constant.CORS_SET.*;
 
+import com.heejuk.tuddyfuddy.authservice.filter.JwtAuthenticationFilter;
 import com.heejuk.tuddyfuddy.authservice.handler.CustomAccessDeniedHandler;
 import com.heejuk.tuddyfuddy.authservice.handler.CustomAuthenticationEntryPoint;
+import com.heejuk.tuddyfuddy.authservice.util.JWTUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,6 +17,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -24,6 +27,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
+    private final JWTUtil jwtUtil;
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
     private final CustomAccessDeniedHandler customAccessDeniedHandler;
 
@@ -68,6 +72,9 @@ public class SecurityConfig {
                 .requestMatchers(NEED_ADMIN_ROLE_URL_PATTERNS).hasRole("ADMIN")
                 .anyRequest().permitAll()
             )
+
+            .addFilterBefore(new JwtAuthenticationFilter(jwtUtil),
+                UsernamePasswordAuthenticationFilter.class)
 
             .sessionManagement((session) -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
