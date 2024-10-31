@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -29,6 +30,7 @@ public class Weather {
     private Double humidity; // 습도
     private String weather; // 날씨
 
+    @CreatedDate
     private LocalDateTime createdAt;
 
     @Builder
