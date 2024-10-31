@@ -17,8 +17,8 @@ public record UserResponse(
     @Schema(description = "프로필 이미지 URL")
     String profileImage,
 
-    @Schema(description = "생년월일")
-    String birthdate
+    @Schema(description = "생년월일", example = "YYYY-MM-DD")
+    String birthDate
 
 ) {
 
