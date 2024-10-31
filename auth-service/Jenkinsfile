@@ -1,0 +1,41 @@
+def DOCKER_REGISTRY = "inyub"  // 본인의 Docker Hub 사용자명
+def REPOSITORY_NAME = "tuddyfuddy"
+def SERVICE_NAME = "auth-service"  // 서비스별로 변경
+
+pipeline {
+    agent any
+    
+    environment {
+        DOCKER_CREDENTIALS = credentials('docker-hub-credential')
+    }
+    
+    stages {
+        stage('Build') {
+            steps {
+                dir(SERVICE_NAME) {
+                    sh './gradlew clean build -x test'
+                }
+            }
+        }
+        
+        stage('Docker Build & Push') {
+            steps {
+                dir(SERVICE_NAME) {
+                    sh """
+                        docker build -t ${DOCKER_REGISTRY}/${REPOSITORY_NAME}:${SERVICE_NAME} .
+                        
+                        echo ${DOCKER_CREDENTIALS_PSW} | docker login -u ${DOCKER_CREDENTIALS_USR} --password-stdin
+                        
+                        docker push ${DOCKER_REGISTRY}/${REPOSITORY_NAME}:${SERVICE_NAME}
+                    """
+                }
+            }
+        }
+    }
+    
+    post {
+        always {
+            sh 'docker logout'
+        }
+    }
+}
