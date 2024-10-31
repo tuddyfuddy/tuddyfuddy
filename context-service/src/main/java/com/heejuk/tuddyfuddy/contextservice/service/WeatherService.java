@@ -3,15 +3,20 @@ package com.heejuk.tuddyfuddy.contextservice.service;
 import static com.heejuk.tuddyfuddy.contextservice.util.GridGpsUtil.TO_GRID;
 import static com.heejuk.tuddyfuddy.contextservice.util.GridGpsUtil.convertGRID_GPS;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.heejuk.tuddyfuddy.contextservice.client.WeatherApiClient;
+import com.heejuk.tuddyfuddy.contextservice.dto.response.WeatherResponse;
 import com.heejuk.tuddyfuddy.contextservice.entity.Weather;
+import com.heejuk.tuddyfuddy.contextservice.mapper.WeatherMapper;
 import com.heejuk.tuddyfuddy.contextservice.repository.WeatherRepository;
 import com.heejuk.tuddyfuddy.contextservice.util.GridGpsUtil.LatXLngY;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -22,11 +27,15 @@ public class WeatherService {
 
     private final WeatherRepository weatherRepository;
     private final WeatherApiClient weatherApiClient;
-    private final RedisTemplate<String, Weather> redisTemplate;
+
+    @Qualifier("weatherRedisTemplate")
+    private final RedisTemplate<String, String> redisTemplate;
+    private final WeatherMapper weatherMapper;
+    private final ObjectMapper objectMapper;
 
     private static final long CACHE_TTL_MINUTES = 61; // 기상청 API 업데이트 주기에 맞춤
 
-    public Weather getWeatherByLocation(
+    public WeatherResponse getWeatherByLocation(
         Double latitude,
         Double longitude
     ) {
@@ -39,15 +48,24 @@ public class WeatherService {
         String redisKey = generateWeatherKey(x,
                                              y);
         // 1.1 redis 값
-        Weather cachedWeather = redisTemplate.opsForValue()
-                                             .get(redisKey);
+        String cachedJson = redisTemplate.opsForValue()
+                                         .get(redisKey);
 
         // 2. redis 캐시 히트
-        if (cachedWeather != null && isWeatherDataFresh(cachedWeather)) {
-            log.info("Cache hit for weather data at x:{}, y:{}",
-                     x,
-                     y);
-            return cachedWeather;
+        if (cachedJson != null) {
+            try {
+                WeatherResponse cachedWeather = objectMapper.readValue(cachedJson,
+                                                                       WeatherResponse.class);
+                if (isWeatherDataFresh(cachedWeather)) {
+                    log.info("Cache hit for weather data at x:{}, y:{}",
+                             x,
+                             y);
+                    return cachedWeather;
+                }
+            } catch (JsonProcessingException e) {
+                log.error("Failed to parse cached weather data",
+                          e);
+            }
         }
 
         // 3. 새로운 날씨 데이터 조회 by API
@@ -69,13 +87,21 @@ public class WeatherService {
         // 5. 데이터베이스에 저장(히스토리 저장용)
         weatherRepository.save(weather);
 
-        // 6. Redis에 캐시 저장
-        redisTemplate.opsForValue()
-                     .set(redisKey,
-                          weather,
-                          Duration.ofMinutes(CACHE_TTL_MINUTES));
+        WeatherResponse response = weatherMapper.toDto(weather);
 
-        return weather;
+        // 6. Redis에 JSON 문자열로 저장
+        try {
+            String jsonValue = objectMapper.writeValueAsString(response);
+            redisTemplate.opsForValue()
+                         .set(redisKey,
+                              jsonValue,
+                              Duration.ofMinutes(CACHE_TTL_MINUTES));
+        } catch (JsonProcessingException e) {
+            log.error("Failed to serialize weather data",
+                      e);
+        }
+
+        return response;
     }
 
     /**
@@ -173,8 +199,8 @@ public class WeatherService {
      * @param weather
      * @return
      */
-    private boolean isWeatherDataFresh(Weather weather) {
-        return Duration.between(weather.getTimestamp(),
+    private boolean isWeatherDataFresh(WeatherResponse weather) {
+        return Duration.between(weather.timestamp(),
                                 LocalDateTime.now())
                        .toMinutes() < CACHE_TTL_MINUTES;
     }
