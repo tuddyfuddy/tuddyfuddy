@@ -1,12 +1,13 @@
 package com.heejuk.tuddyfuddy.userservice.controller;
 
 import com.heejuk.tuddyfuddy.userservice.dto.CommonResponse;
-import com.heejuk.tuddyfuddy.userservice.dto.request.KakaoInfoRequest;
+import com.heejuk.tuddyfuddy.userservice.dto.request.KakaoUserInfo;
 import com.heejuk.tuddyfuddy.userservice.dto.response.UserResponse;
 import com.heejuk.tuddyfuddy.userservice.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/users")
@@ -24,14 +26,15 @@ public class UserController {
 
     private final UserService userService;
 
-    @PostMapping("/login")
+    @PostMapping("/kakao")
     @ResponseStatus(HttpStatus.OK)
-    @Operation(summary = "로그인 및 회원가입")
-    public CommonResponse<?> processKakaoUser(@RequestBody KakaoInfoRequest request) {
+    @Operation(summary = "카카오 사용자 생성/수정", description = "카카오 사용자 정보로 회원가입 또는 정보 업데이트를 수행합니다.")
+    public CommonResponse<UserResponse> createOrUpdateKakaoUser(@RequestBody KakaoUserInfo request) {
+        log.info("Received request to create or update kakao user with id: {}", request.id());
 
-        UserResponse response = userService.processKakaoUser(request);
+        UserResponse userResponse = userService.processKakaoUser(request);
 
-        return CommonResponse.ok("카카오 로그인 성공", response);
+        return CommonResponse.ok("카카오 사용자 정보 처리 완료", userResponse);
     }
 
     @GetMapping("/{userId}")

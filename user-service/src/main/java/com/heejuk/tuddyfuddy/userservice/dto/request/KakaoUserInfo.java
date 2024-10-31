@@ -17,18 +17,26 @@ public record KakaoUserInfo(
     }
 
     public record KakaoAccount(
+
         String email,
         Boolean isEmailValid,
         Boolean isEmailVerified,
+        Profile profile,
+
         String birthday,
-        Profile profile
+        Boolean birthdayNeedsAgreement,
+
+        String birthyear,
+        Boolean birthyearNeedsAgreement
+
     ) {
 
         public record Profile(
+
             String nickname,
             String thumbnailImageUrl,
-            String profileImageUrl,
-            Boolean isDefaultImage
+            String profileImageUrl
+
         ) {
 
         }
