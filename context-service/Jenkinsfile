@@ -18,7 +18,7 @@ pipeline {
                 }
             }
         }
-        
+
         stage('Build') {
             steps {
                 dir(SERVICE_NAME) {
@@ -36,6 +36,27 @@ pipeline {
                         echo ${DOCKER_CREDENTIALS_PSW} | docker login -u ${DOCKER_CREDENTIALS_USR} --password-stdin
                         
                         docker push ${DOCKER_REGISTRY}/${REPOSITORY_NAME}:${SERVICE_NAME}
+                    """
+                }
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                script {
+                    // 기존 컨테이너 중지 및 제거
+                    sh """
+                        docker stop ${SERVICE_NAME} || true
+                        docker rm ${SERVICE_NAME} || true
+                    """
+                    
+                    // 새 컨테이너 실행
+                    sh """
+                        docker run -d \
+                            --name ${SERVICE_NAME} \
+                            --network app-network \
+                            -p 8081:8080 \
+                            ${DOCKER_REGISTRY}/${REPOSITORY_NAME}:${SERVICE_NAME}
                     """
                 }
             }
