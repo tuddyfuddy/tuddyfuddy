@@ -8,7 +8,9 @@ import com.heejuk.tuddyfuddy.authservice.dto.CommonResponse;
 import com.heejuk.tuddyfuddy.authservice.dto.response.KakaoUserInfo;
 import com.heejuk.tuddyfuddy.authservice.dto.response.UserResponse;
 import com.heejuk.tuddyfuddy.authservice.exception.AuthenticationException;
+import com.heejuk.tuddyfuddy.authservice.util.CookieUtil;
 import com.heejuk.tuddyfuddy.authservice.util.JWTUtil;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +25,7 @@ public class AuthService {
     private final JWTUtil jwtUtil;
     private final KakaoApiClient kakaoApiClient;
     private final UserServiceClient userServiceClient;
-//    private final RefreshService refreshService;
+    private final ReissueService refreshService;
 
     public void processKakaoLogin(String kakaoAccessToken, HttpServletResponse response) {
         try {
@@ -56,14 +58,14 @@ public class AuthService {
             );
 
             // Refresh Token을 Redis에 저장
-//            refreshService.saveRefreshToken(user.id().toString(), refreshToken);
+            refreshService.saveRefreshToken(user.id().toString(), refreshToken);
 
             // Access Token을 헤더에 설정
             response.setHeader("Authorization", "Bearer " + accessToken);
 
             // Refresh Token을 쿠키에 설정
-//            Cookie refreshCookie = CookieUtil.createCookie("refresh_token", refreshToken);
-//            CookieUtil.addSameSiteCookieAttribute(response, refreshCookie);
+            Cookie refreshCookie = CookieUtil.createCookie("refresh_token", refreshToken);
+            CookieUtil.addSameSiteCookieAttribute(response, refreshCookie);
 
         } catch (Exception e) {
             log.error("Error processing kakao login", e);
