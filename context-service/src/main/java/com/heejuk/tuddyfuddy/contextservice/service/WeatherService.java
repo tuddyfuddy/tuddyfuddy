@@ -11,12 +11,14 @@ import com.heejuk.tuddyfuddy.contextservice.dto.response.WeatherResponse;
 import com.heejuk.tuddyfuddy.contextservice.entity.Weather;
 import com.heejuk.tuddyfuddy.contextservice.mapper.WeatherMapper;
 import com.heejuk.tuddyfuddy.contextservice.repository.WeatherRepository;
+import com.heejuk.tuddyfuddy.contextservice.util.FormatUtil;
 import com.heejuk.tuddyfuddy.contextservice.util.GridGpsUtil.LatXLngY;
+import feign.FeignException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -28,10 +30,13 @@ public class WeatherService {
     private final WeatherRepository weatherRepository;
     private final WeatherApiClient weatherApiClient;
 
-    @Qualifier("weatherRedisTemplate")
-    private final RedisTemplate<String, String> redisTemplate;
     private final WeatherMapper weatherMapper;
     private final ObjectMapper objectMapper;
+
+    @Value("${weather.api.key}")
+    private String apiKey;
+
+    private final RedisTemplate<String, String> redisTemplate;
 
     private static final long CACHE_TTL_MINUTES = 61; // 기상청 API 업데이트 주기에 맞춤
 
@@ -68,40 +73,46 @@ public class WeatherService {
             }
         }
 
-        // 3. 새로운 날씨 데이터 조회 by API
-        JsonNode newWeather = weatherApiClient.fetchWeatherData(x,
-                                                                y)
-                                              .block();
-        if (newWeather == null) {
-            log.error("Failed for fetching weather data at x:{}, y:{}",
+        try {
+            // api 에서 불러오기
+            JsonNode newWeather = weatherApiClient.fetchWeatherData(
+                apiKey,
+                1,
+                1000,
+                "JSON",
+                FormatUtil.formatDateKST("yyyyMMdd"),
+                FormatUtil.formatTimeKST("HHmm"),
+                x,
+                y
+            );
+
+            Weather weather = parseJsonToWeather(newWeather,
+                                                 x,
+                                                 y);
+            // 저장할 필요가 아직 없음
+//            weatherRepository.save(weather);
+            WeatherResponse response = weatherMapper.toDto(weather);
+
+            try {
+                String jsonValue = objectMapper.writeValueAsString(response);
+                redisTemplate.opsForValue()
+                             .set(redisKey,
+                                  jsonValue,
+                                  Duration.ofMinutes(CACHE_TTL_MINUTES));
+            } catch (JsonProcessingException e) {
+                log.error("Failed to serialize weather data",
+                          e);
+            }
+
+            return response;
+
+        } catch (FeignException e) {
+            log.error("Failed to fetch weather data at x:{}, y:{}, error: {}",
                       x,
-                      y);
+                      y,
+                      e.getMessage());
             return null;
         }
-
-        // 4. newWeather 에서 필요한 필드 추출
-        Weather weather = parseJsonToWeather(newWeather,
-                                             x,
-                                             y);
-
-        // 5. 데이터베이스에 저장(히스토리 저장용)
-        weatherRepository.save(weather);
-
-        WeatherResponse response = weatherMapper.toDto(weather);
-
-        // 6. Redis에 JSON 문자열로 저장
-        try {
-            String jsonValue = objectMapper.writeValueAsString(response);
-            redisTemplate.opsForValue()
-                         .set(redisKey,
-                              jsonValue,
-                              Duration.ofMinutes(CACHE_TTL_MINUTES));
-        } catch (JsonProcessingException e) {
-            log.error("Failed to serialize weather data",
-                      e);
-        }
-
-        return response;
     }
 
     /**
