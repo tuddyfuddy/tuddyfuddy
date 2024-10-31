@@ -31,9 +31,6 @@ public class HealthService {
 
         entity.setUserId(userId);
 
-        entity.setCreatedAt(dateUtil.getCurrentDateTime());
-        entity.setUpdatedAt(dateUtil.getCurrentDateTime());
-
         Health savedData = healthRepository.save(entity);
         detector.detectAnomalies(savedData);
 
