@@ -18,19 +18,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.material.icons.filled.KeyboardVoice
 
 
 @Composable
 fun TextInput() {
     Box(modifier = Modifier
-        .height(50.dp)
+        .fillMaxWidth()
+        .navigationBarsPadding()
         ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(140.dp)
                 .align(Alignment.BottomCenter)
-                .imePadding()
                 .background(color = Color(0xFFE7EBFF))
                 .padding(horizontal = 8.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -39,8 +40,17 @@ fun TextInput() {
             Icon(
                 imageVector = Icons.Default.CameraAlt,
                 contentDescription = "Camera Icon",
-                modifier = Modifier.size(20.dp),
-                tint = Color(0xFFE6E0E0),
+                modifier = Modifier.size(26.dp),
+                tint = Color(0xFF000000),
+            )
+
+            Spacer(modifier = Modifier.width(10.dp))
+
+            Icon(
+                imageVector = Icons.Default.KeyboardVoice,
+                contentDescription = "Camera Icon",
+                modifier = Modifier.size(26.dp),
+                tint = Color(0xFF000000),
             )
 
             OutlinedTextField(
@@ -49,7 +59,7 @@ fun TextInput() {
                 modifier = Modifier
                     .weight(1f)
                     .padding(horizontal = 8.dp)
-                    .padding(top = 8.dp, bottom = 8.dp),
+                    .height(40.dp),
                 shape = RoundedCornerShape(16.dp),
                 colors = TextFieldDefaults.colors(
                     unfocusedContainerColor = Color.White,
@@ -62,7 +72,8 @@ fun TextInput() {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.Send,
                 contentDescription = "Send Icon",
-                modifier = Modifier.size(26.dp),
+                modifier = Modifier
+                    .size(26.dp),
                 tint = Color.Blue
                 )
             }

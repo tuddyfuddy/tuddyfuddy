@@ -39,7 +39,7 @@ fun ChatListPage(navController: NavController) {
         ChatData(
             id = 2,
             profileImage = R.drawable.back,
-            name = "백지현",
+            name = "백지헌",
             message = "갑자기 비내리는거 같은데 ㅠㅠ",
             timestamp = "오후 2:40",
             unreadCount = 3
