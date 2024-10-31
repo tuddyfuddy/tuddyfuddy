@@ -1,29 +1,27 @@
-from typing import Dict
+from app.core.config import settings
 from collections import deque
 from fastapi import APIRouter
 import requests
 from fastapi.responses import JSONResponse
 
 router = APIRouter(prefix="/chat", tags=["chat"])
-
-# TODO key env로 변경
-OPENAI_API_KEY = "."
+OPENAI_API_KEY = settings.GPT_KEY
 API_URL = "https://api.openai.com/v1/chat/completions"
 GPT_MODEL = "gpt-4o-mini"
 MAX_HISTORY = 10  # 최대 저장할 대화 기록 수
 
 
 def calculate_response_length(message_length: int) -> int:
-    """메시지 길이에 따른 적절한 응답 길이 계산"""
-    if message_length <= 20:  # 짧은 메시지
+    """메시지 길이에 따른 응답 길이 계산"""
+    if message_length <= 20:
         return message_length * 2
-    elif message_length <= 50:  # 중간 길이 메시지
+    elif message_length <= 50:
         return message_length * 1.7
     else:  # 긴 메시지
         return message_length * 1.5
 
 
-SYSTEM_PROMPT_TEMPLATE = """
+SYSTEM_PROMPT_TEMPLATE_1 = """
 Start a casual conversation, and respond as comfortably as a close friend to express your feelings honestly. Relate to the feelings, but avoid overly friendly or exaggerated expressions, and continue the conversation naturally. Make the conversation light and comfortable as a real friend.
 Topic: conversation
 Style: Casual
@@ -37,10 +35,8 @@ User emotions are given one of joy/calm/sad/angry/anxiety/tired.
 - Joy/Angry: Please share your feelings and respond.
 - Sadness/Anxiety/Tired: Please say words of consolation.
 
-When printing, make sure to change lines into sentences or phrases and send them in the form of messengers. Speak informally in Korean.
-
+When printing, make sure to add '\\n' between sentences or phrases and send them in the form of messengers. Each complete sentence must end with a final ending word(종결어미), and be separated by '\\n'. Speak informally in Korean"
 Please remember the conversation below and continue with the flow:
-
 Previous Conversations:
 {history}
 
@@ -49,31 +45,27 @@ emotion: {emotion}
 message: {message}
 """
 
+SYSTEM_PROMPT_TEMPLATE_2 = """
+
+"""
+
 # TODO DB로 관리
-conversation_history = deque(maxlen=MAX_HISTORY)
+conversation_history_1 = deque(maxlen=MAX_HISTORY)
+conversation_history_2 = deque(maxlen=MAX_HISTORY)
 
 
-def format_history(history: deque) -> str:
-    if not history:
-        return "이전 대화 없음"
-    recent_history = list(history)[-5:]
-    return "\n".join([
-        f"user: {conv['query']}\nassistant: {conv['response']}"
-        for conv in recent_history
-    ])
-
-
-@router.post("/chat")
-async def chat(emotion: str, message: str):
+@router.post("/chat/{type}")
+async def chat(type:int, emotion: str, message: str):
     try:
-        history = format_history(conversation_history)
+        history = conversation_history_1 if type == 1 else conversation_history_2
+        template = SYSTEM_PROMPT_TEMPLATE_1 if type == 1 else SYSTEM_PROMPT_TEMPLATE_2
 
         message_length = len(message)
         max_response_length = int(calculate_response_length(message_length))
 
-        system_prompt = SYSTEM_PROMPT_TEMPLATE.format(
+        system_prompt = template.format(
             max_length=max_response_length,
-            history=history,
+            history=list(history),
             emotion=emotion,
             message=message
         )
@@ -98,10 +90,8 @@ async def chat(emotion: str, message: str):
         response_data = response.json()
         answer = response_data["choices"][0]["message"]["content"]
 
-        conversation_history.append({
-            "query": message,
-            "response": answer
-        })
+        history.append({"user": message})
+        history.append({"assistant": answer})
 
         return {
             "response": answer
@@ -111,12 +101,16 @@ async def chat(emotion: str, message: str):
         return JSONResponse(status_code=500, content=str(e))
 
 
-@router.get("/history")
-async def get_history():
-    return {"history": format_history(conversation_history)}
+@router.get("/history/{type}")
+async def get_history(type: int):
+    history = conversation_history_1 if type == 1 else conversation_history_2
+    return {"history": list(history)}
 
 
-@router.delete("/clear")
-async def clear_history():
-    conversation_history.clear()
+@router.delete("/clear/{type}")
+async def clear_history(type:int):
+    if type == 1 :
+        conversation_history_1.clear()
+    else :
+        conversation_history_2.clear()
     return {"message": "대화 기록이 초기화되었습니다."}
