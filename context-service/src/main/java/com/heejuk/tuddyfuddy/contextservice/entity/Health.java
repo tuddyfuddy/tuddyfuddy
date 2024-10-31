@@ -16,6 +16,7 @@ public class Health {
 
     @Id
     private String id;
+    @Setter
     private Long userId;
     private LocalDateTime timestamp;
 
