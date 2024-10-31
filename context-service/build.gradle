@@ -53,12 +53,16 @@ dependencies {
 
     // MongoDB
     implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
+    implementation 'org.springframework.data:spring-data-mongodb'
+    
+    // Auditing 지원을 위한 의존성
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 
     // Redis
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
-    // WebClient for external API calls (날씨 API 등)
-    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    // openfeign
+    implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
 
     // Validation
     implementation 'org.springframework.boot:spring-boot-starter-validation'

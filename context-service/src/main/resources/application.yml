@@ -6,13 +6,7 @@ spring:
     name: context-service
   data:
     mongodb:
-      host: ${MONGODB_HOST:localhost}
-      port: ${MONGODB_PORT:27018}
-      database: ${CONTEXT_DB_NAME:contextdb}
-      username: ${CONTEXT_DB_USERNAME:contextuser}
-      password: ${CONTEXT_DB_PASSWORD:contextpass}
-      authentication-database: contextdb
-      time-sonze: Asia/Seoul
+      uri: mongodb://${CONTEXT_DB_USERNAME:contextuser}:${CONTEXT_DB_PASSWORD:contextpass}@${MONGODB_HOST:localhost}:${MONGODB_PORT:27018}/${CONTEXT_DB_NAME:contextdb}?authSource=contextdb
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6383}

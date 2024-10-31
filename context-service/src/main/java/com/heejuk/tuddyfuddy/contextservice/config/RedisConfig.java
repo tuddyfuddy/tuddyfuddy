@@ -30,8 +30,8 @@ public class RedisConfig {
 
     @Bean
     @Primary
-    public RedisTemplate<String, String> weatherRedisTemplate() {
-        RedisTemplate<String, String> template = new RedisTemplate<>();
+    public RedisTemplate<?, ?> redisTemplate() {
+        RedisTemplate<?, ?> template = new RedisTemplate<>();
         template.setConnectionFactory(redisConnectionFactory());
 
         template.setKeySerializer(new StringRedisSerializer());

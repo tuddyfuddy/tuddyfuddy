@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "health.threshold")
 @Component
 @Getter
-@Setter  // ConfigurationProperties는 setter가 필요합니다
+@Setter
 public class HealthThresholdConfig {
 
     private int maxHeartRate;
