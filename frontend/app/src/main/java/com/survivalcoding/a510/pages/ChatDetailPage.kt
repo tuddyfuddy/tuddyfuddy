@@ -1,5 +1,6 @@
 package com.survivalcoding.a510.pages
 
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
@@ -10,11 +11,13 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.navigation.NavController
 import com.survivalcoding.a510.R
 import com.survivalcoding.a510.components.ChatTopBar
+import com.survivalcoding.a510.components.TextInput
 
 @Composable
 fun ChatDetailPage(
@@ -54,6 +57,9 @@ fun ChatDetailPage(
                 onSearchClick = { /* 검색 기능 */ },
                 onMenuClick = { /* 메뉴 기능 */ }
             )
+        },
+        bottomBar = {
+            TextInput()
         }
     ) { paddingValues ->
         Box(
@@ -62,6 +68,7 @@ fun ChatDetailPage(
                 .padding(paddingValues)
                 .background(color = Color.White)
         ) {
+            // 나중에 여기에 채팅 메시지 컴포넌트 넣기
         }
     }
 }
