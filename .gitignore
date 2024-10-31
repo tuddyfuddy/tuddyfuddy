@@ -469,3 +469,5 @@ docker-copmose.**.yml
 logs/
 
 promtail/
+
+venvs/
