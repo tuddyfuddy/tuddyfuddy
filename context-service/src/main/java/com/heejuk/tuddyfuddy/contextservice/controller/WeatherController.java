@@ -1,6 +1,7 @@
 package com.heejuk.tuddyfuddy.contextservice.controller;
 
 import com.heejuk.tuddyfuddy.contextservice.dto.CommonResponse;
+import com.heejuk.tuddyfuddy.contextservice.dto.response.WeatherResponse;
 import com.heejuk.tuddyfuddy.contextservice.service.WeatherService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,7 +17,7 @@ public class WeatherController {
     private final WeatherService weatherService;
 
     @GetMapping
-    public CommonResponse<Object> getWeatherData(
+    public CommonResponse<WeatherResponse> getWeatherData(
         @RequestParam("latitude") Double latitude,
         @RequestParam("longitude") Double longitude
     ) {
