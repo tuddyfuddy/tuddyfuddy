@@ -1,33 +1,34 @@
 package com.heejuk.tuddyfuddy.authservice.service;
 
+import static com.heejuk.tuddyfuddy.authservice.constant.JWT_SET.*;
+
 import com.heejuk.tuddyfuddy.authservice.client.KakaoApiClient;
 import com.heejuk.tuddyfuddy.authservice.client.UserServiceClient;
-import com.heejuk.tuddyfuddy.authservice.config.JwtTokenProvider;
 import com.heejuk.tuddyfuddy.authservice.dto.CommonResponse;
-import com.heejuk.tuddyfuddy.authservice.dto.KakaoUserInfo;
-import com.heejuk.tuddyfuddy.authservice.dto.response.TokenResponse;
+import com.heejuk.tuddyfuddy.authservice.dto.response.KakaoUserInfo;
 import com.heejuk.tuddyfuddy.authservice.dto.response.UserResponse;
 import com.heejuk.tuddyfuddy.authservice.exception.AuthenticationException;
+import com.heejuk.tuddyfuddy.authservice.util.JWTUtil;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class AuthService {
 
+    private final JWTUtil jwtUtil;
     private final KakaoApiClient kakaoApiClient;
     private final UserServiceClient userServiceClient;
-    private final JwtTokenProvider jwtTokenProvider;
+//    private final RefreshService refreshService;
 
-    public TokenResponse processKakaoLogin(String kakaoAccessToken) {
+    public void processKakaoLogin(String kakaoAccessToken, HttpServletResponse response) {
         try {
             KakaoUserInfo kakaoUserInfo = kakaoApiClient.getKakaoUserInfo(
                 "Bearer " + kakaoAccessToken);
-
-            // Feign client를 통해 User 서비스 호출
             CommonResponse<UserResponse> userResponse = userServiceClient.createOrUpdateKakaoUser(
                 kakaoUserInfo);
 
@@ -36,8 +37,34 @@ public class AuthService {
                     "Failed to process user data: " + userResponse.message());
             }
 
-            String accessToken = jwtTokenProvider.createToken(userResponse.result().id());
-            return new TokenResponse(accessToken);
+            UserResponse user = userResponse.result();
+
+            // Access Token 생성
+            String accessToken = jwtUtil.createJwt(
+                "access",
+                user.id(),
+                user.nickname(),
+                ACCESS_TOKEN_EXPIRATION
+            );
+
+            // Refresh Token 생성
+            String refreshToken = jwtUtil.createJwt(
+                "refresh",
+                user.id(),
+                user.nickname(),
+                REFRESH_TOKEN_EXPIRATION
+            );
+
+            // Refresh Token을 Redis에 저장
+//            refreshService.saveRefreshToken(user.id().toString(), refreshToken);
+
+            // Access Token을 헤더에 설정
+            response.setHeader("Authorization", "Bearer " + accessToken);
+
+            // Refresh Token을 쿠키에 설정
+//            Cookie refreshCookie = CookieUtil.createCookie("refresh_token", refreshToken);
+//            CookieUtil.addSameSiteCookieAttribute(response, refreshCookie);
+
         } catch (Exception e) {
             log.error("Error processing kakao login", e);
             throw new AuthenticationException("Failed to process kakao login", e);

@@ -2,10 +2,10 @@ package com.heejuk.tuddyfuddy.authservice.controller;
 
 import com.heejuk.tuddyfuddy.authservice.dto.CommonResponse;
 import com.heejuk.tuddyfuddy.authservice.dto.request.KakaoLoginRequest;
-import com.heejuk.tuddyfuddy.authservice.dto.response.TokenResponse;
 import com.heejuk.tuddyfuddy.authservice.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,12 +30,13 @@ public class AuthController {
     @PostMapping("/kakao")
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "카카오 로그인", description = "카카오 액세스 토큰으로 로그인을 수행합니다.")
-    public CommonResponse<?> kakaoLogin(@Valid @RequestBody KakaoLoginRequest request) {
+    public CommonResponse<?> kakaoLogin(@Valid @RequestBody KakaoLoginRequest request,
+        HttpServletResponse response) {
 
         log.info("Kakao login request received with code: {}", request);
-        TokenResponse response = authService.processKakaoLogin(request.accessToken());
+        authService.processKakaoLogin(request.accessToken(), response);
 
-        return CommonResponse.ok("카카오 로그인 성공", response);
+        return CommonResponse.ok("카카오 로그인 성공");
     }
 
 }
