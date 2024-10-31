@@ -1,13 +1,16 @@
 package com.heejuk.tuddyfuddy.contextservice.config;
 
-import com.heejuk.tuddyfuddy.contextservice.entity.Weather;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 @Configuration
@@ -26,22 +29,22 @@ public class RedisConfig {
     }
 
     @Bean
-    public RedisTemplate<String, Weather> redisTemplate() {
-        RedisTemplate<String, Weather> template = new RedisTemplate<>();
+    @Primary
+    public RedisTemplate<String, String> weatherRedisTemplate() {
+        RedisTemplate<String, String> template = new RedisTemplate<>();
         template.setConnectionFactory(redisConnectionFactory());
 
-        // 직렬화 설정
-        Jackson2JsonRedisSerializer<Weather> serializer =
-            new Jackson2JsonRedisSerializer<>(Weather.class);
-
         template.setKeySerializer(new StringRedisSerializer());
-        template.setValueSerializer(serializer);
-        template.setHashKeySerializer(new StringRedisSerializer());
-        template.setHashValueSerializer(serializer);
-
-        // 설정 초기화
-        template.afterPropertiesSet();
+        template.setValueSerializer(new StringRedisSerializer());  // String serializer 사용
 
         return template;
+    }
+
+    @Bean
+    public ObjectMapper objectMapper() {
+        return JsonMapper.builder()
+                         .addModule(new JavaTimeModule())
+                         .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+                         .build();
     }
 }
