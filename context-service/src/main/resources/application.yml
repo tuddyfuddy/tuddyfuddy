@@ -4,6 +4,38 @@ server:
 spring:
   application:
     name: context-service
+  data:
+    mongodb:
+      host: ${MONGODB_HOST:localhost}
+      port: ${MONGODB_PORT:27018}
+      database: ${CONTEXT_DB_NAME:contextdb}
+      username: ${CONTEXT_DB_USERNAME:contextuser}
+      password: ${CONTEXT_DB_PASSWORD:contextpass}
+      authentication-database: contextdb
+      time-sonze: Asia/Seoul
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6383}
+      timeout: 10000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-wait: -1ms
+          max-idle: 8
+          min-idle: 0
+  jackson:
+    time-zone: Asia/Seoul
+
+health:
+  threshold:
+    max-heart-rate: 180
+    min-heart-rate: 40
+    normal-stress-level: 13
+    mild-stress-level: 16
+    moderate-stress-level: 18
+    severe-stress-level: 19
+    min-sleep-minutes: 180
+    max-sleep-minutes: 600
 
 eureka:
   client:
@@ -28,3 +60,8 @@ logging:
     org.hibernate: "info"
   file:
     name: logs/context-service/application.log
+
+weather:
+  api:
+    key: ${WEATHER_API_KEY}
+    url: ${WEATHER_API_URL}

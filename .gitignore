@@ -464,7 +464,8 @@ $RECYCLE.BIN/
 
 .env
 .env.**
-docker-copmose.**.yml
+docker-compose.**.yml
+docker-compose.yml
 
 logs/
 

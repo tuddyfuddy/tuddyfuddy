@@ -51,6 +51,11 @@ spring:
           filters:
             - RewritePath=/context-service/(?<segment>.*), /$\{segment}
 
+        - id: context-service
+          uri: lb://context-service
+          predicates:
+            - Path=/context/**
+
         - id: notification-service
           uri: lb://notification-service
           predicates:

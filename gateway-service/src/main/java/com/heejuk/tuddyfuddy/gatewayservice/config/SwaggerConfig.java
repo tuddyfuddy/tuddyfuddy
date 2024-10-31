@@ -1,9 +1,10 @@
 package com.heejuk.tuddyfuddy.gatewayservice.config;
 
-import io.swagger.v3.oas.annotations.*;
-import io.swagger.v3.oas.annotations.servers.*;
-import org.springdoc.core.models.*;
-import org.springframework.context.annotation.*;
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.servers.Server;
+import org.springdoc.core.models.GroupedOpenApi;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @OpenAPIDefinition(servers = @Server(url = "/", description = "Default Server URL"))
@@ -12,49 +13,49 @@ public class SwaggerConfig {
     @Bean
     public GroupedOpenApi authServiceApi() {
         return GroupedOpenApi.builder()
-            .group("auth-service")
-            .pathsToMatch("/auth/**")
-            .build();
+                             .group("auth-service")
+                             .pathsToMatch("/auth/**")
+                             .build();
     }
 
     @Bean
     public GroupedOpenApi chatServiceApi() {
         return GroupedOpenApi.builder()
-            .group("chat-service")
-            .pathsToMatch("/chat/**")
-            .build();
+                             .group("chat-service")
+                             .pathsToMatch("/chat/**")
+                             .build();
     }
 
     @Bean
-    public GroupedOpenApi healthServiceApi() {
+    public GroupedOpenApi contextServiceApi() {
         return GroupedOpenApi.builder()
-            .group("health-service")
-            .pathsToMatch("/health/**")
-            .build();
+                             .group("context-service")
+                             .pathsToMatch("/context/**")
+                             .build();
     }
 
     @Bean
     public GroupedOpenApi notificationServiceApi() {
         return GroupedOpenApi.builder()
-            .group("notification-service")
-            .pathsToMatch("/notification/**")
-            .build();
+                             .group("notification-service")
+                             .pathsToMatch("/notification/**")
+                             .build();
     }
 
     @Bean
-    public GroupedOpenApi openaiApiProxyApi() {
+    public GroupedOpenApi logServiceApi() {
         return GroupedOpenApi.builder()
-            .group("openai-api-proxy")
-            .pathsToMatch("/openai-api-proxy/**")
-            .build();
+                             .group("log-service")
+                             .pathsToMatch("/log-service/**")
+                             .build();
     }
 
     @Bean
     public GroupedOpenApi userServiceApi() {
         return GroupedOpenApi.builder()
-            .group("user-service")
-            .pathsToMatch("/user/**")
-            .build();
+                             .group("user-service")
+                             .pathsToMatch("/user/**")
+                             .build();
     }
 
 }
