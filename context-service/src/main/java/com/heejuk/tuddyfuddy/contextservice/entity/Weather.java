@@ -1,22 +1,21 @@
 package com.heejuk.tuddyfuddy.contextservice.entity;
 
-import java.io.Serializable;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document(collection = "weatherData")
 @Getter
+@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-public class Weather implements Serializable {
-
-    private static final long serialVersionUID = 1L;
+public class Weather {
 
     @Id
     private String id;
