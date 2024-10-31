@@ -11,7 +11,8 @@ import com.survivalcoding.a510.R
 
 @Composable
 fun CircleCharacter(
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Image(
         painter = painterResource(id = R.drawable.circlecha),
