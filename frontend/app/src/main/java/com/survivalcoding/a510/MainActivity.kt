@@ -25,11 +25,19 @@ import com.survivalcoding.a510.pages.ChatListPage
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.core.view.WindowCompat
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.res.painterResource
 import com.survivalcoding.a510.components.KakaoLoginButton
 import com.survivalcoding.a510.viewmodels.MainViewModel
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 
 object Routes {
     const val CONTENT_SCREEN = "contentScreen"
@@ -107,15 +115,26 @@ fun ContentScreen(
 ) {
     Column(
         modifier = modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.SpaceBetween
+        verticalArrangement = Arrangement.SpaceBetween,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Greeting(
-            name = "Android",
+        Spacer(modifier = Modifier.weight(1f))
+        Image(
+            painter = painterResource(id = R.drawable.circlecha),
+            contentDescription = "Circle Character",
             modifier = Modifier
-                .padding(top = 350.dp)
-                .padding(start = 120.dp)
+                .size(350.dp)  // 크기 350dp로 설정
         )
+        Text(
+            text = "만나서 반가워!",
+            modifier = Modifier.padding(24.dp),
+            style = TextStyle(
+                fontSize = 24.sp,          // 글자 크기 증가
+                fontWeight = FontWeight.Bold  // 글자 굵기 증가
+            )
 
+        )
+        Spacer(modifier = Modifier.weight(1f))
         if (isLoggedIn) {
             NextButton(
                 onClick = { navController.navigate("chatListPage") },
@@ -137,6 +156,6 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
         modifier = modifier.padding(16.dp)
     )
 }
-}
+
 
 
