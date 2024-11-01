@@ -27,7 +27,7 @@ fun ChatBubble(
                     topEnd = 18.dp,
                     bottomStart = 18.dp,
                     bottomEnd = 18.dp,
-                )
+                )   
             )
             .background(
                 color = Color.White,
