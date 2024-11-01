@@ -28,16 +28,21 @@ import androidx.activity.viewModels
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.core.view.WindowCompat
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.res.painterResource
 import com.survivalcoding.a510.components.KakaoLoginButton
+import com.survivalcoding.a510.states.AuthState
 import com.survivalcoding.a510.viewmodels.MainViewModel
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 
 object Routes {
     const val CONTENT_SCREEN = "contentScreen"
@@ -45,11 +50,16 @@ object Routes {
     const val CHAT_DETAIL = "chatDetailPage/{chatId}"
 
     fun chatDetail(chatId: Int) = "chatDetailPage/$chatId"
-    }
-
+}
 
 class MainActivity : ComponentActivity() {
-    private val viewModel: MainViewModel by viewModels()
+    private val viewModel: MainViewModel by viewModels {
+        object : ViewModelProvider.Factory {
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                return MainViewModel(applicationContext) as T
+            }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -59,7 +69,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             A510Theme {
                 val navController = rememberNavController()
-                val isLoggedIn by viewModel.isLoggedIn.collectAsState()
+                val authState by viewModel.authState.collectAsState()
 
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     NavHost(
@@ -70,12 +80,11 @@ class MainActivity : ComponentActivity() {
                             ContentScreen(
                                 modifier = Modifier.padding(innerPadding),
                                 navController = navController,
-                                isLoggedIn = isLoggedIn,
+                                authState = authState,
                                 onKakaoLoginClick = {
                                     viewModel.handleKakaoLogin(
-                                        context = this@MainActivity,
                                         onSuccess = {
-                                            navController.navigate("chatListPage")
+                                            navController.navigate(Routes.CHAT_LIST)
                                         },
                                         onError = { error ->
                                             Toast.makeText(
@@ -100,6 +109,7 @@ class MainActivity : ComponentActivity() {
                             val chatId = backStackEntry.arguments?.getInt("chatId") ?: return@composable
                             ChatDetailPage(navController, chatId)
                         }
+                    }
                 }
             }
         }
@@ -110,7 +120,7 @@ class MainActivity : ComponentActivity() {
 fun ContentScreen(
     modifier: Modifier = Modifier,
     navController: NavController,
-    isLoggedIn: Boolean,
+    authState: AuthState,
     onKakaoLoginClick: () -> Unit
 ) {
     Column(
@@ -119,28 +129,53 @@ fun ContentScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Spacer(modifier = Modifier.weight(1f))
-        Image(
-            painter = painterResource(id = R.drawable.circlecha),
-            contentDescription = "Circle Character",
-            modifier = Modifier
-                .size(350.dp)  // 크기 350dp로 설정
-        )
-        Text(
-            text = "만나서 반가워!",
-            modifier = Modifier.padding(24.dp),
-            style = TextStyle(
-                fontSize = 24.sp,          // 글자 크기 증가
-                fontWeight = FontWeight.Bold  // 글자 굵기 증가
-            )
 
-        )
+        when (authState) {
+            is AuthState.Loading -> {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(48.dp)
+                )
+            }
+            is AuthState.Success -> {
+                LaunchedEffect(Unit) {
+                    navController.navigate(Routes.CHAT_LIST)
+                }
+            }
+            is AuthState.Error -> {
+                Image(
+                    painter = painterResource(id = R.drawable.circlecha),
+                    contentDescription = "Circle Character",
+                    modifier = Modifier.size(350.dp)
+                )
+                Text(
+                    text = "만나서 반가워!",
+                    modifier = Modifier.padding(24.dp),
+                    style = TextStyle(
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                )
+            }
+            else -> {
+                Image(
+                    painter = painterResource(id = R.drawable.circlecha),
+                    contentDescription = "Circle Character",
+                    modifier = Modifier.size(350.dp)
+                )
+                Text(
+                    text = "만나서 반가워!",
+                    modifier = Modifier.padding(24.dp),
+                    style = TextStyle(
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                )
+            }
+        }
+
         Spacer(modifier = Modifier.weight(1f))
-        if (isLoggedIn) {
-            NextButton(
-                onClick = { navController.navigate("chatListPage") },
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
-        } else {
+
+        if (authState !is AuthState.Success) {
             KakaoLoginButton(
                 onClick = onKakaoLoginClick,
                 modifier = Modifier.padding(bottom = 16.dp)
@@ -156,6 +191,3 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
         modifier = modifier.padding(16.dp)
     )
 }
-
-
-
