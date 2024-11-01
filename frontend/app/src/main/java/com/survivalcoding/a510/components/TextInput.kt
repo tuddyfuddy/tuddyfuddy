@@ -20,14 +20,25 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.material.icons.filled.KeyboardVoice
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
 
 
+// TextInput.kt
 @Composable
-fun TextInput() {
-    Box(modifier = Modifier
-        .fillMaxWidth()
-        .navigationBarsPadding()
-        ) {
+fun TextInput(
+    modifier: Modifier = Modifier,
+    value: String,
+    onValueChange: (String) -> Unit,
+    onSendClick: () -> Unit,
+    onCameraClick: () -> Unit = {},
+    onVoiceClick: () -> Unit = {}
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .navigationBarsPadding()
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -37,52 +48,58 @@ fun TextInput() {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                imageVector = Icons.Default.CameraAlt,
-                contentDescription = "Camera Icon",
-                modifier = Modifier.size(26.dp),
-                tint = Color(0xFF000000),
-            )
+            IconButton(
+                onClick = onCameraClick,
+                modifier = Modifier.size(26.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.CameraAlt,
+                    contentDescription = "Camera Icon",
+                    tint = Color(0xFF000000),
+                )
+            }
 
             Spacer(modifier = Modifier.width(10.dp))
 
-            Icon(
-                imageVector = Icons.Default.KeyboardVoice,
-                contentDescription = "Camera Icon",
-                modifier = Modifier.size(26.dp),
-                tint = Color(0xFF000000),
-            )
+            IconButton(
+                onClick = onVoiceClick,
+                modifier = Modifier.size(26.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.KeyboardVoice,
+                    contentDescription = "Voice Icon",
+                    tint = Color(0xFF000000),
+                )
+            }
 
             OutlinedTextField(
-                value = "",
-                onValueChange = {},
+                value = value,
+                onValueChange = onValueChange,
                 modifier = Modifier
                     .weight(1f)
                     .padding(horizontal = 8.dp)
-                    .height(40.dp),
+                    .heightIn(min = 20.dp, max = 100.dp),
                 shape = RoundedCornerShape(16.dp),
                 colors = TextFieldDefaults.colors(
                     unfocusedContainerColor = Color.White,
                     focusedContainerColor = Color.White,
                     unfocusedIndicatorColor = Color.Transparent,
                     focusedIndicatorColor = Color.Transparent,
-                )
+                ),
+                placeholder = { Text("메시지를 입력하세요") }
             )
 
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.Send,
-                contentDescription = "Send Icon",
-                modifier = Modifier
-                    .size(26.dp),
-                tint = Color.Blue
+            IconButton(
+                onClick = onSendClick,
+                modifier = Modifier.size(26.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.Send,
+                    contentDescription = "Send Icon",
+                    tint = Color.Blue
                 )
             }
         }
     }
-
-
-@Preview(showBackground = true, name = "TextInput Preview")
-@Composable
-fun PreviewTextInput() {
-    TextInput()
 }
+
