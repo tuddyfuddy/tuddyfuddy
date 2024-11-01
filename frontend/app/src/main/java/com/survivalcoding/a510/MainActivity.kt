@@ -1,6 +1,5 @@
 package com.survivalcoding.a510
 
-import androidx.compose.ui.tooling.preview.Preview
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -24,12 +23,14 @@ import androidx.navigation.navArgument
 import com.survivalcoding.a510.pages.ChatDetailPage
 import com.survivalcoding.a510.pages.ChatListPage
 import android.widget.Toast
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.core.view.WindowCompat
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.res.painterResource
 import com.survivalcoding.a510.components.KakaoLoginButton
@@ -44,13 +45,17 @@ object Routes {
     const val CHAT_DETAIL = "chatDetailPage/{chatId}"
 
     fun chatDetail(chatId: Int) = "chatDetailPage/$chatId"
-}
+    }
+
 
 class MainActivity : ComponentActivity() {
     private val viewModel: MainViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+
         setContent {
             A510Theme {
                 val navController = rememberNavController()
@@ -95,8 +100,6 @@ class MainActivity : ComponentActivity() {
                             val chatId = backStackEntry.arguments?.getInt("chatId") ?: return@composable
                             ChatDetailPage(navController, chatId)
                         }
-
-                    }
                 }
             }
         }
@@ -145,3 +148,14 @@ fun ContentScreen(
         }
     }
 }
+
+@Composable
+fun Greeting(name: String, modifier: Modifier = Modifier) {
+    Text(
+        text = "Hello $name!!!!!",
+        modifier = modifier.padding(16.dp)
+    )
+}
+
+
+
