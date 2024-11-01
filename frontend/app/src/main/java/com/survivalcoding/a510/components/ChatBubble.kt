@@ -44,7 +44,7 @@ fun ChatBubble(
             text = text,
             color = Color.DarkGray,
             fontSize = 14.sp,
-            textAlign = TextAlign.Center,
+            textAlign = TextAlign.Start,
             lineHeight = 20.sp
         )
     }
