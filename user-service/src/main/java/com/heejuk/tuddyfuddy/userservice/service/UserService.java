@@ -1,12 +1,13 @@
 package com.heejuk.tuddyfuddy.userservice.service;
 
 import com.heejuk.tuddyfuddy.userservice.dto.request.KakaoUserInfo;
+import com.heejuk.tuddyfuddy.userservice.dto.request.KakaoUserInfo.KakaoAccount;
+import com.heejuk.tuddyfuddy.userservice.dto.request.KakaoUserInfo.KakaoAccount.Profile;
 import com.heejuk.tuddyfuddy.userservice.dto.response.UserResponse;
 import com.heejuk.tuddyfuddy.userservice.entity.User;
 import com.heejuk.tuddyfuddy.userservice.exception.UserNotFoundException;
 import com.heejuk.tuddyfuddy.userservice.repository.UserRepository;
-import java.time.LocalDate;
-import java.time.format.DateTimeParseException;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -21,26 +22,36 @@ public class UserService {
     private final UserRepository userRepository;
 
     public UserResponse processKakaoUser(KakaoUserInfo request) {
-        String email = request.kakaoAccount().email();
+        log.info("Processing Kakao user info: {}", request);
 
-        // 기존 회원인지 확인
-        User user = userRepository.findByEmail(email)
-            .orElseGet(() -> createKakaoUser(request));
+        KakaoAccount kakaoAccount = Optional.ofNullable(request.kakaoAccount())
+            .orElseThrow(
+                () -> new IllegalArgumentException("KakaoAccount information is required"));
+
+        Profile profile = Optional.ofNullable(kakaoAccount.profile())
+            .orElseThrow(() -> new IllegalArgumentException("Profile is required"));
+
+        String nickname = Optional.ofNullable(profile.nickname())
+            .orElseThrow(() -> new IllegalArgumentException("Nickname is required"));
+
+        User user = userRepository.findByKakaoId(request.id())
+            .map(existingUser -> updateUser(existingUser, profile))
+            .orElseGet(() -> createUser(request.id(), profile));
 
         return UserResponse.of(user);
     }
 
-    private User createKakaoUser(KakaoUserInfo request) {
-        return userRepository.save(
-            User.builder()
-                .kakaoId(request.id())
-                .email(request.kakaoAccount().email())
-                .nickname(request.kakaoAccount().profile().nickname())
-                .profileImage(request.kakaoAccount().profile().profileImageUrl())
-                .birthdate(combineBirthDate(request.kakaoAccount().birthday(),
-                    request.kakaoAccount().birthyear()))
-                .build()
-        );
+    private User createUser(Long kakaoId, Profile profile) {
+        return userRepository.save(User.builder()
+            .kakaoId(kakaoId)
+            .nickname(profile.nickname())
+            .profileImage(profile.profileImageUrl())
+            .build());
+    }
+
+    private User updateUser(User user, Profile profile) {
+        user.updateProfile(profile.nickname(), profile.profileImageUrl());
+        return user;
     }
 
     public UserResponse getUser(String userId) {
@@ -49,22 +60,4 @@ public class UserService {
 
         return UserResponse.of(user);
     }
-
-    private LocalDate combineBirthDate(String birthday, String birthyear) {
-        if (birthday == null || birthday.length() != 4) {
-            return null;
-        }
-
-        String year = birthyear != null ? birthyear : "2000";
-        String month = birthday.substring(0, 2);
-        String day = birthday.substring(2, 4);
-
-        try {
-            return LocalDate.parse(year + "-" + month + "-" + day);
-        } catch (DateTimeParseException e) {
-            log.error("Failed to parse birth date", e);
-            return null;
-        }
-    }
-
 }
