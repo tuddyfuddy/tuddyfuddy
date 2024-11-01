@@ -97,64 +97,58 @@ class MainActivity : ComponentActivity() {
                                 navArgument("chatId") { type = NavType.IntType }
                             )
                         ) { backStackEntry ->
-                            val chatId = backStackEntry.arguments?.getInt("chatId") ?: return@composable
+                            val chatId =
+                                backStackEntry.arguments?.getInt("chatId") ?: return@composable
                             ChatDetailPage(navController, chatId)
                         }
+                    }
                 }
             }
         }
     }
-}
 
-@Composable
-fun ContentScreen(
-    modifier: Modifier = Modifier,
-    navController: NavController,
-    isLoggedIn: Boolean,
-    onKakaoLoginClick: () -> Unit
-) {
-    Column(
-        modifier = modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.SpaceBetween,
-        horizontalAlignment = Alignment.CenterHorizontally
+    @Composable
+    fun ContentScreen(
+        modifier: Modifier = Modifier,
+        navController: NavController,
+        isLoggedIn: Boolean,
+        onKakaoLoginClick: () -> Unit
     ) {
-        Spacer(modifier = Modifier.weight(1f))
-        Image(
-            painter = painterResource(id = R.drawable.circlecha),
-            contentDescription = "Circle Character",
-            modifier = Modifier
-                .size(350.dp)  // 크기 350dp로 설정
-        )
-        Text(
-            text = "만나서 반가워!",
-            modifier = Modifier.padding(24.dp),
-            style = TextStyle(
-                fontSize = 24.sp,          // 글자 크기 증가
-                fontWeight = FontWeight.Bold  // 글자 굵기 증가
+        Column(
+            modifier = modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.SpaceBetween,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Spacer(modifier = Modifier.weight(1f))
+            Image(
+                painter = painterResource(id = R.drawable.circlecha),
+                contentDescription = "Circle Character",
+                modifier = Modifier
+                    .size(350.dp)  // 크기 350dp로 설정
             )
+            Text(
+                text = "만나서 반가워!",
+                modifier = Modifier.padding(24.dp),
+                style = TextStyle(
+                    fontSize = 24.sp,          // 글자 크기 증가
+                    fontWeight = FontWeight.Bold  // 글자 굵기 증가
+                )
 
-        )
-        Spacer(modifier = Modifier.weight(1f))
-        if (isLoggedIn) {
-            NextButton(
-                onClick = { navController.navigate("chatListPage") },
-                modifier = Modifier.padding(bottom = 16.dp)
             )
-        } else {
-            KakaoLoginButton(
-                onClick = onKakaoLoginClick,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
+            Spacer(modifier = Modifier.weight(1f))
+            if (isLoggedIn) {
+                NextButton(
+                    onClick = { navController.navigate("chatListPage") },
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+            } else {
+                KakaoLoginButton(
+                    onClick = onKakaoLoginClick,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+            }
         }
     }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!!!!!",
-        modifier = modifier.padding(16.dp)
-    )
 }
 
 

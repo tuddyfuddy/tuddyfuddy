@@ -1,28 +1,23 @@
 package com.survivalcoding.a510.pages
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.survivalcoding.a510.R
-import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.text.selection.TextSelectionColors
-import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.ui.platform.LocalDensity
+import com.survivalcoding.a510.components.ChatBubble
 import com.survivalcoding.a510.components.TextInput
+
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -32,7 +27,8 @@ fun ChatDetailPage(
     chatId: Int,
 ) {
     var messageText by remember { mutableStateOf("") }
-//    val keyboardController = LocalSoftwareKeyboardController.current
+    // 메시지 목록을 로컬 상태로 관리
+    var messages by remember { mutableStateOf(listOf<String>()) }
 
     val ime = WindowInsets.ime
     val insets = WindowInsets.navigationBars
@@ -42,7 +38,6 @@ fun ChatDetailPage(
             ime.getBottom(density) > insets.getBottom(density)
         }
     }
-
 
     val chatData = remember {
         when (chatId) {
@@ -66,9 +61,6 @@ fun ChatDetailPage(
 
             else -> null
         }
-    }
-    val dummyMessages = List(20) { index ->
-        "메시지 ${index + 1}"
     }
 
     Surface(
@@ -107,30 +99,29 @@ fun ChatDetailPage(
                             )
                         }
                     },
-
                 )
 
-                // 상단바랑 채팅화면 구분
+                // 상단바랑 채팅화면 구분하는 구분선
                 HorizontalDivider(color = Color.LightGray)
 
-                // 나중에 채팅 내용 넣을 화면
+                // 채팅 넣는 화면
                 LazyColumn(
                     modifier = Modifier
                         .weight(1f)
-                        .fillMaxWidth()
-                        .wrapContentHeight(),
+                        .fillMaxWidth(),
+                    reverseLayout = true,
                     verticalArrangement = Arrangement.spacedBy(8.dp),
-
+                    contentPadding = PaddingValues(16.dp)
                 ) {
-                    items(dummyMessages) { message ->
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(Color.LightGray)
-                                .padding(8.dp)
-                                .wrapContentHeight(),
+                    items(messages.reversed()) { message ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.End
                         ) {
-                            Text(message)
+                            ChatBubble(
+                                text = message,
+                                modifier = Modifier.widthIn(max = 280.dp)
+                            )
                         }
                     }
                 }
@@ -144,7 +135,12 @@ fun ChatDetailPage(
                     TextInput(
                         value = messageText,
                         onValueChange = { messageText = it },
-                        onSendClick = { /* 나중에 함수 추가하기 */ }
+                        onSendClick = {
+                            if (messageText.isNotBlank()) {
+                                messages = messages + messageText
+                                messageText = ""
+                            }
+                        }
                     )
                 }
             }
