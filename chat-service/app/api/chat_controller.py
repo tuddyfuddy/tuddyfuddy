@@ -4,6 +4,9 @@ from fastapi import APIRouter
 import requests
 from fastapi.responses import JSONResponse
 from app.api.kote_controller import get_emotion
+from pydantic import BaseModel
+from app.core.logger import setup_logger
+
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 OPENAI_API_KEY = settings.GPT_KEY
@@ -11,6 +14,10 @@ API_URL = "https://api.openai.com/v1/chat/completions"
 GPT_MODEL = "gpt-4o-mini"
 MAX_HISTORY = 10  # 최대 저장할 대화 기록 수
 
+class TextRequest(BaseModel):
+    text: str
+
+logging = setup_logger("app")
 
 def calculate_response_length(message_length: int) -> int:
     """메시지 길이에 따른 응답 길이 계산"""
@@ -23,6 +30,10 @@ def calculate_response_length(message_length: int) -> int:
 
 
 SYSTEM_PROMPT_TEMPLATE_1 = """
+
+"""
+
+SYSTEM_PROMPT_TEMPLATE_2 = """
 Start a casual conversation, and respond as comfortably as a close friend to express your feelings honestly. Relate to the feelings, but avoid overly friendly or exaggerated expressions, and continue the conversation naturally. Make the conversation light and comfortable as a real friend.
 Topic: conversation
 Style: Casual
@@ -47,19 +58,19 @@ emotion: {emotion}
 message: {message}
 """
 
-SYSTEM_PROMPT_TEMPLATE_2 = """
-
-"""
-
 # TODO DB로 관리
 conversation_history_1 = deque(maxlen=MAX_HISTORY)
 conversation_history_2 = deque(maxlen=MAX_HISTORY)
 
 
-@router.post("/chat/{type}")
-async def chat(type:int, message: str):
+@router.post("/{type}")
+async def chat(type:int, request: TextRequest):
+    message = request.text
     emotion = await get_emotion(message)
-    print(f">>>>>>> {emotion}")
+
+    logging.info(f">>>>>>> {emotion}")
+    logging.info(f">>>>>>> {message}")
+
     try:
         history = conversation_history_1 if type == 1 else conversation_history_2
         template = SYSTEM_PROMPT_TEMPLATE_1 if type == 1 else SYSTEM_PROMPT_TEMPLATE_2
