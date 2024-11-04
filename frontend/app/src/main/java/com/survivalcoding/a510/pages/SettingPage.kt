@@ -19,7 +19,7 @@ import com.survivalcoding.a510.viewmodels.ChatListViewModel
 import com.survivalcoding.a510.viewmodels.ChatListViewModelFactory
 
 @Composable
-fun PermissionPage (
+fun SettingPage (
                     navController: NavController,
                     viewModel: ChatListViewModel = viewModel(
                         factory = ChatListViewModelFactory(
