@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.survivalcoding.a510.repositories.chat.ChatDatabase
 import com.survivalcoding.a510.repositories.chat.ChatMessage
 import com.survivalcoding.a510.services.RetrofitClient
+import com.survivalcoding.a510.services.chat.ChatRequest
 import com.survivalcoding.a510.services.chat.getMessageList
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -25,7 +26,7 @@ class ChatViewModel(application: Application, private val roomId: Int) : Android
             initialValue = emptyList()
         )
 
-    fun sendMessage(content: String, emotion: String = "평온") {
+    fun sendMessage(content: String) {
         viewModelScope.launch {
             // 사용자 메시지 저장
             messageDao.insertMessage(
@@ -44,13 +45,11 @@ class ChatViewModel(application: Application, private val roomId: Int) : Android
             )
 
             try {
-                // API 호출
+                // API 호출 - 새로운 요청 형식 사용
                 val response = aiChatService.sendChatMessage(
-                    type = 1,
-                    emotion = emotion,
-                    message = content
+                    type = 2,
+                    request = ChatRequest(text = content)  // 수정된 부분
                 )
-
                 if (response.isSuccessful) {
                     // 응답 메시지들을 개별적으로 저장
                     response.body()?.getMessageList()?.forEach { aiMessage ->
