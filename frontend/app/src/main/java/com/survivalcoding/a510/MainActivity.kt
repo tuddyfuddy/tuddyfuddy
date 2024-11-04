@@ -53,18 +53,14 @@ object Routes {
 }
 
 class MainActivity : ComponentActivity() {
-    private val viewModel: MainViewModel by viewModels {
-        object : ViewModelProvider.Factory {
-            override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return MainViewModel(applicationContext) as T
-            }
-        }
-    }
+    private val viewModel: MainViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         WindowCompat.setDecorFitsSystemWindows(window, false)
+
+        viewModel.initializeTokenRepository(this)
 
         setContent {
             A510Theme {
@@ -83,6 +79,7 @@ class MainActivity : ComponentActivity() {
                                 authState = authState,
                                 onKakaoLoginClick = {
                                     viewModel.handleKakaoLogin(
+                                        activity = this@MainActivity,  // Activity 전달
                                         onSuccess = {
                                             navController.navigate(Routes.CHAT_LIST)
                                         },
