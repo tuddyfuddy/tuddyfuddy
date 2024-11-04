@@ -38,9 +38,9 @@ fun TermsAgreementPage(
     ) {
         Text(
             text = "이용약관에 동의해주세요",
-            fontSize = 20.sp,
+            fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(bottom = 16.dp)
+            modifier = Modifier.padding(top = 30.dp, bottom = 30.dp)
         )
 
         AllAgreeCheckbox(
