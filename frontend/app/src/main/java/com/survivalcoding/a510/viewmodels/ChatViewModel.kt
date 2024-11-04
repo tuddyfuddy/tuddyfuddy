@@ -16,7 +16,7 @@ import kotlinx.coroutines.launch
 class ChatViewModel(application: Application, private val roomId: Int) : AndroidViewModel(application) {
     private val database = ChatDatabase.getDatabase(application)
     private val messageDao = database.chatMessageDao()
-    private val chatInfoDao = database.chatInfoDao()  // ChatInfoDao 추가
+    private val chatInfoDao = database.chatInfoDao()
     private val aiChatService = RetrofitClient.aiChatService
 
     val allMessages: StateFlow<List<ChatMessage>> = messageDao.getMessagesByRoomId(roomId)
