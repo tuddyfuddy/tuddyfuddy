@@ -3,8 +3,9 @@ import torch.nn as nn
 from transformers import ElectraModel, AutoTokenizer
 import torch
 from fastapi import FastAPI
+from app.core.logger import setup_logger
 
-app = FastAPI()
+logging = setup_logger("app")
 
 LABELS = ['불평/불만',
           '환영/호의',
@@ -151,7 +152,7 @@ state_dict = torch.load(
     map_location=device
 )
 trained_model.load_state_dict(state_dict, strict=False)
-print("--------------------     Model KOTE loaded.     --------------------")
+logging.info("--------------------     Model KOTE loaded.     --------------------")
 
 
 async def get_emotion(message: str):
