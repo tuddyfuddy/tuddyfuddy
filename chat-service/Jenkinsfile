@@ -3,6 +3,7 @@ def REPOSITORY_NAME = "tuddyfuddy"
 def SERVICE_NAME = "chat-service"  // 서비스별로 변경
 
 pipeline {
+    agent any
     
     environment {
         DOCKER_CREDENTIALS = credentials('docker-hub-credential')
