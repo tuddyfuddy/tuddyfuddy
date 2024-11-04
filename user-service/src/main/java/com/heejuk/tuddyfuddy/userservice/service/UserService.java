@@ -8,6 +8,7 @@ import com.heejuk.tuddyfuddy.userservice.entity.User;
 import com.heejuk.tuddyfuddy.userservice.exception.UserNotFoundException;
 import com.heejuk.tuddyfuddy.userservice.repository.UserRepository;
 import java.util.Optional;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -35,7 +36,6 @@ public class UserService {
             .orElseThrow(() -> new IllegalArgumentException("Nickname is required"));
 
         User user = userRepository.findByKakaoId(request.id())
-            .map(existingUser -> updateUser(existingUser, profile))
             .orElseGet(() -> createUser(request.id(), profile));
 
         return UserResponse.of(user);
@@ -49,13 +49,8 @@ public class UserService {
             .build());
     }
 
-    private User updateUser(User user, Profile profile) {
-        user.updateProfile(profile.nickname(), profile.profileImageUrl());
-        return user;
-    }
-
     public UserResponse getUser(String userId) {
-        User user = userRepository.findById(Long.valueOf(userId))
+        User user = userRepository.findById(UUID.fromString(userId))
             .orElseThrow(UserNotFoundException::new);
 
         return UserResponse.of(user);
