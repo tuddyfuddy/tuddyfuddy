@@ -98,7 +98,7 @@ springdoc:
       - url: /v3/api-docs
         name: API Gateway Service
       - url: /auth-service/v3/api-docs
-        name: 사용자 서비스
+        name: 인증 서비스
       - url: /chat-service/v3/api-docs
         name: 채팅 서비스
       - url: /context-service/v3/api-docs
