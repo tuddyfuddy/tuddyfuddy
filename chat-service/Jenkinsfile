@@ -13,9 +13,14 @@ pipeline {
         stage('Prepare Environment') {
             steps {
                 dir(SERVICE_NAME) {
+                    // 디렉토리 권한 설정
+                    sh 'chmod -R 777 .'
+
                     // Secret file credential에서 .env 파일 가져오기
                     withCredentials([file(credentialsId: 'chat-service-env', variable: 'ENV_FILE')]) {
-                        sh 'cp $ENV_FILE .env'
+                        sh 'cp -f $ENV_FILE .env'
+                        // 복사된 파일 권한 설정
+                        sh 'chmod 644 .env'
                     }
                 }
             }
