@@ -119,47 +119,51 @@ fun ChatDetailPage(
                 }
             }
         )
-            LazyColumn(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth(),
-                reverseLayout = true,
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-                contentPadding = PaddingValues(bottom = 8.dp)
-            ) {
-                val messageList = messages.reversed()
+        LazyColumn(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth(),
+            reverseLayout = true,
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+            contentPadding = PaddingValues(bottom = 8.dp)
+        ) {
+            val messageList = messages.reversed()
 
-                items(messageList.size) { index ->
-                    val message = messageList[index]
-                    val previousMessage = if (index < messageList.size - 1) messageList[index + 1] else null
+            items(messageList.size) { index ->
+                val message = messageList[index]
+                val previousMessage = if (index < messageList.size - 1) messageList[index + 1] else null
 
-                    val showProfile = message.isAiMessage && (
-                            previousMessage == null ||
-                                    !previousMessage.isAiMessage ||
-                                    !TimeUtils.formatChatTime(message.timestamp).equals(
-                                        TimeUtils.formatChatTime(previousMessage.timestamp)
-                                    )
-                            )
-
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(
-                                start = if (message.isAiMessage) 8.dp else 0.dp,
-                                end = if (!message.isAiMessage) (0).dp else 8.dp
-                            )
-                            .offset(x = if (!message.isAiMessage) 10.dp else 0.dp),
-                        horizontalArrangement = if (message.isAiMessage)
-                            Arrangement.Start else Arrangement.End
-                    ) {
-                        ChatBubble(
-                            text = message.content,
-                            timestamp = message.timestamp,
-                            isAiMessage = message.isAiMessage,
-                            profileImage = if (showProfile) chatData?.profileImage else null,
-                            name = if (showProfile) chatData?.name else null
+                val showProfile = message.isAiMessage && (
+                        previousMessage == null ||
+                                !previousMessage.isAiMessage ||
+                                !TimeUtils.formatChatTime(message.timestamp).equals(
+                                    TimeUtils.formatChatTime(previousMessage.timestamp)
+                                )
                         )
-                    }
+
+                // 연속된 메시지인지 확인
+                val isFirstInSequence = previousMessage == null || previousMessage.isAiMessage != message.isAiMessage
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(
+                            start = if (message.isAiMessage) 8.dp else 0.dp,
+                            end = if (!message.isAiMessage) 0.dp else 8.dp
+                        )
+                        .offset(x = if (!message.isAiMessage) 10.dp else 0.dp),
+                    horizontalArrangement = if (message.isAiMessage)
+                        Arrangement.Start else Arrangement.End
+                ) {
+                    ChatBubble(
+                        text = message.content,
+                        timestamp = message.timestamp,
+                        isAiMessage = message.isAiMessage,
+                        profileImage = if (showProfile) chatData?.profileImage else null,
+                        name = if (showProfile) chatData?.name else null,
+                        isFirstInSequence = isFirstInSequence
+                    )
+                }
 
                     // 이 메시지가 해당 날짜의 마지막 메시지인지 확인
                     val isLastMessageOfDay = previousMessage != null &&
@@ -227,8 +231,7 @@ fun ChatDetailPage(
 
 
         TextInput(
-            modifier = Modifier
-                .imePadding(),
+            modifier = Modifier.imePadding(),
             value = messageText,
             onValueChange = { messageText = it },
             onSendClick = {
