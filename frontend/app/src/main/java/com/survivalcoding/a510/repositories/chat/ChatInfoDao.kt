@@ -19,4 +19,7 @@ interface ChatInfoDao {
 
     @Query("UPDATE chat_info SET unreadCount = :count WHERE id = :chatId")
     suspend fun updateUnreadCount(chatId: Int, count: Int)
+
+    @Query("SELECT COUNT(*) FROM chat_info")
+    suspend fun getChatCount(): Int
 }

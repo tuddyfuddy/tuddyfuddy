@@ -6,14 +6,16 @@ import androidx.lifecycle.viewModelScope
 import com.survivalcoding.a510.mocks.DummyAIData
 import com.survivalcoding.a510.repositories.chat.ChatDatabase
 import com.survivalcoding.a510.repositories.chat.ChatInfo
+import com.survivalcoding.a510.repositories.chat.ChatMessage
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-
 class ChatListViewModel(application: Application) : AndroidViewModel(application) {
-    private val chatInfoDao = ChatDatabase.getDatabase(application).chatInfoDao()
+    private val database = ChatDatabase.getDatabase(application)
+    private val chatInfoDao = database.chatInfoDao()
+    private val chatMessageDao = database.chatMessageDao()
 
     val chatList: StateFlow<List<ChatInfo>> = chatInfoDao.getAllChats()
         .stateIn(
@@ -22,18 +24,16 @@ class ChatListViewModel(application: Application) : AndroidViewModel(application
             initialValue = emptyList()
         )
 
-
     init {
-        // 앱 최초 실행시 초기 데이터 삽입
         initializeDefaultChats()
     }
 
     private fun initializeDefaultChats() {
         viewModelScope.launch {
-            // 현재 채팅 목록이 비어있을 때만 초기 데이터 삽입
-            if (chatList.value.isEmpty()) {
-                // DummyAIData의 데이터를 ChatInfo로 변환하여 삽입
+            // DB가 비어있을 때만 초기 데이터 생성
+            if (chatInfoDao.getChatCount() == 0) {
                 DummyAIData.chatList.forEach { chatData ->
+                    // ChatInfo 추가
                     chatInfoDao.insertChat(
                         ChatInfo(
                             id = chatData.id,
@@ -41,6 +41,16 @@ class ChatListViewModel(application: Application) : AndroidViewModel(application
                             name = chatData.name,
                             lastMessage = chatData.message,
                             unreadCount = chatData.unreadCount
+                        )
+                    )
+
+                    // 초기 메시지 추가
+                    chatMessageDao.insertMessage(
+                        ChatMessage(
+                            roomId = chatData.id,
+                            content = chatData.message,
+                            isAiMessage = true,
+                            timestamp = System.currentTimeMillis()
                         )
                     )
                 }
