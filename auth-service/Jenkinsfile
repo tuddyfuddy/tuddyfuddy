@@ -35,9 +35,21 @@ pipeline {
 
                     // Secret file credential에서 .env 파일 가져오기
                     withCredentials([file(credentialsId: 'auth-service-env', variable: 'ENV_FILE')]) {
-                        sh 'cp -f $ENV_FILE .env'
-                        // 복사된 파일 권한 설정
-                        sh 'chmod 644 .env'
+                        sh '''
+                            # .env 파일 복사
+                            cp -f $ENV_FILE .env
+                            chmod 644 .env
+                            
+                            # 환경변수 로드 및 확인
+                            echo "Applying environment variables from .env"
+                            export $(cat .env | grep -v '^#' | xargs)
+                            
+                            # 주요 환경변수 존재 여부 확인 (예시)
+                            if [ -z "$WEATHER_API_URL" ]; then
+                                echo "Error: WEATHER_API_URL is not set"
+                                exit 1
+                            fi
+                            '''
                     }
                 }
             }
