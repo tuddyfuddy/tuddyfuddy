@@ -13,9 +13,17 @@ pipeline {
         stage('Prepare Environment') {
             steps {
                 dir(SERVICE_NAME) {
-                    // Secret file credential에서 .env 파일 가져오기
+                    // 권한 문제 해결을 위한 명령어 추가
+                    sh 'mkdir -p /var/jenkins_home/.env-tmp'
+                    sh 'chmod 777 /var/jenkins_home/.env-tmp'
+                    
+                    // Secret file을 임시 디렉토리에 복사 후 이동
                     withCredentials([file(credentialsId: 'chat-service-env', variable: 'ENV_FILE')]) {
-                        sh 'cp $ENV_FILE .env'
+                        sh '''
+                            cp $ENV_FILE /var/jenkins_home/.env-tmp/.env
+                            cp /var/jenkins_home/.env-tmp/.env .env
+                            chmod 644 .env
+                        '''
                     }
                 }
             }
