@@ -3,7 +3,6 @@ package com.heejuk.tuddyfuddy.userservice.dto.response;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.heejuk.tuddyfuddy.userservice.entity.User;
 import io.swagger.v3.oas.annotations.media.Schema;
-import java.util.UUID;
 import lombok.Builder;
 
 @Builder
@@ -12,7 +11,7 @@ import lombok.Builder;
 public record UserResponse(
 
     @Schema(description = "사용자 ID")
-    UUID id,
+    String userId,
 
     @Schema(description = "닉네임")
     String nickname,
@@ -24,7 +23,7 @@ public record UserResponse(
 
     public static UserResponse of(User user) {
         return new UserResponse(
-            user.getId(),
+            user.getId().toString(),
             user.getNickname(),
             user.getProfileImage()
         );

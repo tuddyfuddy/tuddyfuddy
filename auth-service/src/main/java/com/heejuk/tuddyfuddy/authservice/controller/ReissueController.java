@@ -42,8 +42,8 @@ public class ReissueController {
             throw new InvalidTokenException("Invalid refresh token");
         }
 
-        Long userId = jwtUtil.getUserId(refreshToken);
-        String savedToken = reissueService.findRefreshToken(userId.toString())
+        String userId = jwtUtil.getUserId(refreshToken);
+        String savedToken = reissueService.findRefreshToken(userId)
             .orElseThrow(() -> new InvalidTokenException("Refresh token not found"));
 
         if (!savedToken.equals(refreshToken)) {
@@ -67,8 +67,8 @@ public class ReissueController {
         );
 
         // Redis 업데이트
-        reissueService.deleteRefreshToken(userId.toString());
-        reissueService.saveRefreshToken(userId.toString(), newRefreshToken);
+        reissueService.deleteRefreshToken(userId);
+        reissueService.saveRefreshToken(userId, newRefreshToken);
 
         // 헤더와 쿠키 설정
         response.setHeader("Authorization", "Bearer " + newAccessToken);

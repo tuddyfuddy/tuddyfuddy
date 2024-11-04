@@ -58,7 +58,7 @@ public class AuthorizationHeaderFilter extends
                 return this.onError(response, "Invalid access token", HttpStatus.UNAUTHORIZED);
             }
 
-            Long userId = jwtUtil.getUserId(accessToken);
+            String userId = jwtUtil.getUserId(accessToken);
             String nickname = jwtUtil.getNickname(accessToken);
 
             log.info("Authorization header received userId: {}", userId);
@@ -68,7 +68,7 @@ public class AuthorizationHeaderFilter extends
             encodedString = URLEncoder.encode(nickname, StandardCharsets.UTF_8);
 
             ServerHttpRequest modifiedRequest = exchange.getRequest().mutate()
-                .header("X-UserId", String.valueOf(userId))
+                .header("X-UserId", userId)
                 .header("X-Nickname", encodedString)
                 .build();
             exchange = exchange.mutate().request(modifiedRequest).build();

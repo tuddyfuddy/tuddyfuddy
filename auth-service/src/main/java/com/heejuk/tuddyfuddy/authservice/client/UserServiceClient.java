@@ -11,6 +11,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 public interface UserServiceClient {
 
     @PostMapping("/users/kakao")
-    CommonResponse<UserResponse> createOrUpdateKakaoUser(@RequestBody KakaoUserInfo kakaoUserInfo);
+    CommonResponse<UserResponse> loginKakaoUser(@RequestBody KakaoUserInfo kakaoUserInfo);
 
 }
