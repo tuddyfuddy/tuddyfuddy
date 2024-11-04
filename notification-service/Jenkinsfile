@@ -60,9 +60,6 @@ pipeline {
         stage('Deploy') {
             steps {
                 script {
-                    // 로그 디렉토리 생성 (없는 경우)
-                    sh 'mkdir -p /var/log/applications'
-                    sh 'chmod -R 777 /var/log/applications'
                     
                     // 기존 컨테이너 중지 및 제거
                     sh """
