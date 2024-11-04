@@ -1,7 +1,9 @@
 import pytorch_lightning as pl
 import torch.nn as nn
-from transformers import ElectraModel, AutoTokenizer
 import torch
+import os
+
+from transformers import ElectraModel, AutoTokenizer
 from fastapi import FastAPI
 from app.core.logger import setup_logger
 
@@ -145,9 +147,16 @@ def find_and_match(preds):
     return LABELS[maxidx]
 
 
+# 현재 파일의 디렉토리 경로를 가져옵니다
+current_dir = os.path.dirname(os.path.abspath(__file__))
+
+# 모델 파일 경로를 만듭니다
+model_path = os.path.join(current_dir, "kote_pytorch_lightning.bin")
+
 trained_model = KOTEtagger()
+
 state_dict = torch.load(
-    "./kote_pytorch_lightning.bin",
+    model_path,
     weights_only=True,  # Address the security warning
     map_location=device
 )
