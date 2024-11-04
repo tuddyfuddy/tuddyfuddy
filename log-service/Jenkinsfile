@@ -26,6 +26,17 @@ pipeline {
                 }
             }
         }
+
+        stage('Prepare Environment') {
+            steps {
+                dir(SERVICE_NAME) {
+                    // Secret file credential에서 .env 파일 가져오기
+                    withCredentials([file(credentialsId: 'log-service-env', variable: 'ENV_FILE')]) {
+                        sh 'cp $ENV_FILE .env'
+                    }
+                }
+            }
+        }
         
         stage('Docker Build & Push') {
             steps {
