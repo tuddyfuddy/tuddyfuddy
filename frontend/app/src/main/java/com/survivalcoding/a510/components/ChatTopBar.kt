@@ -1,33 +1,23 @@
 package com.survivalcoding.a510.components
 
-import android.app.Activity
-import android.view.WindowManager
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.*
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.core.view.WindowCompat
-import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import com.survivalcoding.a510.utils.TransparentSystemBars
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,23 +28,14 @@ fun ChatTopBar(
     onMenuClick: () -> Unit,
     title: String = "",
 ) {
-    val view = LocalView.current
-    val window = (view.context as Activity).window
-
-    SideEffect {
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-        WindowCompat.getInsetsController(window, view).apply {
-            isAppearanceLightStatusBars = true
-        }
-        window.statusBarColor = Color.Transparent.toArgb()
-    }
+    TransparentSystemBars(darkIcons = true)
 
     Surface(
         shadowElevation = 4.dp,
         shape = RectangleShape
     ) {
         TopAppBar(
-            modifier = modifier,  // statusBarsPadding() 제거
+            modifier = modifier,
             navigationIcon = {
                 IconButton(onClick = onBackClick) {
                     Icon(

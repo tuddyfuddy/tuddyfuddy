@@ -1,5 +1,7 @@
 package com.survivalcoding.a510.pages
 
+import android.app.Activity
+import android.app.Application
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -7,44 +9,35 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
+import androidx.core.view.WindowCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.survivalcoding.a510.R
-import com.survivalcoding.a510.Routes
 import com.survivalcoding.a510.components.ChatListItem
 import com.survivalcoding.a510.components.TopBar
 import com.survivalcoding.a510.components.CircleCharacter
 import com.survivalcoding.a510.components.SpeechBubble
-
-data class ChatData(
-    val id: Int,
-    val profileImage: Int,
-    val name: String,
-    val message: String,
-    val timestamp: String,
-    val unreadCount: Int = 0
-)
+import com.survivalcoding.a510.routers.Routes
+import com.survivalcoding.a510.utils.TransparentSystemBars
+import com.survivalcoding.a510.viewmodels.ChatListViewModel
+import com.survivalcoding.a510.viewmodels.ChatListViewModelFactory
 
 @Composable
-fun ChatListPage(navController: NavController) {
-    val chatList = listOf(
-        ChatData(
-            id = 1,
-            profileImage = R.drawable.cha,
-            name = "활명수",
-            message = "늦었다고 생각할 때가 진짜 늦은 거야",
-            timestamp = "2분 전",
-            unreadCount = 2
-        ),
-        ChatData(
-            id = 2,
-            profileImage = R.drawable.back,
-            name = "백지헌",
-            message = "갑자기 비내리는거 같은데 ㅠㅠ",
-            timestamp = "오후 2:40",
-            unreadCount = 3
-        ),
+fun ChatListPage(
+    navController: NavController,
+    viewModel: ChatListViewModel = viewModel(
+        factory = ChatListViewModelFactory(
+            LocalContext.current.applicationContext as Application
+        )
     )
+) {
+//    TransparentSystemBars(darkIcons = true)
+
+    val chatList by viewModel.chatList.collectAsState()
 
     Scaffold(
         topBar = { TopBar() }

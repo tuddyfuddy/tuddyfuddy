@@ -17,10 +17,8 @@ fun CircleCharacter(
     Image(
         painter = painterResource(id = R.drawable.circlecha),
         contentDescription = "Circle Character",
-        modifier = Modifier
+        modifier = modifier
             .size(70.dp)
             .clickable(onClick = onClick)
     )
 }
-
-
