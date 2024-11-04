@@ -15,4 +15,7 @@ interface ChatMessageDao {
 
     @Query("DELETE FROM messages WHERE roomId = :roomId")
     suspend fun deleteMessagesByRoomId(roomId: Int)
+
+    @Query("SELECT COUNT(*) FROM messages WHERE roomId = :roomId")
+    suspend fun getMessageCount(roomId: Int): Int
 }

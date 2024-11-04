@@ -140,7 +140,7 @@ class ChatViewModel(application: Application, private val roomId: Int) : Android
         }
     }
 
-    // 채팅방을 읽었을 때 호출 (읽지 않은 메시지 수 초기화)
+    // 채팅방 들어가면 읽지 않은 메세지 수 다시 0으로 초기화
     fun markAsRead() {
         viewModelScope.launch {
             chatInfoDao.updateUnreadCount(roomId, 0)
@@ -149,7 +149,13 @@ class ChatViewModel(application: Application, private val roomId: Int) : Android
 
     fun clearChat() {
         viewModelScope.launch {
+            // 선택한 채팅방의 메시지만 전체 삭제
             messageDao.deleteMessagesByRoomId(roomId)
+
+            chatInfoDao.updateLastMessage(
+                chatId = roomId,
+                message = "친구와 새로운 대화를 시작해보세요!",
+                timestamp = System.currentTimeMillis()
+            )
         }
-    }
-}
+    }}
