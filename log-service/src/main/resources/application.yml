@@ -47,7 +47,7 @@ logging:
   level:
     root: INFO
   file:
-    name: logs/log-service/application.log
+    name: /var/log/applications/${spring.application.name}/application.log
 
 # 로그 수집 설정 추가
 log:
