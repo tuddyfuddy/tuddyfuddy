@@ -54,6 +54,8 @@ android {
 }
 
 dependencies {
+    implementation (libs.retrofit)
+    implementation (libs.converter.gson)
     implementation (libs.accompanist.insets)
     implementation (libs.accompanist.systemuicontroller.v0301)
     implementation (libs.accompanist.systemuicontroller)

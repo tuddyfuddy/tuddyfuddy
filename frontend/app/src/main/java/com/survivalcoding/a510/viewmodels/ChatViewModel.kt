@@ -5,7 +5,8 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.survivalcoding.a510.repositories.chat.ChatDatabase
 import com.survivalcoding.a510.repositories.chat.ChatMessage
-import com.survivalcoding.a510.utils.DummyAIResponses
+import com.survivalcoding.a510.services.RetrofitClient
+import com.survivalcoding.a510.services.chat.getMessageList
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -13,8 +14,8 @@ import kotlinx.coroutines.launch
 
 class ChatViewModel(application: Application, private val roomId: Int) : AndroidViewModel(application) {
     private val messageDao = ChatDatabase.getDatabase(application).chatMessageDao()
+    private val aiChatService = RetrofitClient.aiChatService
 
-    // StateFlow로 메시지 목록을 관리
     val allMessages: StateFlow<List<ChatMessage>> = messageDao.getMessagesByRoomId(roomId)
         .stateIn(
             scope = viewModelScope,
@@ -22,20 +23,62 @@ class ChatViewModel(application: Application, private val roomId: Int) : Android
             initialValue = emptyList()
         )
 
-    // 메시지 전송
-    fun sendMessage(content: String) {
+    fun sendMessage(content: String, emotion: String = "평온") {
         viewModelScope.launch {
-            messageDao.insertMessage(ChatMessage(roomId = roomId, content = content, isAiMessage = false))
-            val aiResponse = generateAiResponse(content)
-            messageDao.insertMessage(ChatMessage(roomId = roomId, content = aiResponse, isAiMessage = true))
+            // 사용자 메시지 저장
+            messageDao.insertMessage(
+                ChatMessage(
+                    roomId = roomId,
+                    content = content,
+                    isAiMessage = false
+                )
+            )
+
+            try {
+                // API 호출
+                val response = aiChatService.sendChatMessage(
+                    type = 1,
+                    emotion = emotion,
+                    message = content
+                )
+
+                if (response.isSuccessful) {
+                    // 응답 메시지들을 개별적으로 저장
+                    response.body()?.getMessageList()?.forEach { aiMessage ->
+                        messageDao.insertMessage(
+                            ChatMessage(
+                                roomId = roomId,
+                                content = aiMessage,
+                                isAiMessage = true
+                            )
+                        )
+                    }
+                } else {
+                    // 에러 처리
+                    messageDao.insertMessage(
+                        ChatMessage(
+                            roomId = roomId,
+                            content = "죄송해요, 메시지를 받지 못했어요.",
+                            isAiMessage = true
+                        )
+                    )
+                }
+            } catch (e: Exception) {
+                // 네트워크 에러 등 예외 처리
+                messageDao.insertMessage(
+                    ChatMessage(
+                        roomId = roomId,
+                        content = "네트워크 오류가 발생했어요.",
+                        isAiMessage = true
+                    )
+                )
+            }
         }
     }
 
-    // AI 응답 생성 함수
-    private fun generateAiResponse(userMessage: String): String = DummyAIResponses.getResponse(userMessage)
-
-    // 채팅 기록 삭제
     fun clearChat() {
-        viewModelScope.launch { messageDao.deleteMessagesByRoomId(roomId) }
+        viewModelScope.launch {
+            messageDao.deleteMessagesByRoomId(roomId)
+        }
     }
 }

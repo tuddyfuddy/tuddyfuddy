@@ -24,12 +24,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.survivalcoding.a510.R
+import com.survivalcoding.a510.pages.PermissionPage
 
 
 object Routes {
     const val WELCOME_SCREEN = "welcomeScreen"
     const val CHAT_LIST = "chatListPage"
     const val CHAT_DETAIL = "chatDetailPage/{chatId}"
+    const val PERMISSION_PAGE = "permissionPage"
 
     fun chatDetail(chatId: Int) = "chatDetailPage/$chatId"
 }
@@ -58,6 +60,11 @@ fun AppRouter(
                     navController.navigate(Routes.CHAT_LIST)
                 }
             )
+        }
+
+        // 권한 설정 페이지
+        composable(Routes.PERMISSION_PAGE) {
+            PermissionPage(navController)
         }
 
         // 채팅 리스트 화면 라우트

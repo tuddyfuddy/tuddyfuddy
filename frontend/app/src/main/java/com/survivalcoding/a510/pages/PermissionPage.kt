@@ -4,10 +4,8 @@ import android.app.Application
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -15,33 +13,31 @@ import androidx.navigation.NavController
 import com.survivalcoding.a510.components.ChatListItem
 import com.survivalcoding.a510.components.TopBar
 import com.survivalcoding.a510.components.CircleCharacter
-import com.survivalcoding.a510.components.SpeechBubble
 import com.survivalcoding.a510.routers.Routes
 import com.survivalcoding.a510.viewmodels.ChatListViewModel
 import com.survivalcoding.a510.viewmodels.ChatListViewModelFactory
 
 @Composable
-fun ChatListPage(
-    navController: NavController,
-    viewModel: ChatListViewModel = viewModel(
-        factory = ChatListViewModelFactory(
-            LocalContext.current.applicationContext as Application
-        )
-    )
+fun PermissionPage (
+                    navController: NavController,
+                    viewModel: ChatListViewModel = viewModel(
+                        factory = ChatListViewModelFactory(
+                            LocalContext.current.applicationContext as Application
+                        )
+                    )
 ) {
-
     val chatList by viewModel.chatList.collectAsState()
 
-    Scaffold(
+    androidx.compose.material3.Scaffold(
         topBar = { TopBar() }
     ) { paddingValues ->
         Box(
-            modifier = Modifier
+            modifier = androidx.compose.ui.Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
             LazyColumn(
-                modifier = Modifier
+                modifier = androidx.compose.ui.Modifier
                     .fillMaxSize()
                     .padding(horizontal = 16.dp)
                     .padding(vertical = 16.dp),
@@ -56,22 +52,20 @@ fun ChatListPage(
                         onClick = {
                             navController.navigate(Routes.chatDetail(chat.id))
                         },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = androidx.compose.ui.Modifier.fillMaxWidth()
                     )
                 }
             }
             Box(
-                modifier = Modifier
+                modifier = androidx.compose.ui.Modifier
                     .align(Alignment.BottomEnd)
                     .padding(end = 25.dp, bottom = 20.dp)
             ) {
                 Row {
                     Box(
-                        modifier = Modifier.offset(y = (-35).dp, x = 5.dp)
-                    ) {
-                        SpeechBubble(text = "더 많은 권한을 허용하면 \n 더 나은 대답을 줄 수 있어요.")
-                    }
-                    Spacer(modifier = Modifier.width(14.dp))
+                        modifier = androidx.compose.ui.Modifier.offset(y = (-35).dp, x = 5.dp)
+                    )
+                    Spacer(modifier = androidx.compose.ui.Modifier.width(14.dp))
 
                     CircleCharacter(onClick = {})
                 }
@@ -79,3 +73,4 @@ fun ChatListPage(
         }
     }
 }
+

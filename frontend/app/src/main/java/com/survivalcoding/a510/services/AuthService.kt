@@ -20,3 +20,4 @@ data class KakaoAuthResponse(
     val userId: String,
     val nickname: String
 )
+
