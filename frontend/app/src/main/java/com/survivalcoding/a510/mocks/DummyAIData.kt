@@ -4,12 +4,12 @@ import com.survivalcoding.a510.R
 import com.survivalcoding.a510.models.ChatData
 
 object DummyAIData {
-    private val chatList = listOf(
+    val chatList = listOf(
         ChatData(
             id = 1,
             profileImage = R.drawable.cha,
             name = "활명수",
-            message = "늦었다고 생각할 때가 진짜 늦은 거야",
+            message = "늦었다고오오오오 생각할 때가 진짜 늦은 거야",
             timestamp = "2분 전",
             unreadCount = 2
         ),

@@ -49,6 +49,10 @@ fun ChatDetailPage(
     val chatData = remember { DummyAIData.getChatById(chatId) }
     var showMenu by remember { mutableStateOf(false) }
 
+    LaunchedEffect(Unit) {
+        viewModel.markAsRead()
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()

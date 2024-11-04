@@ -17,6 +17,7 @@ import com.survivalcoding.a510.components.TopBar
 import com.survivalcoding.a510.components.CircleCharacter
 import com.survivalcoding.a510.components.SpeechBubble
 import com.survivalcoding.a510.routers.Routes
+import com.survivalcoding.a510.utils.TimeUtils
 import com.survivalcoding.a510.viewmodels.ChatListViewModel
 import com.survivalcoding.a510.viewmodels.ChatListViewModelFactory
 
@@ -50,8 +51,8 @@ fun ChatListPage(
                     ChatListItem(
                         profileImage = chat.profileImage,
                         name = chat.name,
-                        message = chat.message,
-                        timestamp = chat.timestamp,
+                        message = chat.lastMessage,
+                        timestamp = TimeUtils.formatChatTime(chat.lastMessageTime),
                         unreadCount = chat.unreadCount,
                         onClick = {
                             navController.navigate(Routes.chatDetail(chat.id))
