@@ -3,6 +3,7 @@ from collections import deque
 from fastapi import APIRouter
 import requests
 from fastapi.responses import JSONResponse
+from . import kote_controller
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 OPENAI_API_KEY = settings.GPT_KEY
@@ -55,7 +56,8 @@ conversation_history_2 = deque(maxlen=MAX_HISTORY)
 
 
 @router.post("/chat/{type}")
-async def chat(type:int, emotion: str, message: str):
+async def chat(type:int, message: str):
+    emotion = await get_emotion(message)
     try:
         history = conversation_history_1 if type == 1 else conversation_history_2
         template = SYSTEM_PROMPT_TEMPLATE_1 if type == 1 else SYSTEM_PROMPT_TEMPLATE_2
