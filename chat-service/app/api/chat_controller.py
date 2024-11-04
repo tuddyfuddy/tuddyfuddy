@@ -3,6 +3,7 @@ from collections import deque
 from fastapi import APIRouter
 import requests
 from fastapi.responses import JSONResponse
+from app.api.kote_controller import get_emotion
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 OPENAI_API_KEY = settings.GPT_KEY
@@ -30,12 +31,13 @@ Audience: 20-year old
 Response Length: Up to {max_length} characters
 Format: Text
 
-User emotions are given one of joy/calm/sad/angry/anxiety/tired.
-- Calm: Continue the conversation naturally without any particular reaction to your emotions.
-- Joy/Angry: Please share your feelings and respond.
-- Sadness/Anxiety/Tired: Please say words of consolation.
+User emotions are given one of 분노/놀람/행복/공포/슬픔/기타.
+- 기타: Continue the conversation naturally without any particular reaction to your emotions.
+- 분노/행복: Please share your feelings and respond.
+- 놀람/공포/슬픔: Please say words of consolation.
 
-When printing, make sure to add '\\n' between sentences or phrases and send them in the form of messengers. Each complete sentence must end with a final ending word(종결어미), and be separated by '\\n'. Speak informally in Korean"
+When printing, make sure to add '<br>' between sentences or phrases and send them in the form of messengers. 
+Each complete sentence must end with a final ending word(종결어미), Speak informally in Korean
 Please remember the conversation below and continue with the flow:
 Previous Conversations:
 {history}
@@ -55,7 +57,9 @@ conversation_history_2 = deque(maxlen=MAX_HISTORY)
 
 
 @router.post("/chat/{type}")
-async def chat(type:int, emotion: str, message: str):
+async def chat(type:int, message: str):
+    emotion = await get_emotion(message)
+    print(f">>>>>>> {emotion}")
     try:
         history = conversation_history_1 if type == 1 else conversation_history_2
         template = SYSTEM_PROMPT_TEMPLATE_1 if type == 1 else SYSTEM_PROMPT_TEMPLATE_2
@@ -93,8 +97,10 @@ async def chat(type:int, emotion: str, message: str):
         history.append({"user": message})
         history.append({"assistant": answer})
 
+        sentences = [sentence.strip() for sentence in answer.split("<br>")]
+
         return {
-            "response": answer
+            "response": sentences
         }
 
     except Exception as e:
