@@ -1,9 +1,8 @@
 from fastapi import FastAPI
 from py_eureka_client import eureka_client
-from .core.config import settings
+from core.config import settings
 import uvicorn
-from .api import chat_controller
-from .api import kote_controller
+from api import chat_controller
 
 app = FastAPI(
     root_path="/chat-service",
@@ -24,14 +23,13 @@ async def register_to_eureka():
 def read_root():
     return {"Hello": "World"}
 
-@app.on_event("startup")
-async def startup_event():
-    await register_to_eureka()
-    await init_kote()
+# @app.on_event("startup")
+# async def startup_event():
+    # await register_to_eureka()
 
-@app.on_event("shutdown")
-async def shutdown_event():
-    await eureka_client.stop()
+# @app.on_event("shutdown")
+# async def shutdown_event():
+#     await eureka_client.stop()
 
 if __name__ == '__main__':
     config = uvicorn.Config("main:app", port=8000, log_level="info", reload=True)
