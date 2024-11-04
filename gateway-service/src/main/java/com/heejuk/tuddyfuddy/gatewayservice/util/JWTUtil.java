@@ -1,4 +1,4 @@
-package com.heejuk.tuddyfuddy.authservice.util;
+package com.heejuk.tuddyfuddy.gatewayservice.util;
 
 import io.jsonwebtoken.Jwts;
 import java.nio.charset.StandardCharsets;
@@ -17,17 +17,6 @@ public class JWTUtil {
 
         secretKey = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8),
             Jwts.SIG.HS256.key().build().getAlgorithm());
-    }
-
-    public String createJwt(String category, String userId, String nickname, Long expiredMs) {
-        return Jwts.builder()
-            .claim("category", category)
-            .claim("userId", userId)
-            .claim("nickname", nickname)
-            .issuedAt(new Date(System.currentTimeMillis()))
-            .expiration(new Date(System.currentTimeMillis() + expiredMs))
-            .signWith(secretKey)
-            .compact();
     }
 
     public String getCategory(String token) {

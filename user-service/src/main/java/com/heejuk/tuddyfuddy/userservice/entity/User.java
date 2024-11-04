@@ -2,14 +2,12 @@ package com.heejuk.tuddyfuddy.userservice.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -22,8 +20,7 @@ import lombok.NoArgsConstructor;
 public class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private UUID id;
 
     @Column(unique = true)
     private Long kakaoId;
@@ -40,6 +37,9 @@ public class User {
 
     @PrePersist
     protected void onCreate() {
+        if (this.id == null) {
+            this.id = UUID.randomUUID();
+        }
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
@@ -58,10 +58,8 @@ public class User {
 
     @Builder
     public User(Long kakaoId, String nickname, String profileImage) {
-
         this.kakaoId = kakaoId;
         this.nickname = nickname;
         this.profileImage = profileImage;
-
     }
 }

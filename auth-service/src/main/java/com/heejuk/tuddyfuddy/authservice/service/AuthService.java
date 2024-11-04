@@ -31,7 +31,7 @@ public class AuthService {
         try {
             KakaoUserInfo kakaoUserInfo = kakaoApiClient.getKakaoUserInfo(
                 "Bearer " + kakaoAccessToken);
-            CommonResponse<UserResponse> userResponse = userServiceClient.createOrUpdateKakaoUser(
+            CommonResponse<UserResponse> userResponse = userServiceClient.loginKakaoUser(
                 kakaoUserInfo);
 
             if (userResponse.statusCode() != HttpStatus.OK.value()) {
@@ -44,7 +44,7 @@ public class AuthService {
             // Access Token 생성
             String accessToken = jwtUtil.createJwt(
                 "access",
-                user.id(),
+                user.userId(),
                 user.nickname(),
                 ACCESS_TOKEN_EXPIRATION
             );
@@ -52,13 +52,13 @@ public class AuthService {
             // Refresh Token 생성
             String refreshToken = jwtUtil.createJwt(
                 "refresh",
-                user.id(),
+                user.userId(),
                 user.nickname(),
                 REFRESH_TOKEN_EXPIRATION
             );
 
             // Refresh Token을 Redis에 저장
-            refreshService.saveRefreshToken(user.id().toString(), refreshToken);
+            refreshService.saveRefreshToken(user.userId(), refreshToken);
 
             // Access Token을 헤더에 설정
             response.setHeader("Authorization", "Bearer " + accessToken);

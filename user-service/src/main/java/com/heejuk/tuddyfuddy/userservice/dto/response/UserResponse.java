@@ -10,15 +10,20 @@ import lombok.Builder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record UserResponse(
 
-    Long id,
+    @Schema(description = "사용자 ID")
+    String userId,
+
+    @Schema(description = "닉네임")
     String nickname,
+
+    @Schema(description = "프로필 이미지 URL")
     String profileImage
 
 ) {
 
     public static UserResponse of(User user) {
         return new UserResponse(
-            user.getId(),
+            user.getId().toString(),
             user.getNickname(),
             user.getProfileImage()
         );
