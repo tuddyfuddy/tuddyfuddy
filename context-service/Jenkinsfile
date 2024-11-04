@@ -71,7 +71,7 @@ pipeline {
                         docker run -d \
                             --name ${SERVICE_NAME} \
                             --network app-network \
-                            --env-file .env \
+                            --env-file ${WORKSPACE}/${SERVICE_NAME}/.env \
                             -p 8082:8080 \
                             ${DOCKER_REGISTRY}/${REPOSITORY_NAME}:${SERVICE_NAME}
                     """
