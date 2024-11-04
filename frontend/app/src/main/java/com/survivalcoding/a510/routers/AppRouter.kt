@@ -1,6 +1,6 @@
 package com.survivalcoding.a510.routers
 
-import android.widget.Toast
+import androidx.activity.viewModels
 import androidx.compose.foundation.Image
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -16,6 +16,7 @@ import com.survivalcoding.a510.pages.ChatDetailPage
 import com.survivalcoding.a510.pages.ChatListPage
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -23,6 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.survivalcoding.a510.R
+
 
 object Routes {
     const val WELCOME_SCREEN = "welcomeScreen"
