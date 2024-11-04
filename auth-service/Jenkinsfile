@@ -60,18 +60,23 @@ pipeline {
         stage('Deploy') {
             steps {
                 script {
+                    // 로그 디렉토리 생성 (없는 경우)
+                    sh 'sudo mkdir -p /var/log/applications'
+                    sh 'sudo chmod -R 777 /var/log/applications'
+                    
                     // 기존 컨테이너 중지 및 제거
                     sh """
                         docker stop ${SERVICE_NAME} || true
                         docker rm ${SERVICE_NAME} || true
                     """
                     
-                    // 새 컨테이너 실행
+                    // 새 컨테이너 실행 (볼륨 마운트 추가)
                     sh """
                         docker run -d \
                             --name ${SERVICE_NAME} \
                             --network app-network \
                             --env-file ${WORKSPACE}/${SERVICE_NAME}/.env \
+                            -v /var/log/applications:/var/log/applications \
                             -p 8081:8080 \
                             ${DOCKER_REGISTRY}/${REPOSITORY_NAME}:${SERVICE_NAME}
                     """
