@@ -1,4 +1,4 @@
-package com.survivalcoding.a510.notification
+package com.survivalcoding.a510.services
 
 import android.Manifest
 import android.app.NotificationChannel
