@@ -47,7 +47,7 @@ class ChatViewModel(application: Application, private val roomId: Int) : Android
             try {
                 // API 호출 - 새로운 요청 형식 사용
                 val response = aiChatService.sendChatMessage(
-                    type = 2,
+                    type = roomId,
                     request = ChatRequest(text = content)  // 수정된 부분
                 )
                 if (response.isSuccessful) {
