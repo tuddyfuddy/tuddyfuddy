@@ -147,7 +147,7 @@ def find_and_match(preds):
 
 trained_model = KOTEtagger()
 state_dict = torch.load(
-    "./api/kote_pytorch_lightning.bin",
+    "./kote_pytorch_lightning.bin",
     weights_only=True,  # Address the security warning
     map_location=device
 )
