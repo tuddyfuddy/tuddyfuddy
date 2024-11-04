@@ -1,5 +1,5 @@
 server:
-  port: 8082
+  port: ${SERVER_PORT:8082}
 
 spring:
   application:
@@ -53,7 +53,7 @@ logging:
     org.springframework.web: "info"
     org.hibernate: "info"
   file:
-    name: logs/context-service/application.log
+    name: /var/log/applications/${spring.application.name}/application.log
 
 weather:
   api:

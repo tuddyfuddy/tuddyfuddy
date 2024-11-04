@@ -1,8 +1,10 @@
 from fastapi import FastAPI
 from py_eureka_client import eureka_client
 from .core.config import settings
-import uvicorn
 from .api import chat_controller
+
+import uvicorn
+import os
 
 app = FastAPI(
     root_path="/chat-service",
@@ -12,12 +14,20 @@ app = FastAPI(
 app.include_router(chat_controller.router)
 
 async def register_to_eureka():
-    await eureka_client.init_async(
-        eureka_server=f"{settings.EUREKA_SERVER_URL}",
-        app_name="chat-service",
-        instance_port=8000,
-        instance_host="localhost"
-    )
+    # Docker 환경에서는 hostname이 container name이 되어야 함
+    hostname = os.getenv('HOSTNAME', 'chat-service')
+    try:
+        await eureka_client.init_async(
+            eureka_server=settings.EUREKA_SERVER_URL,
+            app_name=settings.SERVICE_NAME,
+            instance_port=settings.SERVICE_PORT,
+            instance_host=hostname,
+            status_page_url=f"http://{hostname}:{settings.SERVICE_PORT}/docs",
+            health_check_url=f"http://{hostname}:{settings.SERVICE_PORT}/health-check"
+        )
+        print(f"Successfully registered with Eureka at {settings.EUREKA_SERVER_URL}")
+    except Exception as e:
+        print(f"Failed to register with Eureka: {e}")
 
 @app.get("/health-check")
 def read_root():

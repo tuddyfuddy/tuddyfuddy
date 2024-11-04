@@ -1,5 +1,5 @@
 server:
-  port: 8081
+  port: ${SERVER_PORT:8081}
 
 spring:
   application:
@@ -40,4 +40,4 @@ logging:
     org.springframework.web: "info"
     org.hibernate: "info"
   file:
-    name: logs/auth-service/application.log
+    name: /var/log/applications/${spring.application.name}/application.log

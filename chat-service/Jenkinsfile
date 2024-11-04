@@ -1,6 +1,6 @@
 def DOCKER_REGISTRY = "inyub"  // 본인의 Docker Hub 사용자명
 def REPOSITORY_NAME = "tuddyfuddy"
-def SERVICE_NAME = "auth-service"  // 서비스별로 변경
+def SERVICE_NAME = "chat-service"  // 서비스별로 변경
 
 pipeline {
     agent any
@@ -10,23 +10,6 @@ pipeline {
     }
     
     stages {
-        stage('Prepare') {
-            steps {
-                dir(SERVICE_NAME) {
-                    // gradlew 파일에 실행 권한 부여
-                    sh 'chmod +x ./gradlew'
-                }
-            }
-        }
-
-        stage('Build') {
-            steps {
-                dir(SERVICE_NAME) {
-                    sh './gradlew clean build -x test'
-                }
-            }
-        }
-
         stage('Prepare Environment') {
             steps {
                 dir(SERVICE_NAME) {
@@ -34,7 +17,7 @@ pipeline {
                     sh 'chmod -R 777 .'
 
                     // Secret file credential에서 .env 파일 가져오기
-                    withCredentials([file(credentialsId: 'auth-service-env', variable: 'ENV_FILE')]) {
+                    withCredentials([file(credentialsId: 'chat-service-env', variable: 'ENV_FILE')]) {
                         sh 'cp -f $ENV_FILE .env'
                         // 복사된 파일 권한 설정
                         sh 'chmod 644 .env'
@@ -71,8 +54,10 @@ pipeline {
                         docker run -d \
                             --name ${SERVICE_NAME} \
                             --network app-network \
-                            --env-file ${WORKSPACE}/${SERVICE_NAME}/.env \
-                            -p 8081:8080 \
+                            -p 8000:8000 \
+                            -e MONGODB_URL=mongodb://chat-mongodb:27017 \
+                            -e REDIS_URL=redis://chat-redis:6379 \
+                            -e ELASTICSEARCH_URL=http://chat-elasticsearch:9200 \
                             ${DOCKER_REGISTRY}/${REPOSITORY_NAME}:${SERVICE_NAME}
                     """
                 }

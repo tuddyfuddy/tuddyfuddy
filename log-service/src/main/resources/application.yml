@@ -1,5 +1,5 @@
 server:
-  port: 8089
+  port: ${SERVER_PORT:8089}
 
 spring:
   application:
@@ -12,7 +12,7 @@ spring:
     redis: # 실시간 메트릭을 위한 Redis 설정 추가
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
-      password: ${REDIS_PASSWORD:}
+      password: ${REDIS_PASSWORD:111}
 
 eureka:
   client:
@@ -47,7 +47,7 @@ logging:
   level:
     root: INFO
   file:
-    name: logs/log-service/application.log
+    name: /var/log/applications/${spring.application.name}/application.log
 
 # 로그 수집 설정 추가
 log:
