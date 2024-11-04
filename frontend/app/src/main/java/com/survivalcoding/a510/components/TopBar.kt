@@ -4,12 +4,17 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.*
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.LinearGradientShader
+import androidx.compose.ui.graphics.Outline
+import androidx.compose.ui.graphics.Paint
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.TileMode
+import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
@@ -18,45 +23,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.survivalcoding.a510.R
-import com.google.accompanist.systemuicontroller.rememberSystemUiController
-import android.app.Activity
-import android.view.WindowManager
-import androidx.core.view.WindowCompat
+import com.survivalcoding.a510.utils.TransparentSystemBars
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopBar() {
-    val systemUiController = rememberSystemUiController()
-    val view = LocalView.current
+//    TransparentSystemBars(darkIcons = true)
+
     val density = LocalDensity.current
-    val statusBarHeightPx = WindowInsets.statusBars.getTop(density)
-    val statusBarHeightDp = with(density) { statusBarHeightPx.toDp() }
-
-    DisposableEffect(systemUiController) {
-        val window = (view.context as Activity).window
-
-        // 상태바 완전 투명하게 만들기 -> 그라데이션 탑바 색이 보여야함
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-        window.setFlags(
-            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
-            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
-        )
-
-        systemUiController.setStatusBarColor(
-            color = Color.Transparent,
-            darkIcons = false
-        )
-        systemUiController.setSystemBarsColor(
-            color = Color.Transparent,
-            darkIcons = false
-        )
-    
-        // TopBar 사용되는 페이지에서만 적용해야 함으로, 탑바가 사라지면 상태바 설정 원상복귀되도록
-        onDispose {
-            window.clearFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS)
-            systemUiController.setStatusBarColor(Color.Transparent)
-        }
-    }
+    val statusBarHeightDp = with(density) { WindowInsets.statusBars.getTop(density).toDp() }
 
     Box(
         modifier = Modifier
@@ -69,24 +44,20 @@ fun TopBar() {
                     lineTo(size.width, size.height * 0.7f)
                     quadraticTo(
                         size.width * 0.5f,
-                        size.height * 1f,
+                        size.height,
                         0f,
-                        size.height * 1f
+                        size.height
                     )
                     close()
                 }
-
                 drawIntoCanvas { canvas ->
                     canvas.drawOutline(
                         outline = Outline.Generic(path),
                         paint = Paint().apply {
                             shader = LinearGradientShader(
-                                from = Offset(0f, (-statusBarHeightPx).toFloat()),
-                                to = Offset(size.width, (-statusBarHeightPx).toFloat()),
-                                colors = listOf(
-                                    Color(0xFFD1FFB5),
-                                    Color(0xFF04C628)
-                                ),
+                                from = Offset(0f, -statusBarHeightDp.toPx()),
+                                to = Offset(size.width, -statusBarHeightDp.toPx()),
+                                colors = listOf(Color(0xFFD1FFB5), Color(0xFF04C628)),
                                 tileMode = TileMode.Clamp
                             )
                         }

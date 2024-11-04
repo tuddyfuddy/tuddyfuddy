@@ -70,7 +70,11 @@ fun ChatListItem(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = message,
+                    text = if (message.length > 20) {
+                        message.take(20) + "..."
+                    } else {
+                        message
+                    },
                     fontSize = 14.sp,
                     color = Color.Gray,
                     modifier = Modifier.weight(1f)

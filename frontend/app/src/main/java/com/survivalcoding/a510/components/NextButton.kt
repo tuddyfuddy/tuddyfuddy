@@ -14,21 +14,21 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun NextButton(
-        onClick: () -> Unit,
-        modifier: Modifier = Modifier,
-        text: String = "다음"
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    text: String = "다음"
 ) {
-            Button(
-                onClick = onClick,
-                modifier = modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                elevation = ButtonDefaults.elevatedButtonElevation(defaultElevation = 4.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF04C628)),
-                shape = RoundedCornerShape(10.dp),
-            ) {
-                Text(text)
-        }
+    Button(
+        onClick = onClick,
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        elevation = ButtonDefaults.elevatedButtonElevation(defaultElevation = 4.dp),
+        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF04C628)),
+        shape = RoundedCornerShape(10.dp)
+    ) {
+        Text(text)
+    }
 }
 
 @Preview(showBackground = true, name = "Next Button Preview")
