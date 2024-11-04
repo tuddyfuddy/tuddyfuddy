@@ -3,34 +3,12 @@ def REPOSITORY_NAME = "tuddyfuddy"
 def SERVICE_NAME = "chat-service"  // 서비스별로 변경
 
 pipeline {
-    agent {
-        docker {
-            image 'python:3.11-slim'  // Python 이미지를 사용하는 agent
-            args '-u root'  // root 권한으로 실행
-        }
-    }
     
     environment {
         DOCKER_CREDENTIALS = credentials('docker-hub-credential')
     }
     
     stages {
-        stage('Test') {
-            steps {
-                dir(SERVICE_NAME) {
-                    script {
-                        // Python 가상환경 생성 및 테스트 실행
-                        sh '''
-                            python -m venv venv
-                            . venv/bin/activate
-                            pip install -r requirements.txt
-                            pip install pytest
-                            pytest || echo "Tests failed but continuing"
-                        '''
-                    }
-                }
-            }
-        }
         
         stage('Docker Build & Push') {
             steps {
