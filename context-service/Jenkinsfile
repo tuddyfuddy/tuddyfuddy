@@ -34,13 +34,13 @@ pipeline {
                     ).trim()
                     
                     // 수동 트리거이거나 해당 서비스 디렉토리에 변경이 있는 경우에만 실행
-                    env.SHOULD_RUN = changes != '' || currentBuild.getBuildCauses('hudson.model.Cause$UserIdCause').size() > 0
-                    
+                    env.SHOULD_RUN = (changes != '' || currentBuild.getBuildCauses('hudson.model.Cause$UserIdCause').size() > 0).toString()
+
                     // 실행 여부 로깅
                     echo "Changes detected in ${SERVICE_NAME}: ${env.SHOULD_RUN}"
-                    
+
                     // 실행 조건이 맞지 않으면 파이프라인 종료
-                    if (env.SHOULD_RUN != 'true') {
+                    if (env.SHOULD_RUN == 'false') {
                         currentBuild.result = 'NOT_BUILT'
                         error("No changes in ${SERVICE_NAME} directory. Skipping build.")
                     }
