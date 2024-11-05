@@ -7,6 +7,7 @@ import com.survivalcoding.a510.repositories.chat.ChatDatabase
 import com.survivalcoding.a510.repositories.chat.ChatMessage
 import com.survivalcoding.a510.services.RetrofitClient
 import com.survivalcoding.a510.services.chat.ChatRequest
+import com.survivalcoding.a510.services.chat.ChatService
 import com.survivalcoding.a510.services.chat.getMessageList
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -44,99 +45,8 @@ class ChatViewModel(application: Application, private val roomId: Int) : Android
                 timestamp = System.currentTimeMillis()
             )
 
-            try {
-                // API 호출 - 새로운 요청 형식 사용
-                val response = aiChatService.sendChatMessage(
-                    type = roomId,
-                    request = ChatRequest(text = content)  // 수정된 부분
-                )
-                if (response.isSuccessful) {
-                    // 응답 메시지들을 개별적으로 저장
-                    response.body()?.getMessageList()?.forEach { aiMessage ->
-                        messageDao.insertMessage(
-                            ChatMessage(
-                                roomId = roomId,
-                                content = aiMessage,
-                                isAiMessage = true
-                            )
-                        )
-                    }
-
-                    // AI의 마지막 메시지로 채팅방 정보 업데이트
-                    response.body()?.getMessageList()?.lastOrNull()?.let { lastAiMessage ->
-                        chatInfoDao.updateLastMessage(
-                            chatId = roomId,
-                            message = lastAiMessage,
-                            timestamp = System.currentTimeMillis()
-                        )
-
-                        // 읽지 않은 메시지 수 증가
-                        val currentChat = chatInfoDao.getChatById(roomId)
-                        currentChat?.let {
-                            chatInfoDao.updateUnreadCount(
-                                chatId = roomId,
-                                count = it.unreadCount + 1
-                            )
-                        }
-                    }
-                    // else 부분 수정
-                } else {
-                    // 에러 메시지
-                    val errorMessage = "죄송해요, 메시지를 받지 못했어요."
-
-                    // 에러 메시지 저장
-                    messageDao.insertMessage(
-                        ChatMessage(
-                            roomId = roomId,
-                            content = errorMessage,
-                            isAiMessage = true
-                        )
-                    )
-
-                    // 채팅방 정보도 에러 메시지로 업데이트
-                    chatInfoDao.updateLastMessage(
-                        chatId = roomId,
-                        message = errorMessage,
-                        timestamp = System.currentTimeMillis()
-                    )
-
-                    // 읽지 않은 메시지 수 증가
-                    val currentChat = chatInfoDao.getChatById(roomId)
-                    currentChat?.let {
-                        chatInfoDao.updateUnreadCount(
-                            chatId = roomId,
-                            count = it.unreadCount + 1
-                        )
-                    }
-                }
-            } catch (e: Exception) {
-                val errorMessage = "네트워크 오류가 발생했어요. 인터넷 연결을 확인해주세요."
-
-                // 네트워크 에러 메시지 저장
-                messageDao.insertMessage(
-                    ChatMessage(
-                        roomId = roomId,
-                        content = errorMessage,
-                        isAiMessage = true
-                    )
-                )
-
-                // 채팅방 정보도 에러 메시지로 업데이트
-                chatInfoDao.updateLastMessage(
-                    chatId = roomId,
-                    message = errorMessage,
-                    timestamp = System.currentTimeMillis()
-                )
-
-                // 읽지 않은 메시지 수 증가
-                val currentChat = chatInfoDao.getChatById(roomId)
-                currentChat?.let {
-                    chatInfoDao.updateUnreadCount(
-                        chatId = roomId,
-                        count = it.unreadCount + 1
-                    )
-                }
-            }
+            // Foreground 서비스 시작
+            ChatService.startService(getApplication(), roomId, content)
         }
     }
 
