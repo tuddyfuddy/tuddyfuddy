@@ -31,6 +31,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.ui.platform.LocalDensity
 import android.util.Log
+import com.survivalcoding.a510.services.chat.ChatService
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,8 +50,13 @@ fun ChatDetailPage(
     val chatData = remember { DummyAIData.getChatById(chatId) }
     var showMenu by remember { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) {
+    DisposableEffect(Unit) {
+        ChatService.setActiveChatRoom(chatId)
         viewModel.markAsRead()
+
+        onDispose {
+            ChatService.setActiveChatRoom(null)
+        }
     }
 
     Column(
