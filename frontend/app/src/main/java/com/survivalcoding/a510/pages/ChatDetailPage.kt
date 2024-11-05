@@ -36,6 +36,9 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.ImeAction
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.ui.platform.LocalConfiguration
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -56,6 +59,31 @@ fun ChatDetailPage(
     var isSearchMode by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
     val searchResults by viewModel.searchResults.collectAsState()
+    val listState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
+    val screenHeight = LocalConfiguration.current.screenHeightDp
+
+    // 검색어가 변경될 때마다 첫 번째 검색 결과로 스크롤
+    LaunchedEffect(searchQuery) {
+        if (searchQuery.isNotEmpty()) {
+            val messageList = messages.reversed()
+            val firstMatchIndex = messageList.indexOfFirst {
+                it.content.contains(searchQuery, ignoreCase = true)
+            }
+
+            if (firstMatchIndex != -1) {
+                // 스크린 높이의 30% 위치에 아이템이 오도록 오프셋 계산
+                val targetOffset = (screenHeight * 0.3).toInt()
+
+                coroutineScope.launch {
+                    listState.scrollToItem(
+                        index = firstMatchIndex,
+                        scrollOffset = -targetOffset
+                    )
+                }
+            }
+        }
+    }
 
     // 뒤로가기 버튼 처리
     BackHandler {
@@ -186,6 +214,7 @@ fun ChatDetailPage(
         )
 
         LazyColumn(
+            state = listState,
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth(),
