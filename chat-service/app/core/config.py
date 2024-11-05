@@ -10,9 +10,10 @@ class Settings(BaseSettings):
     MONGODB_URL: str = "mongodb://chat-mongodb:27017/chatdb"
     REDIS_URL: str = "redis://chat-redis:6379"
     ELASTICSEARCH_URL: str = "http://chat-elasticsearch:9200"
-    
-    GPT_KEY: str = "."
-    
+
+    GPT_KEY: str = ""
+    EMOTION_URL : str = ""
+
     class Config:
         env_file = ".env"
         # 추가 필드 허용

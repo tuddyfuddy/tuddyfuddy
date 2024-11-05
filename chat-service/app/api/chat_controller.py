@@ -3,8 +3,8 @@ from collections import deque
 from fastapi import APIRouter
 import requests
 from fastapi.responses import JSONResponse
-from app.api.kote_controller import get_emotion
 from pydantic import BaseModel
+import httpx
 from app.core.logger import setup_logger
 
 
@@ -61,6 +61,22 @@ message: {message}
 # TODO DB로 관리
 conversation_history_1 = deque(maxlen=MAX_HISTORY)
 conversation_history_2 = deque(maxlen=MAX_HISTORY)
+
+async def get_emotion(text: str) -> str:
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.post(
+                settings.EMOTION_URL,
+                json={"text": text},
+                headers={'accept': 'application/json', 'Content-Type': 'application/json'},
+                timeout = 8.0
+            )
+            response.raise_for_status()
+            return response.text
+        except Exception as e:
+            logging.error(f"Error calling emotion API: {e}")
+            return "기타"
+
 
 
 @router.post("/{type}")
