@@ -3,37 +3,58 @@ package com.survivalcoding.a510.viewmodels
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.survivalcoding.a510.R
-import com.survivalcoding.a510.models.ChatData
+import com.survivalcoding.a510.mocks.DummyAIData
 import com.survivalcoding.a510.repositories.chat.ChatDatabase
+import com.survivalcoding.a510.repositories.chat.ChatInfo
 import com.survivalcoding.a510.repositories.chat.ChatMessage
-import com.survivalcoding.a510.utils.TimeUtils
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 class ChatListViewModel(application: Application) : AndroidViewModel(application) {
-    private val messageDao = ChatDatabase.getDatabase(application).chatMessageDao()
-    private val chatInfoMap = mapOf(1 to Triple(1, R.drawable.cha, "활명수"), 2 to Triple(2, R.drawable.back, "백지헌"))
+    private val database = ChatDatabase.getDatabase(application)
+    private val chatInfoDao = database.chatInfoDao()
+    private val chatMessageDao = database.chatMessageDao()
 
-    // 채팅방 목록 실시간 가져오기
-    val chatList: StateFlow<List<ChatData>> = messageDao.getMessagesByRoomId(1)
-        .combine(messageDao.getMessagesByRoomId(2)) { messages1, messages2 ->
-            createChatList(messages1, messages2)
-        }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val chatList: StateFlow<List<ChatInfo>> = chatInfoDao.getAllChats()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
 
-    private fun createChatList(messages1: List<ChatMessage>, messages2: List<ChatMessage>): List<ChatData> {
-        return listOf(messages1 to 1, messages2 to 2).mapNotNull { (messages, roomId) ->
-            val (id, profileImage, name) = chatInfoMap[roomId] ?: return@mapNotNull null
-            val lastMessage = messages.lastOrNull()
+    init {
+        initializeDefaultChats()
+    }
 
-            ChatData(
-                id = id,
-                profileImage = profileImage,
-                name = name,
-                message = lastMessage?.content.orEmpty(),
-                timestamp = lastMessage?.let { TimeUtils.formatChatListTime(it.timestamp) }.orEmpty(),
-                unreadCount = 0
-            )
+    private fun initializeDefaultChats() {
+        viewModelScope.launch {
+            // DB가 비어있을 때만 초기 데이터 생성
+            if (chatInfoDao.getChatCount() == 0) {
+                DummyAIData.chatList.forEach { chatData ->
+                    // ChatInfo 추가
+                    chatInfoDao.insertChat(
+                        ChatInfo(
+                            id = chatData.id,
+                            profileImage = chatData.profileImage,
+                            name = chatData.name,
+                            lastMessage = chatData.message,
+                            unreadCount = chatData.unreadCount
+                        )
+                    )
+
+                    // 초기 메시지 추가
+                    chatMessageDao.insertMessage(
+                        ChatMessage(
+                            roomId = chatData.id,
+                            content = chatData.message,
+                            isAiMessage = true,
+                            timestamp = System.currentTimeMillis()
+                        )
+                    )
+                }
+            }
         }
     }
 }

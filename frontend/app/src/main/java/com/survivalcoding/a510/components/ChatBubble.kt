@@ -27,23 +27,28 @@ fun ChatBubble(
     modifier: Modifier = Modifier,
     isAiMessage: Boolean = false,
     profileImage: Int? = null,
-    name: String? = null
+    name: String? = null,
+    isFirstInSequence: Boolean = true
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = if (isAiMessage) Arrangement.Start else Arrangement.End,
         verticalAlignment = Alignment.Top
     ) {
-        if (isAiMessage && profileImage != null) {
-            Image(
-                painter = painterResource(id = profileImage),
-                contentDescription = "Profile Image",
-                modifier = Modifier
-                    .size(38.dp)
-                    .clip(CircleShape)
-                    .border(1.dp, Color.LightGray, CircleShape),
-                contentScale = ContentScale.Crop
-            )
+        if (isAiMessage) {
+            if (profileImage != null) {
+                Image(
+                    painter = painterResource(id = profileImage),
+                    contentDescription = "Profile Image",
+                    modifier = Modifier
+                        .size(38.dp)
+                        .clip(CircleShape)
+                        .border(1.dp, Color.LightGray, CircleShape),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                Spacer(modifier = Modifier.size(38.dp))
+            }
             Spacer(modifier = Modifier.width(8.dp))
 
             Column(
@@ -58,16 +63,21 @@ fun ChatBubble(
                     )
                 }
 
-                MessageBubble(text, timestamp, isAiMessage)
+                MessageBubble(text, timestamp, isAiMessage, isFirstInSequence)
             }
         } else {
-            MessageBubble(text, timestamp, isAiMessage)
+            MessageBubble(text, timestamp, isAiMessage, isFirstInSequence)
         }
     }
 }
 
 @Composable
-fun MessageBubble(text: String, timestamp: Long, isAiMessage: Boolean) {
+fun MessageBubble(
+    text: String,
+    timestamp: Long,
+    isAiMessage: Boolean,
+    isFirstInSequence: Boolean
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -75,14 +85,14 @@ fun MessageBubble(text: String, timestamp: Long, isAiMessage: Boolean) {
         horizontalArrangement = if (isAiMessage) Arrangement.Start else Arrangement.End,
         verticalAlignment = Alignment.Bottom
     ) {
-        if (!isAiMessage) {  // 내 메세지면 타임스탬프를 왼쪽에 표시하기
+        if (!isAiMessage) {
             Text(
                 text = TimeUtils.formatChatTime(timestamp),
                 style = MaterialTheme.typography.bodySmall,
                 color = Color.Gray,
                 modifier = Modifier.align(Alignment.Bottom)
             )
-            Spacer(modifier = Modifier.width(4.dp))  // 타임스탬프와 말풍선 간격
+            Spacer(modifier = Modifier.width(4.dp))
         }
 
         Box(
@@ -92,8 +102,8 @@ fun MessageBubble(text: String, timestamp: Long, isAiMessage: Boolean) {
                     width = 0.05.dp,
                     color = if (!isAiMessage) Color.Yellow else Color.White,
                     shape = RoundedCornerShape(
-                        topStart = if (isAiMessage) 0.dp else 10.dp,
-                        topEnd = if (isAiMessage) 10.dp else 0.dp,
+                        topStart = if (!isFirstInSequence) 10.dp else if (isAiMessage) 0.dp else 10.dp,
+                        topEnd = if (!isFirstInSequence) 10.dp else if (isAiMessage) 10.dp else 0.dp,
                         bottomStart = 10.dp,
                         bottomEnd = 10.dp
                     )
@@ -101,8 +111,8 @@ fun MessageBubble(text: String, timestamp: Long, isAiMessage: Boolean) {
                 .background(
                     color = if (!isAiMessage) Color.Yellow else Color.White,
                     shape = RoundedCornerShape(
-                        topStart = if (isAiMessage) 0.dp else 10.dp,
-                        topEnd = if (isAiMessage) 10.dp else 0.dp,
+                        topStart = if (!isFirstInSequence) 10.dp else if (isAiMessage) 0.dp else 10.dp,
+                        topEnd = if (!isFirstInSequence) 10.dp else if (isAiMessage) 10.dp else 0.dp,
                         bottomStart = 10.dp,
                         bottomEnd = 10.dp
                     )
@@ -118,9 +128,8 @@ fun MessageBubble(text: String, timestamp: Long, isAiMessage: Boolean) {
             )
         }
 
-        // AI 메시지에도 항상 타임스탬프가 표시되도록 조건 없이 표시
         if (isAiMessage) {
-            Spacer(modifier = Modifier.width(4.dp))  // 말풍선과 타임스탬프 사이의 간격
+            Spacer(modifier = Modifier.width(4.dp))
             Text(
                 text = TimeUtils.formatChatTime(timestamp),
                 style = MaterialTheme.typography.bodySmall,

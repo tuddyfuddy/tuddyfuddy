@@ -2,16 +2,18 @@ package com.survivalcoding.a510.services
 
 import android.content.Context
 import com.survivalcoding.a510.data.TokenManager
+import com.survivalcoding.a510.services.chat.AIChatService
 import okhttp3.Cookie
 import okhttp3.CookieJar
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
+import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
-
 // Retrofit 인스턴스를 관리하는 싱글톤 객체
 object RetrofitClient {
+    private const val BASE_URL = "http://k11a510.p.ssafy.io:8080/chat-service/"
     private lateinit var tokenManager: TokenManager
 
     // RetrofitClient 초기화 (앱 시작 시 호출 필요)
@@ -38,7 +40,6 @@ object RetrofitClient {
 
                 // 요청 시 저장된 쿠키 불러오기
                 override fun loadForRequest(url: HttpUrl): List<Cookie> {
-                    // 저장된 refresh_token이 있다면 쿠키로 추가
                     return tokenManager.getRefreshToken()?.let { refreshToken ->
                         listOf(
                             Cookie.Builder()
@@ -63,13 +64,19 @@ object RetrofitClient {
             .build()
             .create(AuthService::class.java)
     }
+
+    // AI 채팅 서비스 추가
+    private val retrofit = Retrofit.Builder()
+        .baseUrl(BASE_URL)
+        .addConverterFactory(GsonConverterFactory.create())
+        .build()
+
+    val aiChatService: AIChatService = retrofit.create(AIChatService::class.java)
 }
 
-//object RetrofitClient {
 //    // 테스트용 가짜 응답
 //    fun mockAuthService() = object : AuthService {
 //        override suspend fun authenticateKakao(request: KakaoAuthRequest): Response<KakaoAuthResponse> {
-//            // 항상 성공 응답 반환
 //            return Response.success(
 //                KakaoAuthResponse(
 //                    token = "fake_jwt_token",
@@ -79,7 +86,7 @@ object RetrofitClient {
 //            )
 //        }
 //    }
-//
-//    // 실제 서비스 대신 가짜 서비스 사용
+
+    // 가짜 서비스 사용
 //    val authService: AuthService = mockAuthService()
 //}

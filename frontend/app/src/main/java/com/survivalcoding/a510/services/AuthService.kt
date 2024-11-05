@@ -27,3 +27,4 @@ data class AuthResponse(
     val userId: String,
     val nickname: String
 )
+
