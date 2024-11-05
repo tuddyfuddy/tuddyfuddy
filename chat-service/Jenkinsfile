@@ -14,23 +14,22 @@ pipeline {
         DOCKER_IMAGE_TAG = "${DOCKER_REGISTRY}/${REPOSITORY_NAME}:${SERVICE_NAME}-${BUILD_NUMBER}"
         DOCKER_LATEST_TAG = "${DOCKER_REGISTRY}/${REPOSITORY_NAME}:${SERVICE_NAME}-latest"
     }
-
-    when {
-        anyOf {
-            changeset "${SERVICE_NAME}/**"
-            triggeredBy 'UserCause' // 수동 트리거 허용
-        }
-    }
     
     stages {
         stage('Prepare Environment') {
+            when {
+                anyOf {
+                    changeset "${SERVICE_NAME}/**"
+                    triggeredBy 'UserCause' // 수동 트리거 허용
+                }
+            }
             steps {
                 dir(SERVICE_NAME) {
                     // 디렉토리 권한 설정
                     sh 'chmod -R 777 .'
 
                     // Secret file credential에서 .env 파일 가져오기
-                    withCredentials([file(credentialsId: 'chat-service-env', variable: 'ENV_FILE')]) {
+                    withCredentials([file(credentialsId: "${SERVICE_NAME}-env", variable: 'ENV_FILE')]) {
                         sh 'cp -f $ENV_FILE .env'
                         // 복사된 파일 권한 설정
                         sh 'chmod 644 .env'
@@ -40,6 +39,12 @@ pipeline {
         }
         
         stage('Docker Build & Push') {
+            when {
+                anyOf {
+                    changeset "${SERVICE_NAME}/**"
+                    triggeredBy 'UserCause' // 수동 트리거 허용
+                }
+            }
             steps {
                 dir(SERVICE_NAME) {
                     sh """
@@ -55,6 +60,12 @@ pipeline {
         }
 
         stage('Deploy') {
+            when {
+                anyOf {
+                    changeset "${SERVICE_NAME}/**"
+                    triggeredBy 'UserCause' // 수동 트리거 허용
+                }
+            }
             steps {
                 script {
                     try {

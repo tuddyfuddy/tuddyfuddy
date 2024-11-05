@@ -14,16 +14,15 @@ pipeline {
         DOCKER_IMAGE_TAG = "${DOCKER_REGISTRY}/${REPOSITORY_NAME}:${SERVICE_NAME}-${BUILD_NUMBER}"
         DOCKER_LATEST_TAG = "${DOCKER_REGISTRY}/${REPOSITORY_NAME}:${SERVICE_NAME}-latest"
     }
-
-    when {
-        anyOf {
-            changeset "${SERVICE_NAME}/**"
-            triggeredBy 'UserCause' // 수동 트리거 허용
-        }
-    }
     
     stages {
         stage('Prepare') {
+            when {
+                anyOf {
+                    changeset "${SERVICE_NAME}/**"
+                    triggeredBy 'UserCause' // 수동 트리거 허용
+                }
+            }
             steps {
                 dir(SERVICE_NAME) {
                     // gradlew 파일에 실행 권한 부여
@@ -33,6 +32,12 @@ pipeline {
         }
 
         stage('Build') {
+            when {
+                anyOf {
+                    changeset "${SERVICE_NAME}/**"
+                    triggeredBy 'UserCause' // 수동 트리거 허용
+                }
+            }
             steps {
                 dir(SERVICE_NAME) {
                     sh './gradlew clean build -x test'
@@ -41,13 +46,19 @@ pipeline {
         }
 
         stage('Prepare Environment') {
+            when {
+                anyOf {
+                    changeset "${SERVICE_NAME}/**"
+                    triggeredBy 'UserCause' // 수동 트리거 허용
+                }
+            }
             steps {
                 dir(SERVICE_NAME) {
                     // 디렉토리 권한 설정
                     sh 'chmod -R 777 .'
 
                     // Secret file credential에서 .env 파일 가져오기
-                    withCredentials([file(credentialsId: 'context-service-env', variable: 'ENV_FILE')]) {
+                    withCredentials([file(credentialsId: "${SERVICE_NAME}-env", variable: 'ENV_FILE')]) {
                         sh 'cp -f $ENV_FILE .env'
                         // 복사된 파일 권한 설정
                         sh 'chmod 644 .env'
@@ -57,6 +68,12 @@ pipeline {
         }
         
         stage('Docker Build & Push') {
+            when {
+                anyOf {
+                    changeset "${SERVICE_NAME}/**"
+                    triggeredBy 'UserCause' // 수동 트리거 허용
+                }
+            }
             steps {
                 dir(SERVICE_NAME) {
                     sh """
@@ -72,34 +89,46 @@ pipeline {
         }
 
         stage('Deploy') {
+            when {
+                anyOf {
+                    changeset "${SERVICE_NAME}/**"
+                    triggeredBy 'UserCause' // 수동 트리거 허용
+                }
+            }
             steps {
-                try {
-                    // 배포 전 헬스체크
-                    sh "docker inspect ${SERVICE_NAME} >/dev/null 2>&1 && docker stop ${SERVICE_NAME} || true"
-                    sh "docker rm ${SERVICE_NAME} || true"
-                    
-                    // 새 컨테이너 실행
-                    sh """
-                        docker run -d \
-                            --name ${SERVICE_NAME} \
-                            --network ${NETWORK_NAME} \
-                            --restart unless-stopped \
-                            -p ${HOST_PORT}:${CONTAINER_PORT} \
-                            ${DOCKER_IMAGE_TAG}
-                    """
-                } catch(Exception e) {
-                    // 배포 실패시 롤백
-                    sh """
-                        docker stop ${SERVICE_NAME}
-                        docker rm ${SERVICE_NAME}
-                        docker run -d \
-                            --name ${SERVICE_NAME} \
-                            --network ${NETWORK_NAME} \
-                            --restart unless-stopped \
-                            -p ${HOST_PORT}:${CONTAINER_PORT} \
-                            ${DOCKER_LATEST_TAG}
-                    """
-                    throw e
+                script {
+                    try {
+                        // 배포 전 헬스체크
+                        sh "docker inspect ${SERVICE_NAME} >/dev/null 2>&1 && docker stop ${SERVICE_NAME} || true"
+                        sh "docker rm ${SERVICE_NAME} || true"
+                        
+                        // 새 컨테이너 실행
+                        sh """
+                            docker run -d \
+                                --name ${SERVICE_NAME} \
+                                --network ${NETWORK_NAME} \
+                                --restart unless-stopped \
+                                --env-file ${WORKSPACE}/${SERVICE_NAME}/.env \
+                                -v /var/log/applications:/var/log/applications \
+                                -p ${HOST_PORT}:${CONTAINER_PORT} \
+                                ${DOCKER_IMAGE_TAG}
+                        """
+                    } catch(Exception e) {
+                        // 배포 실패시 롤백
+                        sh """
+                            docker stop ${SERVICE_NAME}
+                            docker rm ${SERVICE_NAME}
+                            docker run -d \
+                                --name ${SERVICE_NAME} \
+                                --network ${NETWORK_NAME} \
+                                --restart unless-stopped \
+                                --env-file ${WORKSPACE}/${SERVICE_NAME}/.env \
+                                -v /var/log/applications:/var/log/applications \
+                                -p ${HOST_PORT}:${CONTAINER_PORT} \
+                                ${DOCKER_LATEST_TAG}
+                        """
+                        throw e
+                    }
                 }
             }
         }
