@@ -5,20 +5,27 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.survivalcoding.a510.repositories.chat.ChatDatabase
 import com.survivalcoding.a510.repositories.chat.ChatMessage
+import com.survivalcoding.a510.repositories.chat.ChatRepository
 import com.survivalcoding.a510.services.RetrofitClient
 import com.survivalcoding.a510.services.chat.ChatRequest
 import com.survivalcoding.a510.services.chat.ChatService
 import com.survivalcoding.a510.services.chat.getMessageList
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 
 class ChatViewModel(application: Application, private val roomId: Int) : AndroidViewModel(application) {
     private val database = ChatDatabase.getDatabase(application)
     private val messageDao = database.chatMessageDao()
     private val chatInfoDao = database.chatInfoDao()
     private val aiChatService = RetrofitClient.aiChatService
+    private val repository: ChatRepository = ChatRepository(application)
 
     val allMessages: StateFlow<List<ChatMessage>> = messageDao.getMessagesByRoomId(roomId)
         .stateIn(
@@ -26,6 +33,31 @@ class ChatViewModel(application: Application, private val roomId: Int) : Android
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
         )
+
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery = _searchQuery.asStateFlow()
+
+    @OptIn(kotlinx.coroutines.FlowPreview::class, kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    val searchResults = searchQuery
+        .debounce(300L) // 타이핑 완료 후 300ms 대기
+        .flatMapLatest { query ->
+            if (query.isEmpty()) {
+                flowOf(emptyList())
+            } else {
+                repository.searchMessages(roomId, query)
+            }
+        }
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000),
+            emptyList()
+        )
+
+    fun updateSearchQuery(query: String) {
+        viewModelScope.launch {
+            _searchQuery.value = query
+        }
+    }
 
     fun sendMessage(content: String) {
         viewModelScope.launch {
