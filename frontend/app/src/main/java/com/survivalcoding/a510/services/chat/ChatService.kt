@@ -69,12 +69,14 @@ class ChatService : Service() {
                             timestamp = System.currentTimeMillis()
                         )
 
-                        val currentChat = chatInfoDao.getChatById(roomId)
-                        currentChat?.let {
-                            chatInfoDao.updateUnreadCount(
-                                chatId = roomId,
-                                count = it.unreadCount + 1
-                            )
+                        if (activeChatRoomId != roomId) {
+                            val currentChat = chatInfoDao.getChatById(roomId)
+                            currentChat?.let {
+                                chatInfoDao.updateUnreadCount(
+                                    chatId = roomId,
+                                    count = it.unreadCount + 1
+                                )
+                            }
                         }
                     }
                 } else {
@@ -101,12 +103,14 @@ class ChatService : Service() {
             timestamp = System.currentTimeMillis()
         )
 
-        val currentChat = chatInfoDao.getChatById(roomId)
-        currentChat?.let {
-            chatInfoDao.updateUnreadCount(
-                chatId = roomId,
-                count = it.unreadCount + 1
-            )
+        if (activeChatRoomId != roomId) {
+            val currentChat = chatInfoDao.getChatById(roomId)
+            currentChat?.let {
+                chatInfoDao.updateUnreadCount(
+                    chatId = roomId,
+                    count = it.unreadCount + 1
+                )
+            }
         }
     }
 
@@ -145,6 +149,7 @@ class ChatService : Service() {
         const val ACTION_START_CHAT = "action_start_chat"
         const val EXTRA_ROOM_ID = "extra_room_id"
         const val EXTRA_CONTENT = "extra_content"
+        private var activeChatRoomId: Int? = null
 
         fun startService(context: Context, roomId: Int, content: String) {
             val intent = Intent(context, ChatService::class.java).apply {
@@ -154,6 +159,9 @@ class ChatService : Service() {
             }
             context.startForegroundService(intent)
         }
+
+        fun setActiveChatRoom(roomId: Int?) {
+            activeChatRoomId = roomId
+        }
     }
 }
-
