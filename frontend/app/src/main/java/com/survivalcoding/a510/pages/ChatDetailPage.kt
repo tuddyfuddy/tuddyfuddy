@@ -193,11 +193,8 @@ fun ChatDetailPage(
             verticalArrangement = Arrangement.spacedBy(10.dp),
             contentPadding = PaddingValues(bottom = 8.dp)
         ) {
-            val messageList = if (isSearchMode && searchQuery.isNotEmpty()) {
-                searchResults.reversed()
-            } else {
-                messages.reversed()
-            }
+            val messageList = messages.reversed()
+
 
             items(messageList.size) { index ->
                 val message = messageList[index]
