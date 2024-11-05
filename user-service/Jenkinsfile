@@ -13,16 +13,42 @@ pipeline {
         DOCKER_CREDENTIALS = credentials('docker-hub-credential')
         DOCKER_IMAGE_TAG = "${DOCKER_REGISTRY}/${REPOSITORY_NAME}:${SERVICE_NAME}-${BUILD_NUMBER}"
         DOCKER_LATEST_TAG = "${DOCKER_REGISTRY}/${REPOSITORY_NAME}:${SERVICE_NAME}-latest"
+        SHOULD_RUN = false  
+    }
+
+    options {
+        skipDefaultCheckout(true)
     }
     
     stages {
-        stage('Prepare') {
-            when {
-                anyOf {
-                    changeset "${SERVICE_NAME}/**"
-                    triggeredBy cause: 'UserIdCause' // 수동 트리거 허용
+        stage('Check Changes') {
+            steps {
+                script {
+                    // 저장소 체크아웃
+                    checkout scm
+                    
+                    // 변경된 파일 목록 확인
+                    def changes = sh(
+                        script: "git diff --name-only HEAD^..HEAD | grep '^${SERVICE_NAME}/' || true",
+                        returnStdout: true
+                    ).trim()
+                    
+                    // 수동 트리거이거나 해당 서비스 디렉토리에 변경이 있는 경우에만 실행
+                    env.SHOULD_RUN = (changes != '' || currentBuild.getBuildCauses('hudson.model.Cause$UserIdCause').size() > 0).toString()
+
+                    // 실행 여부 로깅
+                    echo "Changes detected in ${SERVICE_NAME}: ${env.SHOULD_RUN}"
+
+                    // 실행 조건이 맞지 않으면 파이프라인 종료
+                    if (env.SHOULD_RUN == 'false') {
+                        currentBuild.result = 'NOT_BUILT'
+                        error("No changes in ${SERVICE_NAME} directory. Skipping build.")
+                    }
                 }
             }
+        }
+
+        stage('Prepare') {
             steps {
                 dir(SERVICE_NAME) {
                     // gradlew 파일에 실행 권한 부여
@@ -32,12 +58,6 @@ pipeline {
         }
 
         stage('Build') {
-            when {
-                anyOf {
-                    changeset "${SERVICE_NAME}/**"
-                    triggeredBy cause: 'UserIdCause' // 수동 트리거 허용
-                }
-            }
             steps {
                 dir(SERVICE_NAME) {
                     sh './gradlew clean build -x test'
@@ -46,12 +66,6 @@ pipeline {
         }
 
         stage('Prepare Environment') {
-            when {
-                anyOf {
-                    changeset "${SERVICE_NAME}/**"
-                    triggeredBy cause: 'UserIdCause' // 수동 트리거 허용
-                }
-            }
             steps {
                 dir(SERVICE_NAME) {
                     // 디렉토리 권한 설정
@@ -68,12 +82,6 @@ pipeline {
         }
         
         stage('Docker Build & Push') {
-            when {
-                anyOf {
-                    changeset "${SERVICE_NAME}/**"
-                    triggeredBy cause: 'UserIdCause' // 수동 트리거 허용
-                }
-            }
             steps {
                 dir(SERVICE_NAME) {
                     sh """
@@ -89,12 +97,6 @@ pipeline {
         }
 
         stage('Deploy') {
-            when {
-                anyOf {
-                    changeset "${SERVICE_NAME}/**"
-                    triggeredBy cause: 'UserIdCause' // 수동 트리거 허용
-                }
-            }
             steps {
                 script {
                     try {
