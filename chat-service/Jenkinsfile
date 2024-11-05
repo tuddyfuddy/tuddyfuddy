@@ -20,7 +20,7 @@ pipeline {
             when {
                 anyOf {
                     changeset "${SERVICE_NAME}/**"
-                    triggeredBy 'UserCause' // 수동 트리거 허용
+                    triggeredBy cause: 'UserIdCause' // 수동 트리거 허용
                 }
             }
             steps {
@@ -42,7 +42,7 @@ pipeline {
             when {
                 anyOf {
                     changeset "${SERVICE_NAME}/**"
-                    triggeredBy 'UserCause' // 수동 트리거 허용
+                    triggeredBy cause: 'UserIdCause' // 수동 트리거 허용
                 }
             }
             steps {
@@ -63,7 +63,7 @@ pipeline {
             when {
                 anyOf {
                     changeset "${SERVICE_NAME}/**"
-                    triggeredBy 'UserCause' // 수동 트리거 허용
+                    triggeredBy cause: 'UserIdCause' // 수동 트리거 허용
                 }
             }
             steps {
