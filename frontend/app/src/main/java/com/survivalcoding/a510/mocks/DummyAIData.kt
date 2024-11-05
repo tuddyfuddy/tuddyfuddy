@@ -9,7 +9,7 @@ object DummyAIData {
             id = 1,
             profileImage = R.drawable.cha,
             name = "활명수",
-            message = "반가워! 너는 이름이 뭐야?",
+            message = "야",
             timestamp = "방금 전",
             unreadCount = 1
         ),
@@ -17,7 +17,7 @@ object DummyAIData {
             id = 2,
             profileImage = R.drawable.back,
             name = "백지헌",
-            message = "하이하이!! 얼른 나랑 놀아줘!!!!",
+            message = "하이하이!! 너는 이름이 뭐야?",
             timestamp = "방금 전",
             unreadCount = 1
         )
