@@ -149,7 +149,7 @@ class ChatService : Service() {
         const val ACTION_START_CHAT = "action_start_chat"
         const val EXTRA_ROOM_ID = "extra_room_id"
         const val EXTRA_CONTENT = "extra_content"
-        private var activeChatRoomId: Int? = null
+        private var activeChatRoomId: Int? = null  // 현재 사용자 휴대폰 화면이 몇번 채팅방인지 확인하는 변
 
         fun startService(context: Context, roomId: Int, content: String) {
             val intent = Intent(context, ChatService::class.java).apply {
@@ -159,7 +159,8 @@ class ChatService : Service() {
             }
             context.startForegroundService(intent)
         }
-
+    
+        // 현재 화면이 몇번 채팅방인지 확인하기 위함
         fun setActiveChatRoom(roomId: Int?) {
             activeChatRoomId = roomId
         }

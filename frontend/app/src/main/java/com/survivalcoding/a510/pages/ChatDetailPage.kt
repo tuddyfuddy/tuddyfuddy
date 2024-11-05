@@ -51,10 +51,10 @@ fun ChatDetailPage(
     var showMenu by remember { mutableStateOf(false) }
 
     DisposableEffect(Unit) {
-        ChatService.setActiveChatRoom(chatId)
-        viewModel.markAsRead()
+        ChatService.setActiveChatRoom(chatId)    // 채팅방 입장시 현재 화면이 몇번 채팅방인지 변수 설정
+        viewModel.markAsRead()     // 채팅방 입장하면 안읽은 메세지 개수 초기
 
-        onDispose {
+        onDispose {    // 채팅방 나가면 현재 화면 채팅방 번호 null 값으로 변경
             ChatService.setActiveChatRoom(null)
         }
     }
