@@ -1,0 +1,159 @@
+package com.survivalcoding.a510.services.chat
+
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.Service
+import android.content.Context
+import android.content.Intent
+import android.os.Build
+import android.os.IBinder
+import androidx.core.app.NotificationCompat
+import com.survivalcoding.a510.repositories.chat.ChatDatabase
+import com.survivalcoding.a510.repositories.chat.ChatMessage
+import com.survivalcoding.a510.services.RetrofitClient
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
+
+class ChatService : Service() {
+    private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    private val database by lazy { ChatDatabase.getDatabase(applicationContext) }
+    private val messageDao by lazy { database.chatMessageDao() }
+    private val chatInfoDao by lazy { database.chatInfoDao() }
+    private val aiChatService by lazy { RetrofitClient.aiChatService }
+
+    override fun onCreate() {
+        super.onCreate()
+        createNotificationChannel()
+        startForeground(NOTIFICATION_ID, createNotification())
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        intent?.let {
+            when (it.action) {
+                ACTION_START_CHAT -> {
+                    val roomId = it.getIntExtra(EXTRA_ROOM_ID, -1)
+                    val content = it.getStringExtra(EXTRA_CONTENT) ?: return@let
+                    handleChatRequest(roomId, content)
+                }
+            }
+        }
+        return START_STICKY
+    }
+
+    private fun handleChatRequest(roomId: Int, content: String) {
+        serviceScope.launch {
+            try {
+                val response = aiChatService.sendChatMessage(
+                    type = roomId,
+                    request = ChatRequest(text = content)
+                )
+
+                if (response.isSuccessful) {
+                    response.body()?.getMessageList()?.forEach { aiMessage ->
+                        messageDao.insertMessage(
+                            ChatMessage(
+                                roomId = roomId,
+                                content = aiMessage,
+                                isAiMessage = true
+                            )
+                        )
+                    }
+
+                    response.body()?.getMessageList()?.lastOrNull()?.let { lastAiMessage ->
+                        chatInfoDao.updateLastMessage(
+                            chatId = roomId,
+                            message = lastAiMessage,
+                            timestamp = System.currentTimeMillis()
+                        )
+
+                        val currentChat = chatInfoDao.getChatById(roomId)
+                        currentChat?.let {
+                            chatInfoDao.updateUnreadCount(
+                                chatId = roomId,
+                                count = it.unreadCount + 1
+                            )
+                        }
+                    }
+                } else {
+                    handleError(roomId, "죄송해요, 메시지를 받지 못했어요.")
+                }
+            } catch (e: Exception) {
+                handleError(roomId, "네트워크 오류가 발생했어요. 인터넷 연결을 확인해주세요.")
+            }
+        }
+    }
+
+    private suspend fun handleError(roomId: Int, errorMessage: String) {
+        messageDao.insertMessage(
+            ChatMessage(
+                roomId = roomId,
+                content = errorMessage,
+                isAiMessage = true
+            )
+        )
+
+        chatInfoDao.updateLastMessage(
+            chatId = roomId,
+            message = errorMessage,
+            timestamp = System.currentTimeMillis()
+        )
+
+        val currentChat = chatInfoDao.getChatById(roomId)
+        currentChat?.let {
+            chatInfoDao.updateUnreadCount(
+                chatId = roomId,
+                count = it.unreadCount + 1
+            )
+        }
+    }
+
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                CHANNEL_ID,
+                "Chat Service",
+                NotificationManager.IMPORTANCE_LOW
+            ).apply {
+                description = "Keeps chat active in background"
+            }
+
+            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
+        }
+    }
+
+    private fun createNotification() = NotificationCompat.Builder(this, CHANNEL_ID)
+        .setContentTitle("채팅 서비스 실행 중")
+        .setContentText("백그라운드에서 메시지를 수신하고 있습니다.")
+        .setSmallIcon(android.R.drawable.ic_dialog_info)
+        .setPriority(NotificationCompat.PRIORITY_LOW)
+        .build()
+
+    override fun onBind(intent: Intent?): IBinder? = null
+
+    override fun onDestroy() {
+        super.onDestroy()
+        serviceScope.cancel()
+    }
+
+    companion object {
+        private const val CHANNEL_ID = "chat_service_channel"
+        private const val NOTIFICATION_ID = 1
+        const val ACTION_START_CHAT = "action_start_chat"
+        const val EXTRA_ROOM_ID = "extra_room_id"
+        const val EXTRA_CONTENT = "extra_content"
+
+        fun startService(context: Context, roomId: Int, content: String) {
+            val intent = Intent(context, ChatService::class.java).apply {
+                action = ACTION_START_CHAT
+                putExtra(EXTRA_ROOM_ID, roomId)
+                putExtra(EXTRA_CONTENT, content)
+            }
+            context.startForegroundService(intent)
+        }
+    }
+}
+
