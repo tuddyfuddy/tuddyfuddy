@@ -30,6 +30,22 @@ class ChatViewModel(application: Application, private val roomId: Int) : Android
     private val chatInfoDao = database.chatInfoDao()
     private val aiChatService = RetrofitClient.aiChatService
     private val repository: ChatRepository = ChatRepository(application)
+    private val _pendingMessages = MutableStateFlow<List<String>>(emptyList())
+    private var loadingMessageId: Long? = null
+
+    init {
+        // 3초 동안 메시지를 모았다가 한 번에 처리
+        viewModelScope.launch {
+            _pendingMessages
+                .debounce(1000) // 로딩아이콘 3초 보여주기
+                .collect { messages ->
+                    if (messages.isNotEmpty()) {
+                        sendCombinedMessage(messages)
+                        _pendingMessages.value = emptyList()
+                    }
+                }
+        }
+    }
 
     val allMessages: StateFlow<List<ChatMessage>> = messageDao.getMessagesByRoomId(roomId)
         .stateIn(
@@ -124,6 +140,24 @@ class ChatViewModel(application: Application, private val roomId: Int) : Android
                 )
             )
 
+            // 현재 메시지를 pending 목록에 추가
+            _pendingMessages.value = _pendingMessages.value + content
+
+            // 이전 로딩 메시지가 있다면 삭제
+            loadingMessageId?.let { id ->
+                messageDao.deleteMessageById(id)
+            }
+
+            // 새로운 로딩 메시지 추가
+            val loadingMessage = ChatMessage(
+                roomId = roomId,
+                content = "",
+                isAiMessage = true,
+                isLoading = true
+            )
+            val insertedId = messageDao.insertMessageAndGetId(loadingMessage)
+            loadingMessageId = insertedId
+
             // 채팅방 정보 업데이트 (마지막 메시지 표시해주는거)
             chatInfoDao.updateLastMessage(
                 chatId = roomId,
@@ -131,10 +165,52 @@ class ChatViewModel(application: Application, private val roomId: Int) : Android
                 timestamp = System.currentTimeMillis()
             )
 
-            // 백그라운드 서비스 시작시키기
-            ChatService.startService(getApplication(), roomId, content)
+//            // 백그라운드 서비스 시작시키기
+//            ChatService.startService(getApplication(), roomId, content)
         }
     }
+
+    private fun sendCombinedMessage(messages: List<String>) {
+        viewModelScope.launch {
+            try {
+                // 로딩 메시지 삭제
+                loadingMessageId?.let { id ->
+                    messageDao.deleteMessageById(id)
+                    loadingMessageId = null
+                }
+
+                // 백그라운드 서비스로 합쳐진 메시지 전송
+                val combinedContent = messages.joinToString("\n")
+                ChatService.startService(getApplication(), roomId, combinedContent)
+            } catch (e: Exception) {
+                // 에러 메시지 추출해서 전달
+                handleError(e.message ?: "알 수 없는 오류가 발생했습니다.")
+            }
+        }
+    }
+
+    private suspend fun handleError(errorMessage: String) {
+        // 에러 메시지를 AI 메시지로 표시
+        messageDao.insertMessage(
+            ChatMessage(
+                roomId = roomId,
+                content = errorMessage,
+                isAiMessage = true
+            )
+        )
+
+        // 채팅방 정보 업데이트
+        chatInfoDao.updateLastMessage(
+            chatId = roomId,
+            message = errorMessage,
+            timestamp = System.currentTimeMillis()
+        )
+
+        // 로딩 상태 초기화
+        loadingMessageId = null
+    }
+
+
 
     // 채팅방 들어가면 읽지 않은 메세지 수 다시 0으로 초기화
     fun markAsRead() {

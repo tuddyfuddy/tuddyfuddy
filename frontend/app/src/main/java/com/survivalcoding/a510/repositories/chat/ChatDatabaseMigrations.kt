@@ -65,7 +65,7 @@ object ChatDatabaseMigrations {
 
     val MIGRATION_5_6 = object : Migration(5, 6) {
         override fun migrate(database: SupportSQLiteDatabase) {
-            // 임시 테이블 생성
+            // 1. 임시 테이블 생성
             database.execSQL("""
                 CREATE TABLE IF NOT EXISTS messages_temp (
                     id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
@@ -73,27 +73,26 @@ object ChatDatabaseMigrations {
                     content TEXT NOT NULL,
                     isAiMessage INTEGER NOT NULL,
                     timestamp INTEGER NOT NULL,
-                    isImage INTEGER NOT NULL,
-                    imageUrl TEXT
+                    isImage INTEGER NOT NULL DEFAULT 0,
+                    imageUrl TEXT,
+                    isLoading INTEGER NOT NULL DEFAULT 0
                 )
             """)
 
-            // 기존 데이터 복사 (이미지 URL은 그대로 유지)
+            // 2. 기존 데이터 복사
             database.execSQL("""
-                INSERT INTO messages_temp (
-                    id, roomId, content, isAiMessage, timestamp, isImage, imageUrl
-                )
-                SELECT 
-                    id, roomId, content, isAiMessage, timestamp, isImage, imageUrl
+                INSERT INTO messages_temp (id, roomId, content, isAiMessage, timestamp, isImage, imageUrl)
+                SELECT id, roomId, content, isAiMessage, timestamp, isImage, imageUrl
                 FROM messages
             """)
 
-            // 기존 테이블 삭제
+            // 3. 기존 테이블 삭제
             database.execSQL("DROP TABLE messages")
 
-            // 임시 테이블 이름 변경
+            // 4. 임시 테이블 이름 변경
             database.execSQL("ALTER TABLE messages_temp RENAME TO messages")
         }
     }
+
 }
 

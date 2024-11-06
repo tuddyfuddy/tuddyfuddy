@@ -11,7 +11,7 @@ import com.survivalcoding.a510.repositories.chat.ChatDatabaseMigrations.MIGRATIO
 import com.survivalcoding.a510.repositories.chat.ChatDatabaseMigrations.MIGRATION_5_6
 
 
-@Database(entities = [ChatMessage::class, ChatInfo::class], version = 5)
+@Database(entities = [ChatMessage::class, ChatInfo::class], version = 6)
 abstract class ChatDatabase : RoomDatabase() {
     abstract fun chatMessageDao(): ChatMessageDao
     abstract fun chatInfoDao(): ChatInfoDao
