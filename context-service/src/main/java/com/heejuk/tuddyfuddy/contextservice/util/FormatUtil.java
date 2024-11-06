@@ -21,6 +21,12 @@ public class FormatUtil {
         return timestamp.format(DateTimeFormatter.ofPattern(pattern));
     }
 
+    public static String formatPreviousDateKST(String pattern) {
+        ZonedDateTime previousDayKST = ZonedDateTime.now(ZoneId.of("Asia/Seoul"))
+                                                    .minusDays(1);
+        return previousDayKST.format(DateTimeFormatter.ofPattern(pattern));
+    }
+
     public static String formatDateKST(String pattern) {
         ZonedDateTime kstDateTime = ZonedDateTime.now(ZoneId.of("Asia/Seoul"));
 

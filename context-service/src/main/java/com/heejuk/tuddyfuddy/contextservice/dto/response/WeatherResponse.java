@@ -1,7 +1,6 @@
 package com.heejuk.tuddyfuddy.contextservice.dto.response;
 
 import java.io.Serializable;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import lombok.Builder;
 
@@ -9,7 +8,7 @@ import lombok.Builder;
 public record WeatherResponse(
     Integer x,
     Integer y,
-    LocalDate timestamp,
+    LocalDateTime timestamp,
     Double minTemperature,
     Double maxTemperature,
     String weather,

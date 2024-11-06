@@ -13,8 +13,12 @@ import com.heejuk.tuddyfuddy.contextservice.util.FormatUtil;
 import com.heejuk.tuddyfuddy.contextservice.util.GridGpsUtil.LatXLngY;
 import feign.FeignException;
 import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -59,12 +63,12 @@ public class WeatherService {
             try {
                 WeatherResponse cachedWeather = objectMapper.readValue(cachedJson,
                                                                        WeatherResponse.class);
-//                if (isWeatherDataFresh(cachedWeather)) {
-//                    log.info("Cache hit for weather data at x:{}, y:{}",
-//                             x,
-//                             y);
-//                    return cachedWeather;
-//                }
+                if (isWeatherDataFresh(cachedWeather)) {
+                    log.info("Cache hit for weather data at x:{}, y:{}",
+                             x,
+                             y);
+                    return cachedWeather;
+                }
             } catch (JsonProcessingException e) {
                 log.error("Failed to parse cached weather data",
                           e);
@@ -72,24 +76,35 @@ public class WeatherService {
         }
 
         try {
+            String baseDate = FormatUtil.formatDateKST("yyyyMMdd");
+            String baseTime = "0500";
+            String previousDate = FormatUtil.formatPreviousDateKST("yyyyMMdd");
             // api 에서 불러오기
-            JsonNode newWeather = weatherApiClient.fetchWeatherData(
+            JsonNode curWeatherData = weatherApiClient.fetchWeatherData(
                 apiKey,
                 1,
-                1000,
+                300,
                 "JSON",
-                FormatUtil.formatDateKST("yyyyMMdd"),
-                FormatUtil.formatTimeKST("HHmm"),
+                baseDate,
+                baseTime,
+                x,
+                y
+            );
+            JsonNode prevWeatherData = weatherApiClient.fetchWeatherData(
+                apiKey,
+                1,
+                300,
+                "JSON",
+                baseDate,
+                baseTime,
                 x,
                 y
             );
 
-            WeatherResponse weather = parseJsonToWeather(newWeather,
-                                                         x,
-                                                         y, null);
-
+            WeatherResponse curWeather = parseJsonToWeather(curWeatherData, x, y, baseDate);
+            WeatherResponse prevWeather = parseJsonToWeather(prevWeatherData, x, y, previousDate);
             try {
-                String jsonValue = objectMapper.writeValueAsString(weather);
+                String jsonValue = objectMapper.writeValueAsString(curWeather);
                 redisTemplate.opsForValue()
                              .set(redisKey,
                                   jsonValue,
@@ -99,7 +114,7 @@ public class WeatherService {
                           e);
             }
 
-            return weather;
+            return curWeather;
 
         } catch (FeignException e) {
             log.error("Failed to fetch weather data at x:{}, y:{}, error: {}",
@@ -142,7 +157,7 @@ public class WeatherService {
                                  .asText();
 
         // 기상청 API 요청 에러 처리
-        if (!resultMsg.equals("00")) {
+        if (!resultCode.equals("00")) {
             throw new RuntimeException("기상청 API 요청 에러 코드[" + resultCode + "] - " + resultMsg);
         }
 
@@ -154,8 +169,8 @@ public class WeatherService {
         // weather 저장
         Map<String, String> weatherInfo = new HashMap<>();
         // 당일은 max, min 안 줘서 직접 계산. 다음날부터 제공
-        double maxTemperature = 1000D;
-        double minTemperature = -1000D;
+        double maxTemperature = -1000D;
+        double minTemperature = 1000D;
 
         for (JsonNode item : items) {
             String category = item.path("category")
@@ -186,6 +201,7 @@ public class WeatherService {
             switch (category) {
                 case "TMP": // 기온
                     temperature = Double.parseDouble(value);
+                    System.out.println("temperature = " + temperature);
                     maxTemperature = Math.max(maxTemperature, temperature);
                     minTemperature = Math.min(minTemperature, temperature);
                     break;
@@ -214,8 +230,88 @@ public class WeatherService {
             }
         }
 
+        String weather = getWeatherFromInfo(weatherInfo);
+        String note = getNoteFromInfo(weatherInfo);
+
         // WeatherResponse 빌더 사용하여 설정된 값으로 객체 생성
-        return null;
+        return WeatherResponse.builder()
+                              .x(x)
+                              .y(y)
+                              .timestamp(LocalDateTime.now())
+                              .minTemperature(minTemperature)
+                              .maxTemperature(maxTemperature)
+                              .weather(weather)
+                              .note(note)
+                              .createdAt(LocalDateTime.now())
+                              .build();
+    }
+
+    private String getWeatherFromInfo(Map<String, String> weatherInfo) {
+        // 가장 많이 나타난 날씨를 대표 날씨로 선정
+        Map<String, Integer> weatherCount = new HashMap<>();
+
+        for (String weather : weatherInfo.values()) {
+            weatherCount.put(weather, weatherCount.getOrDefault(weather, 0) + 1);
+        }
+
+        return weatherCount.entrySet()
+                           .stream()
+                           .max(Map.Entry.comparingByValue())
+                           .map(Map.Entry::getKey)
+                           .orElseThrow(() -> new RuntimeException("날씨 정보를 찾을 수 없습니다."));
+    }
+
+    private String getNoteFromInfo(Map<String, String> weatherInfo) {
+        String mainWeather = getWeatherFromInfo(weatherInfo);
+        List<String> significantChanges = new ArrayList<>();
+
+        // 시간대를 오전/오후로 구분
+        Map<String, List<String>> timeSlots = new HashMap<>();
+        timeSlots.put("오전", new ArrayList<>());
+        timeSlots.put("오후", new ArrayList<>());
+
+        weatherInfo.forEach((time, weather) -> {
+            int hour = Integer.parseInt(time.substring(0, 2));
+            String slot = (hour < 12) ? "오전" : "오후";
+
+            // 대표 날씨와 다르고, 비나 눈이 포함된 경우만 기록
+            if (!weather.equals(mainWeather) &&
+                (weather.contains("비") || weather.contains("눈"))) {
+                timeSlots.get(slot)
+                         .add(weather);
+            }
+        });
+
+        // note 생성
+        StringBuilder note = new StringBuilder();
+        if (!timeSlots.get("오전")
+                      .isEmpty()) {
+            String morningWeather = getMostFrequent(timeSlots.get("오전"));
+            note.append("오전에 ")
+                .append(morningWeather);
+        }
+
+        if (!timeSlots.get("오후")
+                      .isEmpty()) {
+            if (note.length() > 0) {
+                note.append(", ");
+            }
+            String afternoonWeather = getMostFrequent(timeSlots.get("오후"));
+            note.append("오후에 ")
+                .append(afternoonWeather);
+        }
+
+        return note.length() > 0 ? note.toString() : null;
+    }
+
+    private String getMostFrequent(List<String> list) {
+        return list.stream()
+                   .collect(Collectors.groupingBy(w -> w, Collectors.counting()))
+                   .entrySet()
+                   .stream()
+                   .max(Map.Entry.comparingByValue())
+                   .map(Map.Entry::getKey)
+                   .orElse("");
     }
 
     /**
@@ -224,11 +320,11 @@ public class WeatherService {
      * @param weather
      * @return
      */
-//    private boolean isWeatherDataFresh(WeatherResponse weather) {
-//        return Duration.between(weather.timestamp(),
-//                                LocalDateTime.now())
-//                       .toMinutes() < CACHE_TTL_MINUTES;
-//    }
+    private boolean isWeatherDataFresh(WeatherResponse weather) {
+        return Duration.between(weather.timestamp(),
+                                LocalDateTime.now())
+                       .toMinutes() < CACHE_TTL_MINUTES;
+    }
 
 
 }
