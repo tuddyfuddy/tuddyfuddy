@@ -48,6 +48,20 @@
                     android:scheme="kakaoa167264ee18a4fc52fd2238b8c445a39" />
             </intent-filter>
         </activity>
+
+        <service
+            android:name=".services.MyFirebaseMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/logo" />
+<!--        <meta-data-->
+<!--            android:name="com.google.firebase.messaging.default_notification_color"-->
+<!--            android:resource="@color/colorAccent" />-->
     </application>
 
 </manifest>
