@@ -47,7 +47,8 @@ class ChatService : Service() {
         serviceScope.launch {
             try {
                 val response = aiChatService.sendChatMessage(
-                    type = roomId,
+                    // roomId가 5(단톡방)이 아니면 그대로 type에 roomId 보내고, roomId가 5이면... 제작중
+                    type = if (roomId != 5) roomId else 1,
                     request = ChatRequest(text = content)
                 )
 

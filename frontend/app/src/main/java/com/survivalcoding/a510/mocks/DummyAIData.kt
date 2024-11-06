@@ -37,7 +37,6 @@ object DummyAIData {
             timestamp = "방금 전",
             unreadCount = 1
         ),
-
     )
 
     fun getChatById(id: Int): ChatData? = chatList.find { it.id == id }

@@ -55,8 +55,8 @@ fun HighlightedText(
             // 검색어에 해당하는 부분을 하이라이트 처리
             withStyle(
                 style = SpanStyle(
-                    background = Color.Yellow.copy(alpha = 0.5f),
-                    color = Color.Black
+                    background = Color.Black,
+                    color = Color.White
                 )
             ) {
                 append(text.substring(startIndex, startIndex + searchQuery.length))
