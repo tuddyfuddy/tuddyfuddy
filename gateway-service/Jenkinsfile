@@ -27,22 +27,39 @@ pipeline {
                     // 저장소 체크아웃
                     checkout scm
                     
+                    // Build Cause 확인
+                    def causes = currentBuild.getBuildCauses()
+                    def isManualTrigger = false
+                    
+                    // 모든 Cause들을 순회하며 수동 트리거 확인
+                    causes.each { cause ->
+                        if (cause._class.contains('UserIdCause')) {
+                            isManualTrigger = true
+                        }
+                    }
+                    
                     // 변경된 파일 목록 확인
                     def changes = sh(
-                        script: "git diff --name-only HEAD^..HEAD | grep '^${SERVICE_NAME}/' || true",
+                        script: """
+                            git fetch --no-tags origin +refs/heads/*:refs/remotes/origin/*
+                            LAST_SUCCESSFUL_COMMIT=\$(git rev-parse \${GIT_PREVIOUS_SUCCESSFUL_COMMIT:-HEAD~1})
+                            CURRENT_COMMIT=\$(git rev-parse HEAD)
+                            git diff --name-only \$LAST_SUCCESSFUL_COMMIT \$CURRENT_COMMIT | grep '^${SERVICE_NAME}/' || true
+                        """,
                         returnStdout: true
                     ).trim()
                     
-                    // 수동 트리거이거나 해당 서비스 디렉토리에 변경이 있는 경우에만 실행
-                    env.SHOULD_RUN = (changes != '' || currentBuild.getBuildCauses('hudson.model.Cause$UserIdCause').size() > 0).toString()
+                    // Boolean 값을 직접 할당
+                    def shouldRun = changes != '' || isManualTrigger
+                    env.SHOULD_RUN = shouldRun ? 'true' : 'false'
 
-                    // 실행 여부 로깅
-                    echo "Changes detected in ${SERVICE_NAME}: ${env.SHOULD_RUN}"
+                    echo "Is Manual Trigger: ${isManualTrigger}"
+                    echo "Changes detected in ${SERVICE_NAME}: ${changes}"
+                    echo "Should Run: ${env.SHOULD_RUN}"
 
-                    // 실행 조건이 맞지 않으면 파이프라인 종료
-                    if (env.SHOULD_RUN == 'false') {
+                    if (!shouldRun) {  // Boolean 값으로 직접 비교
                         currentBuild.result = 'NOT_BUILT'
-                        error("No changes in ${SERVICE_NAME} directory. Skipping build.")
+                        error("No changes in ${SERVICE_NAME} directory and not manually triggered. Skipping build.")
                     }
                 }
             }
