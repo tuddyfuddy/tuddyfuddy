@@ -39,6 +39,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.ui.platform.LocalConfiguration
 import kotlinx.coroutines.launch
+import com.survivalcoding.a510.components.UpDownButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -62,6 +63,8 @@ fun ChatDetailPage(
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
     val screenHeight = LocalConfiguration.current.screenHeightDp
+    val currentSearchIndex by viewModel.currentSearchIndex.collectAsState()
+    val searchMatches by viewModel.searchMatches.collectAsState()
 
     // 검색어가 변경될 때마다 첫 번째 검색 결과로 스크롤
     LaunchedEffect(searchQuery) {
@@ -72,8 +75,8 @@ fun ChatDetailPage(
             }
 
             if (firstMatchIndex != -1) {
-                // 스크린 높이의 30% 위치에 아이템이 오도록 오프셋 계산
-                val targetOffset = (screenHeight * 0.3).toInt()
+                // 스크린 높이의 30% 위치에 아이템이 오도록
+                val targetOffset = (screenHeight * 0.8).toInt()
 
                 coroutineScope.launch {
                     listState.scrollToItem(
@@ -289,7 +292,19 @@ fun ChatDetailPage(
                 }
             }
         }
-        if (!isSearchMode) {
+        if (isSearchMode) {
+            UpDownButton(
+                onUpClick = {
+                    viewModel.moveToPreviousMatch(listState, screenHeight)
+                },
+                onDownClick = {
+                    viewModel.moveToNextMatch(listState, screenHeight)
+                },
+                currentIndex = currentSearchIndex,
+                totalResults = searchMatches.size,
+                modifier = Modifier.imePadding()
+            )
+        } else {
             TextInput(
                 modifier = Modifier.imePadding(),
                 value = messageText,
