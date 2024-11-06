@@ -8,8 +8,8 @@ object DummyAIData {
         ChatData(
             id = 1,
             profileImage = R.drawable.cha,
-            name = "활명수",
-            message = "야",
+            name = "차은우",
+            message = "야 대답해",
             timestamp = "방금 전",
             unreadCount = 1
         ),
@@ -20,8 +20,23 @@ object DummyAIData {
             message = "하이하이!! 너는 이름이 뭐야?",
             timestamp = "방금 전",
             unreadCount = 1
-        )
-
+        ),
+        ChatData(
+            id = 3,
+            profileImage = R.drawable.kim,
+            name = "김유정",
+            message = "심심하면 나랑 수다나 떨자",
+            timestamp = "방금 전",
+            unreadCount = 1
+        ),
+        ChatData(
+            id = 4,
+            profileImage = R.drawable.karina,
+            name = "카리나",
+            message = "이번 주말에 뭐해?",
+            timestamp = "방금 전",
+            unreadCount = 1
+        ),
     )
 
     fun getChatById(id: Int): ChatData? = chatList.find { it.id == id }

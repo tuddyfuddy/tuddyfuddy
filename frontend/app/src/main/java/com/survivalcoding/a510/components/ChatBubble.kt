@@ -18,6 +18,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.survivalcoding.a510.ui.theme.BubbleTheme.lineHeight
 import com.survivalcoding.a510.utils.TimeUtils
 
 @Composable
@@ -28,7 +29,8 @@ fun ChatBubble(
     isAiMessage: Boolean = false,
     profileImage: Int? = null,
     name: String? = null,
-    isFirstInSequence: Boolean = true
+    isFirstInSequence: Boolean = true,
+    searchQuery: String = ""
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
@@ -63,10 +65,10 @@ fun ChatBubble(
                     )
                 }
 
-                MessageBubble(text, timestamp, isAiMessage, isFirstInSequence)
+                MessageBubble(text, timestamp, isAiMessage, isFirstInSequence, searchQuery)
             }
         } else {
-            MessageBubble(text, timestamp, isAiMessage, isFirstInSequence)
+            MessageBubble(text, timestamp, isAiMessage, isFirstInSequence, searchQuery)
         }
     }
 }
@@ -76,7 +78,8 @@ fun MessageBubble(
     text: String,
     timestamp: Long,
     isAiMessage: Boolean,
-    isFirstInSequence: Boolean
+    isFirstInSequence: Boolean,
+    searchQuery: String = ""
 ) {
     Row(
         modifier = Modifier
@@ -90,7 +93,7 @@ fun MessageBubble(
                 text = TimeUtils.formatChatTime(timestamp),
                 style = MaterialTheme.typography.bodySmall,
                 color = Color.Gray,
-                modifier = Modifier.align(Alignment.Bottom)
+                modifier = Modifier.align(Alignment.Bottom),
             )
             Spacer(modifier = Modifier.width(4.dp))
         }
@@ -119,12 +122,13 @@ fun MessageBubble(
                 )
                 .padding(horizontal = 10.dp, vertical = 7.dp)
         ) {
-            Text(
+            HighlightedText(
                 text = text,
+                searchQuery = searchQuery,
                 color = Color.DarkGray,
-                fontSize = 12.sp,
                 textAlign = TextAlign.Start,
-                lineHeight = 20.sp
+                modifier = Modifier.align(Alignment.CenterStart),
+                fontSize = 12.sp
             )
         }
 
