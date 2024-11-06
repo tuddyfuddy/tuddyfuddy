@@ -7,7 +7,7 @@ from app.core.logger import setup_logger
 from app.api.chat_service import ChatService
 
 
-router = APIRouter(prefix="/chat", tags=["chat"])
+router = APIRouter(prefix="/chats", tags=["chat"])
 logging = setup_logger("app")
 
 
@@ -15,7 +15,23 @@ class TextRequest(BaseModel):
     text: str
 
 
-@router.post("/chats/direct/{type}")
+# 임시용
+@router.post("/test/{type}")
+async def chat(
+    type: int,
+    request: TextRequest,
+):
+    try:
+        result = await ChatService.process_chat(type, 9999, request.text)
+        if isinstance(result, JSONResponse):
+            return ["응?"]
+        return result
+    except Exception as e:
+        logging.error(f"Error in chat endpoint: {e}")
+        return ["응?"]
+
+
+@router.post("/direct/{type}")
 async def chat(
     type: int,
     request: TextRequest,
@@ -31,7 +47,7 @@ async def chat(
         return ["응?"]
 
 
-@router.post("/chats/group/{type}")
+@router.post("/group/{type}")
 async def chat(
     type: int,
     request: TextRequest,
