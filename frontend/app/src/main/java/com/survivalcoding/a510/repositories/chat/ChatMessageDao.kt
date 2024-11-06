@@ -55,4 +55,15 @@ interface ChatMessageDao {
     // 특정 이미지 URL을 포함하는 모든 메시지를 조회
     @Query("SELECT * FROM messages WHERE imageUrl = :imageUrl")
     suspend fun getMessagesByImageUrl(imageUrl: String): List<ChatMessage>
+
+    @Insert
+    suspend fun insertMessageAndGetId(message: ChatMessage): Long  // Room에서는 Int 대신 Long을 사용
+
+    @Query("DELETE FROM messages WHERE id = :messageId")
+    suspend fun deleteMessageById(messageId: Long)
+
+    // 동기식으로 메시지 가져오기 (로딩 메시지 찾기 위함)
+    @Query("SELECT * FROM messages WHERE roomId = :roomId ORDER BY timestamp DESC")
+    suspend fun getMessagesByRoomIdSync(roomId: Int): List<ChatMessage>
+
 }
