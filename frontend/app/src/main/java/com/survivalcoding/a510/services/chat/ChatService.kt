@@ -165,5 +165,9 @@ class ChatService : Service() {
         fun setActiveChatRoom(roomId: Int?) {
             activeChatRoomId = roomId
         }
+
+        fun getActiveChatRoom(): Int? {
+            return activeChatRoomId
+        }
     }
 }
