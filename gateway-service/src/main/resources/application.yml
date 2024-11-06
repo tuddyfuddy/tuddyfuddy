@@ -46,6 +46,14 @@ spring:
           filters:
             - RewritePath=/chat-service/(?<segment>.*), /$\{segment}
 
+        - id: chat-service
+          uri: lb://chat-service
+          predicates:
+            - Path=/chat-service/chats/direct/*, /chat-service/chats/group/*
+          filters:
+            - AuthorizationHeaderFilter
+            - RewritePath=/chat-service/(?<segment>.*), /$\{segment}
+
         - id: context-service
           uri: lb://context-service
           predicates:
