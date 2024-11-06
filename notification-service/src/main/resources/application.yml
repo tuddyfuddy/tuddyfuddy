@@ -26,11 +26,11 @@ spring:
         format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
-  kafka:
-    bootstrap-servers: ${KAFKA_HOST}:${KAFKA_PORT}
-    consumer:
+  message:
+    kafka:
+      host: ${KAFKA_HOST}
+      post: ${KAFKA_PORT}
       group-id: ${KAFKA_GROUP}
-      auto-offset-reset: earliest
 
 eureka:
   client:
