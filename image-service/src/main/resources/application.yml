@@ -18,8 +18,10 @@ cloud:
       secret-key: ${AWS_SECRET_KEY}
     s3:
       bucket-name: ${AWS_S3_BUCKET_NAME}
+    stack:
+      auto: false
     region:
-      static: ap-northeast-2
+      static: ${AWS_REGION}
 
 eureka:
   client:
