@@ -58,7 +58,7 @@ object RetrofitClient {
 
         // Retrofit 빌더 설정
         return Retrofit.Builder()
-            .baseUrl("https://k11a510.p.ssafy.io/")
+            .baseUrl("http://k11a510.p.ssafy.io:8080/")
             .client(client)
             .addConverterFactory(GsonConverterFactory.create())
             .build()

@@ -46,7 +46,7 @@ class MainViewModel : ViewModel() {
         viewModelScope.launch {
             val accessToken = tokenManager?.getAccessToken()
             _authState.value = if (accessToken != null) {
-                AuthState.Success(null, null, accessToken)
+                AuthState.Success(accessToken)
             } else {
                 AuthState.Initial
             }
@@ -119,16 +119,8 @@ class MainViewModel : ViewModel() {
                         if (accessToken != null) {
                             // TokenManager에 저장 (refresh token은 자동으로 저장됨)
                             tokenManager?.saveTokens(accessToken, "")
-
-                            // 응답 바디에서 사용자 정보 추출
-                            response.body()?.let { authResponse ->
-                                _authState.value = AuthState.Success(
-                                    kakaoUserId = null,
-                                    nickname = authResponse.nickname,
-                                    jwtToken = accessToken
-                                )
-                                onSuccess()
-                            }
+                            _authState.value = AuthState.Success(jwtToken = accessToken)
+                            onSuccess()
                         } else {
                             _authState.value = AuthState.Error("No access token in response")
                             onError(Exception("No access token in response"))
