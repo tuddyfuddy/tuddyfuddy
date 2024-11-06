@@ -51,6 +51,14 @@ public class SwaggerConfig {
     }
 
     @Bean
+    public GroupedOpenApi imageServiceApi() {
+        return GroupedOpenApi.builder()
+                             .group("image-service")
+                             .pathsToMatch("/image-service/**")
+                             .build();
+    }
+
+    @Bean
     public GroupedOpenApi userServiceApi() {
         return GroupedOpenApi.builder()
                              .group("user-service")

@@ -70,6 +70,13 @@ spring:
           filters:
             - RewritePath=/log-service/(?<segment>.*), /$\{segment}
 
+        - id: image-service
+          uri: lb://image-service
+          predicates:
+            - Path=/image-service/**
+          filters:
+            - RewritePath=/image-service/(?<segment>.*), /$\{segment}
+
         - id: user-service
           uri: lb://user-service
           predicates:
@@ -107,6 +114,8 @@ springdoc:
         name: 알림 서비스
       - url: /log-service/v3/api-docs
         name: 로그 서비스
+      - url: /image-service/v3/api-docs
+        name: 이미지 서비스
       - url: /user-service/v3/api-docs
         name: 사용자 서비스
 
