@@ -40,6 +40,13 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.ui.platform.LocalConfiguration
 import kotlinx.coroutines.launch
 import com.survivalcoding.a510.components.UpDownButton
+import android.Manifest
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import android.content.pm.PackageManager
+import androidx.core.content.ContextCompat
+import android.os.Build
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -65,6 +72,25 @@ fun ChatDetailPage(
     val screenHeight = LocalConfiguration.current.screenHeightDp
     val currentSearchIndex by viewModel.currentSearchIndex.collectAsState()
     val searchMatches by viewModel.searchMatches.collectAsState()
+    val context = LocalContext.current
+
+    // 이미지 선택 launcher
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        uri?.let {
+            viewModel.handleImageUpload(uri)
+        }
+    }
+
+    // 권한 요청 launcher
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            imagePickerLauncher.launch("image/*")
+        }
+    }
 
     // 검색어가 변경될 때마다 첫 번째 검색 결과로 스크롤
     LaunchedEffect(searchQuery) {
@@ -259,7 +285,9 @@ fun ChatDetailPage(
                         profileImage = if (showProfile) chatData?.profileImage else null,
                         name = if (showProfile) chatData?.name else null,
                         isFirstInSequence = isFirstInSequence,
-                        searchQuery = searchQuery
+                        searchQuery = searchQuery,
+                        isImage = message.isImage,
+                        imageUrl = message.imageUrl
                     )
                 }
 
@@ -313,6 +341,42 @@ fun ChatDetailPage(
                     if (messageText.isNotBlank()) {
                         viewModel.sendMessage(messageText)
                         messageText = ""
+                    }
+                },
+                onCameraClick = {
+                    when {
+                        // Android 14 이상 (API 34)
+                        Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE -> {
+                            imagePickerLauncher.launch("image/*")
+                        }
+                        // Android 13 (API 33)
+                        Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU -> {
+                            when {
+                                ContextCompat.checkSelfPermission(
+                                    context,
+                                    Manifest.permission.READ_MEDIA_IMAGES
+                                ) == PackageManager.PERMISSION_GRANTED -> {
+                                    imagePickerLauncher.launch("image/*")
+                                }
+                                else -> {
+                                    permissionLauncher.launch(Manifest.permission.READ_MEDIA_IMAGES)
+                                }
+                            }
+                        }
+                        // Android 10-12 (API 29-32)
+                        else -> {
+                            when {
+                                ContextCompat.checkSelfPermission(
+                                    context,
+                                    Manifest.permission.READ_EXTERNAL_STORAGE
+                                ) == PackageManager.PERMISSION_GRANTED -> {
+                                    imagePickerLauncher.launch("image/*")
+                                }
+                                else -> {
+                                    permissionLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
+                                }
+                            }
+                        }
                     }
                 }
             )

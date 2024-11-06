@@ -37,4 +37,8 @@ interface ChatMessageDao {
         AND content LIKE '%' || :searchQuery || '%'
     """)
     suspend fun getSearchResultCount(roomId: Int, searchQuery: String): Int
+
+    // 특정 채팅방의 마지막 메시지 삭제
+    @Query("DELETE FROM messages WHERE roomId = :roomId AND id = (SELECT MAX(id) FROM messages WHERE roomId = :roomId)")
+    suspend fun deleteLastMessage(roomId: Int)
 }
