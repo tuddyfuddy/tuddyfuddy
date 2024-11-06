@@ -301,7 +301,8 @@ fun ChatDetailPage(
                         searchQuery = searchQuery,
                         isImage = message.isImage,
                         imageUrl = message.imageUrl,
-                        showTimestamp = showTimestamp
+                        showTimestamp = showTimestamp,
+                        isLoading = message.isLoading,
                     )
                 }
 
