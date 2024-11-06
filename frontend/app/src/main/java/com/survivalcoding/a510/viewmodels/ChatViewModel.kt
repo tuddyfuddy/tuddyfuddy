@@ -11,6 +11,7 @@ import com.survivalcoding.a510.repositories.chat.ChatRepository
 import com.survivalcoding.a510.services.RetrofitClient
 import com.survivalcoding.a510.services.chat.ChatRequest
 import com.survivalcoding.a510.services.chat.ChatService
+import com.survivalcoding.a510.services.chat.ImageProcessingService
 import com.survivalcoding.a510.services.chat.ImageService
 import com.survivalcoding.a510.services.chat.getMessageList
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -142,7 +143,6 @@ class ChatViewModel(application: Application, private val roomId: Int) : Android
         }
     }
 
-    // 이미지 업로드 처리
     fun handleImageUpload(uri: Uri) {
         viewModelScope.launch {
             try {
@@ -150,56 +150,24 @@ class ChatViewModel(application: Application, private val roomId: Int) : Android
                 messageDao.insertMessage(
                     ChatMessage(
                         roomId = roomId,
-                        content = "",  // 이미지인 경우 content는 비워둠
+                        content = "",
                         isAiMessage = false,
                         isImage = true,
-                        imageUrl = uri.toString()  // 로컬 이미지 URI 저장
+                        imageUrl = uri.toString()
                     )
                 )
 
-                // 이미지 업로드 및 분석
-                val response = ImageService.uploadAndAnalyzeImage(getApplication(), uri)
+                // 채팅방 정보 업데이트
+                chatInfoDao.updateLastMessage(
+                    chatId = roomId,
+                    message = "이미지를 보냈습니다",
+                    timestamp = System.currentTimeMillis()
+                )
 
-                if (response.isSuccessful && response.body() != null) {
-                    val result = response.body()!!.result
-
-                    // 채팅방 정보 업데이트 (채팅방 목록에서는 "이미지를 보냈습니다" 표시)
-                    chatInfoDao.updateLastMessage(
-                        chatId = roomId,
-                        message = "이미지를 보냈습니다",
-                        timestamp = System.currentTimeMillis()
-                    )
-
-                    // ChatService로 이미지 분석 결과 전달
-                    ChatService.startService(
-                        getApplication(),
-                        roomId,
-                        "사용자가 이미지를 공유했습니다.\n이미지 URL: ${result.imageUrl}\n이미지 설명: ${result.description}"
-                    )
-
-                } else {
-                    val errorMessage = when (response.code()) {
-                        413 -> "이미지 크기가 너무 큽니다. 더 작은 이미지를 선택해주세요."
-                        415 -> "지원하지 않는 이미지 형식입니다. JPG, PNG 형식을 사용해주세요."
-                        else -> "이미지 처리 중 오류가 발생했습니다. (Error: ${response.code()})"
-                    }
-                    messageDao.insertMessage(
-                        ChatMessage(
-                            roomId = roomId,
-                            content = errorMessage,
-                            isAiMessage = true
-                        )
-                    )
-                }
+                // 이미지 처리를 ChatService로 위임
+                ImageProcessingService.startService(getApplication(), roomId, uri)
             } catch (e: Exception) {
-                // 구체적인 예외 처리
-                val errorMessage = when (e) {
-                    is OutOfMemoryError -> "이미지가 너무 큽니다. 더 작은 이미지를 선택해주세요."
-                    is SecurityException -> "이미지 접근 권한이 없습니다. 권한을 확인해주세요."
-                    is IllegalArgumentException -> "올바르지 않은 이미지 파일입니다. 다른 이미지를 선택해주세요."
-                    else -> "이미지 처리 중 오류가 발생했습니다. 다시 시도해주세요.\n${e.message}"
-                }
-
+                val errorMessage = "이미지 처리 중 오류가 발생했습니다. 다시 시도해주세요.\n${e.message}"
                 messageDao.insertMessage(
                     ChatMessage(
                         roomId = roomId,
