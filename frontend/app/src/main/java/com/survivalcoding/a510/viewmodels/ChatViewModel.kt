@@ -99,7 +99,7 @@ class ChatViewModel(application: Application, private val roomId: Int) : Android
 
     private suspend fun scrollToCurrentMatch(listState: LazyListState, screenHeight: Int) {
         val targetIndex = _searchMatches.value[_currentSearchIndex.value]
-        // 화면에디에 검색한 단어가 있는 말풍선이 보이게 할지 정하는 숫자
+        // 화면어디에 검색한 단어가 있는 말풍선이 보이게 할지 정하는 숫자
         val targetOffset = (screenHeight * 0.8).toInt()
 
         listState.scrollToItem(
