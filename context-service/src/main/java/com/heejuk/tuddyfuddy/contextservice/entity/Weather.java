@@ -1,6 +1,8 @@
 package com.heejuk.tuddyfuddy.contextservice.entity;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,12 +25,18 @@ public class Weather {
 
     private Integer x;
     private Integer y;
-    private LocalDateTime timestamp;
+
+    private LocalDate baseDate;
+    private LocalTime baseTime;
 
     // 날씨 데이터
-    private Double temperature;
-    private Double humidity; // 습도
-    private String weather; // 날씨
+    private Double maxTemperature;
+    private Double minTemperature;
+
+    // 날씨
+    private String weather;
+    // 비고사항(오후에 비가 왔었다, 오전에 눈이 내렸다 이런느낌)
+    private String comment;
 
     @CreatedDate
     private LocalDateTime createdAt;
@@ -37,18 +45,20 @@ public class Weather {
     public Weather(
         Integer x,
         Integer y,
-        LocalDateTime timestamp,
-        Double temperature,
-        Double humidity,
+        LocalDate baseDate,
+        LocalTime baseTime,
+        Double maxTemperature,
+        Double minTemperature,
         String weather,
-        LocalDateTime createdAt
+        String comment
     ) {
         this.x = x;
         this.y = y;
-        this.timestamp = timestamp;
-        this.temperature = temperature;
-        this.humidity = humidity;
+        this.baseDate = baseDate;
+        this.baseTime = baseTime;
+        this.maxTemperature = maxTemperature;
+        this.minTemperature = minTemperature;
         this.weather = weather;
-        this.createdAt = createdAt;
+        this.comment = comment;
     }
 }
