@@ -1,5 +1,7 @@
 package com.survivalcoding.a510.components
 
+import android.graphics.BitmapFactory
+import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -13,12 +15,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.survivalcoding.a510.ui.theme.BubbleTheme.lineHeight
 import com.survivalcoding.a510.utils.TimeUtils
 
 @Composable
@@ -30,7 +33,9 @@ fun ChatBubble(
     profileImage: Int? = null,
     name: String? = null,
     isFirstInSequence: Boolean = true,
-    searchQuery: String = ""
+    searchQuery: String = "",
+    isImage: Boolean = false,
+    imageUrl: String? = null
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
@@ -65,13 +70,14 @@ fun ChatBubble(
                     )
                 }
 
-                MessageBubble(text, timestamp, isAiMessage, isFirstInSequence, searchQuery)
+                MessageBubble(text, timestamp, isAiMessage, isFirstInSequence, searchQuery, isImage, imageUrl)
             }
         } else {
-            MessageBubble(text, timestamp, isAiMessage, isFirstInSequence, searchQuery)
+            MessageBubble(text, timestamp, isAiMessage, isFirstInSequence, searchQuery, isImage, imageUrl)
         }
     }
 }
+
 
 @Composable
 fun MessageBubble(
@@ -79,7 +85,9 @@ fun MessageBubble(
     timestamp: Long,
     isAiMessage: Boolean,
     isFirstInSequence: Boolean,
-    searchQuery: String = ""
+    searchQuery: String = "",
+    isImage: Boolean = false,
+    imageUrl: String? = null
 ) {
     Row(
         modifier = Modifier
@@ -100,7 +108,7 @@ fun MessageBubble(
 
         Box(
             modifier = Modifier
-                .widthIn(max = 220.dp)
+                .widthIn(max = if (isImage) 200.dp else 220.dp)
                 .border(
                     width = 0.05.dp,
                     color = if (!isAiMessage) Color.Yellow else Color.White,
@@ -120,16 +128,65 @@ fun MessageBubble(
                         bottomEnd = 10.dp
                     )
                 )
-                .padding(horizontal = 10.dp, vertical = 7.dp)
+                .padding(
+                    horizontal = if (isImage) 0.dp else 10.dp,
+                    vertical = if (isImage) 0.dp else 7.dp
+                )
         ) {
-            HighlightedText(
-                text = text,
-                searchQuery = searchQuery,
-                color = Color.DarkGray,
-                textAlign = TextAlign.Start,
-                modifier = Modifier.align(Alignment.CenterStart),
-                fontSize = 12.sp
-            )
+            if (isImage && imageUrl != null) {
+                val context = LocalContext.current
+                val bitmap = androidx.compose.runtime.remember(imageUrl) {
+                    try {
+                        val uri = Uri.parse(imageUrl)
+                        val inputStream = context.contentResolver.openInputStream(uri)
+
+                        // 비트맵 옵션을 사용하여 이미지 크기 조절
+                        val options = BitmapFactory.Options().apply {
+                            inJustDecodeBounds = true
+                        }
+                        BitmapFactory.decodeStream(inputStream, null, options)
+                        inputStream?.close()
+
+                        // 적절한 샘플 크기 계산
+                        val maxSize = 1024
+                        var sampleSize = 1
+                        while (options.outWidth / sampleSize > maxSize ||
+                            options.outHeight / sampleSize > maxSize) {
+                            sampleSize *= 2
+                        }
+
+                        // 실제 비트맵 로드
+                        val finalOptions = BitmapFactory.Options().apply {
+                            inSampleSize = sampleSize
+                        }
+                        context.contentResolver.openInputStream(uri)?.use { stream ->
+                            BitmapFactory.decodeStream(stream, null, finalOptions)?.asImageBitmap()
+                        }
+                    } catch (e: Exception) {
+                        null
+                    }
+                }
+
+                bitmap?.let {
+                    Image(
+                        bitmap = it,
+                        contentDescription = "Shared image",
+                        modifier = Modifier
+                            .size(200.dp)
+                            .clip(RoundedCornerShape(10.dp)),
+                        contentScale = ContentScale.Crop
+                    )
+                }
+            } else {
+                HighlightedText(
+                    text = text,
+                    searchQuery = searchQuery,
+                    color = Color.DarkGray,
+                    textAlign = TextAlign.Start,
+                    modifier = Modifier.align(Alignment.CenterStart),
+                    fontSize = 12.sp
+                )
+            }
         }
 
         if (isAiMessage) {
