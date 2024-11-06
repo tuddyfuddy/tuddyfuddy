@@ -1,11 +1,17 @@
 import httpx
-import json
+from langchain_core.messages import SystemMessage, HumanMessage
 from app.core.logger import setup_logger
 from app.core.config import settings
 from langchain_openai import ChatOpenAI
 
 from app.models.memory_manager import UserMemoryManager
-from app.models.templates import SYSTEM_PROMPT_TEMPLATE_2, SYSTEM_PROMPT_TEMPLATE_1
+from app.models.templates import (
+    SYSTEM_MESSAGE_1,
+    SYSTEM_MESSAGE_2,
+    SYSTEM_MESSAGE_3,
+    SYSTEM_MESSAGE_4,
+    USER_MESSAGE_TEMPLATE,
+)
 
 logging = setup_logger("app")
 
@@ -58,27 +64,25 @@ class ChatService:
             api_key=ChatService.OPENAI_API_KEY,
             model_name=ChatService.GPT_MODEL,
             temperature=0.7,
-            max_tokens=max_response_length + 50,
         )
 
     @staticmethod
     async def process_chat(type: int, user_id: int, message: str):
         # 감정 분석
         emotion = await ChatService.get_emotion(message)
-        logging.info(f">>>>>>> {emotion}")
-        logging.info(f">>>>>>> {message}")
+        logging.info(f">>>>>>> ({emotion}) {message}")
 
         # LLM 및 메모리 설정
         message_length = len(message)
         max_response_length = ChatService.calculate_response_length(message_length)
         llm = ChatService.get_llm(max_response_length)
-        memory_manager = ChatService.get_memory_manager()
+        # memory_manager = ChatService.get_memory_manager()
 
         # 메모리 처리
-        short_term, entity_memory, vector_store = memory_manager.get_or_create_memories(
-            str(user_id)
-        )
-        recent_history = short_term.chat_memory.messages
+        # short_term, entity_memory, vector_store = memory_manager.get_or_create_memories(
+        #     str(user_id)
+        # )
+        # recent_history = short_term.chat_memory.messages
 
         # entity_memory.save_context({"input": message}, {"output": ""})
         # memory_variables = entity_memory.load_memory_variables({"input": message})
@@ -91,27 +95,38 @@ class ChatService:
         #     vector_store.add_texts(
         #         [f"User preference: {json.dumps(entities, ensure_ascii=False)}"]
         #     )
-        vector_store.add_texts([message])
+        # vector_store.add_texts([message])
 
         # 관련 정보 검색
-        relevant_docs = vector_store.similarity_search(message, k=2)
-        relevant_history = [doc.page_content for doc in relevant_docs]
+        # relevant_docs = vector_store.similarity_search(message, k=2)
+        # relevant_history = [doc.page_content for doc in relevant_docs]
 
-        logging.info(f"recent_history : \n{recent_history}")
-        logging.info(f"relevant_docs : \n{relevant_docs}")
-        logging.info(f"relevant_history : \n{relevant_history}")
+        # logging.info(f"recent_history : \n{recent_history}")
+        # logging.info(f"relevant_docs : \n{relevant_docs}")
+        # logging.info(f"relevant_history : \n{relevant_history}")
 
         # 응답 생성
-        template = SYSTEM_PROMPT_TEMPLATE_1 if type == 1 else SYSTEM_PROMPT_TEMPLATE_2
-        full_prompt = template.format(
-            max_length=max_response_length,
-            history=recent_history,
-            relevant_info=relevant_history,
-            emotion=emotion,
-            message=message,
-        )
 
-        answer = llm.predict(full_prompt)
-        short_term.save_context({"input": message}, {"output": answer})
+        system_message = {
+            1: SYSTEM_MESSAGE_1,
+            2: SYSTEM_MESSAGE_2,
+            3: SYSTEM_MESSAGE_3,
+            4: SYSTEM_MESSAGE_4,
+        }.get(type, SYSTEM_MESSAGE_1)
+
+        messages = [
+            SystemMessage(content=system_message),
+            HumanMessage(
+                content=USER_MESSAGE_TEMPLATE.format(
+                    emotion=emotion,
+                    message=message,
+                    history="no",
+                    relevant_info="no",
+                    max_response_length=max_response_length // 3,
+                )
+            ),
+        ]
+        answer = llm.invoke(messages).content
+        # short_term.save_context({"input": message}, {"output": answer})
 
         return {"response": [s.strip() for s in answer.split("<br>")]}
