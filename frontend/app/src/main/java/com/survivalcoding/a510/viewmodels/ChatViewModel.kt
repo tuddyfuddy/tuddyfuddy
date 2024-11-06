@@ -1,6 +1,7 @@
 package com.survivalcoding.a510.viewmodels
 
 import android.app.Application
+import android.net.Uri
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -10,6 +11,7 @@ import com.survivalcoding.a510.repositories.chat.ChatRepository
 import com.survivalcoding.a510.services.RetrofitClient
 import com.survivalcoding.a510.services.chat.ChatRequest
 import com.survivalcoding.a510.services.chat.ChatService
+import com.survivalcoding.a510.services.chat.ImageService
 import com.survivalcoding.a510.services.chat.getMessageList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -97,6 +99,8 @@ class ChatViewModel(application: Application, private val roomId: Int) : Android
         }
     }
 
+
+
     private suspend fun scrollToCurrentMatch(listState: LazyListState, screenHeight: Int) {
         val targetIndex = _searchMatches.value[_currentSearchIndex.value]
         // 화면어디에 검색한 단어가 있는 말풍선이 보이게 할지 정하는 숫자
@@ -138,6 +142,77 @@ class ChatViewModel(application: Application, private val roomId: Int) : Android
         }
     }
 
+    // 이미지 업로드 처리
+    fun handleImageUpload(uri: Uri) {
+        viewModelScope.launch {
+            try {
+                // 이미지 전송 중임을 사용자에게 알림
+                messageDao.insertMessage(
+                    ChatMessage(
+                        roomId = roomId,
+                        content = "이미지를 분석하고 있습니다...",
+                        isAiMessage = true
+                    )
+                )
+
+                // 이미지 업로드 및 분석
+                val response = ImageService.uploadAndAnalyzeImage(getApplication(), uri)
+
+                // 진행 중 메시지 삭제
+                messageDao.deleteLastMessage(roomId)
+
+                if (response.isSuccessful && response.body() != null) {
+                    val result = response.body()!!.result
+
+                    // 이미지 분석 결과 메시지 추가
+                    messageDao.insertMessage(
+                        ChatMessage(
+                            roomId = roomId,
+                            content = result.description,
+                            isAiMessage = true
+                        )
+                    )
+
+                    // 채팅방 정보 업데이트
+                    chatInfoDao.updateLastMessage(
+                        chatId = roomId,
+                        message = result.description,
+                        timestamp = System.currentTimeMillis()
+                    )
+                } else {
+                    val errorMessage = when (response.code()) {
+                        413 -> "이미지 크기가 너무 큽니다. 더 작은 이미지를 선택해주세요."
+                        415 -> "지원하지 않는 이미지 형식입니다. JPG, PNG 형식을 사용해주세요."
+                        else -> "이미지 처리 중 오류가 발생했습니다. (Error: ${response.code()})"
+                    }
+                    messageDao.insertMessage(
+                        ChatMessage(
+                            roomId = roomId,
+                            content = errorMessage,
+                            isAiMessage = true
+                        )
+                    )
+                }
+            } catch (e: Exception) {
+                // 구체적인 예외 처리
+                val errorMessage = when (e) {
+                    is OutOfMemoryError -> "이미지가 너무 큽니다. 더 작은 이미지를 선택해주세요."
+                    is SecurityException -> "이미지 접근 권한이 없습니다. 권한을 확인해주세요."
+                    is IllegalArgumentException -> "올바르지 않은 이미지 파일입니다. 다른 이미지를 선택해주세요."
+                    else -> "이미지 처리 중 오류가 발생했습니다. 다시 시도해주세요.\n${e.message}"
+                }
+
+                messageDao.insertMessage(
+                    ChatMessage(
+                        roomId = roomId,
+                        content = errorMessage,
+                        isAiMessage = true
+                    )
+                )
+            }
+        }
+    }
+
     fun clearChat() {
         viewModelScope.launch {
             // 선택한 채팅방의 메시지만 전체 삭제
@@ -149,4 +224,5 @@ class ChatViewModel(application: Application, private val roomId: Int) : Android
                 timestamp = System.currentTimeMillis()
             )
         }
-    }}
+    }
+}
