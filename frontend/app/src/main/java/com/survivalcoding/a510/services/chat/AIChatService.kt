@@ -28,7 +28,7 @@ fun ChatResponse.getMessageList(): List<String> {
 }
 
 interface AIChatService {
-    @POST("chat/{type}")
+    @POST("chats/test/{type}")
     suspend fun sendChatMessage(
         @Path("type") type: Int,
         @Body request: ChatRequest

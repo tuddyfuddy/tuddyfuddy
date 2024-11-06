@@ -7,6 +7,12 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
 
+    <!--카메라 접근권한-->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="34" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VISUAL_USER_SELECTED" />
+
     <application
         android:name=".GlobalApplication"
         android:allowBackup="true"
@@ -17,6 +23,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.A510"
+        android:enableOnBackInvokedCallback="true"
         tools:targetApi="31">
         <activity
             android:name=".MainActivity"
@@ -48,6 +55,9 @@
                     android:scheme="kakaoa167264ee18a4fc52fd2238b8c445a39" />
             </intent-filter>
         </activity>
+        <property
+            android:name="android.permissions.ENABLE_SELECTED_PHOTOS_ACCESS"
+            android:value="true" />
 
         <service
             android:name=".services.MyFirebaseMessagingService"

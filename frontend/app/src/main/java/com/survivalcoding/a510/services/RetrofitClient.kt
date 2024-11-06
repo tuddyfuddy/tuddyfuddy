@@ -3,6 +3,7 @@ package com.survivalcoding.a510.services
 import android.content.Context
 import com.survivalcoding.a510.data.TokenManager
 import com.survivalcoding.a510.services.chat.AIChatService
+import com.survivalcoding.a510.services.chat.ImageAnalysisService
 import okhttp3.Cookie
 import okhttp3.CookieJar
 import okhttp3.HttpUrl
@@ -10,10 +11,12 @@ import okhttp3.OkHttpClient
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.util.concurrent.TimeUnit
 
 // Retrofit 인스턴스를 관리하는 싱글톤 객체
 object RetrofitClient {
-    private const val BASE_URL = "http://k11a510.p.ssafy.io:8080/chat-service/"
+    private const val CHAT_BASE_URL = "http://k11a510.p.ssafy.io:8080/chat-service/"
+    private const val IMAGE_BASE_URL = "http://k11a510.p.ssafy.io:8080/"
     private lateinit var tokenManager: TokenManager
 
     // RetrofitClient 초기화 (앱 시작 시 호출 필요)
@@ -65,28 +68,38 @@ object RetrofitClient {
             .create(AuthService::class.java)
     }
 
-    // AI 채팅 서비스 추가
-    private val retrofit = Retrofit.Builder()
-        .baseUrl(BASE_URL)
+    // 채팅 서비스용 Retrofit 인스턴스
+    private val chatRetrofit = Retrofit.Builder()
+        .baseUrl(CHAT_BASE_URL)
         .addConverterFactory(GsonConverterFactory.create())
+        .client(
+            OkHttpClient.Builder()
+                .connectTimeout(30, TimeUnit.SECONDS)
+                .readTimeout(30, TimeUnit.SECONDS)
+                .writeTimeout(30, TimeUnit.SECONDS)
+                .build()
+        )
         .build()
 
-    val aiChatService: AIChatService = retrofit.create(AIChatService::class.java)
+    // 이미지 분석용 Retrofit 인스턴스
+    private val imageRetrofit = Retrofit.Builder()
+        .baseUrl(IMAGE_BASE_URL)
+        .addConverterFactory(GsonConverterFactory.create())
+        .client(
+            OkHttpClient.Builder()
+                .connectTimeout(30, TimeUnit.SECONDS)
+                .readTimeout(30, TimeUnit.SECONDS)
+                .writeTimeout(30, TimeUnit.SECONDS)
+                .build()
+        )
+        .build()
+
+    // 채팅 서비스
+    val aiChatService: AIChatService = chatRetrofit.create(AIChatService::class.java)
+
+    // 이미지 분석 서비스
+    val imageAnalysisService: ImageAnalysisService by lazy {
+        imageRetrofit.create(ImageAnalysisService::class.java)
+    }
 }
 
-//    // 테스트용 가짜 응답
-//    fun mockAuthService() = object : AuthService {
-//        override suspend fun authenticateKakao(request: KakaoAuthRequest): Response<KakaoAuthResponse> {
-//            return Response.success(
-//                KakaoAuthResponse(
-//                    token = "fake_jwt_token",
-//                    userId = "12345",
-//                    nickname = "테스트유저"
-//                )
-//            )
-//        }
-//    }
-
-    // 가짜 서비스 사용
-//    val authService: AuthService = mockAuthService()
-//}
