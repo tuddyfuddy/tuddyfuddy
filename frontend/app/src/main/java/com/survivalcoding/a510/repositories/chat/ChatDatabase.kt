@@ -8,6 +8,7 @@ import com.survivalcoding.a510.repositories.chat.ChatDatabaseMigrations.MIGRATIO
 import com.survivalcoding.a510.repositories.chat.ChatDatabaseMigrations.MIGRATION_2_3
 import com.survivalcoding.a510.repositories.chat.ChatDatabaseMigrations.MIGRATION_3_4
 import com.survivalcoding.a510.repositories.chat.ChatDatabaseMigrations.MIGRATION_4_5
+import com.survivalcoding.a510.repositories.chat.ChatDatabaseMigrations.MIGRATION_5_6
 
 
 @Database(entities = [ChatMessage::class, ChatInfo::class], version = 5)
@@ -26,7 +27,13 @@ abstract class ChatDatabase : RoomDatabase() {
                     ChatDatabase::class.java,
                     "chat_database"
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+                    .addMigrations(
+                        MIGRATION_1_2,
+                        MIGRATION_2_3,
+                        MIGRATION_3_4,
+                        MIGRATION_4_5,
+                        MIGRATION_5_6
+                    )
                     .build()
                 INSTANCE = instance
                 instance
