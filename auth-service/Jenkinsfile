@@ -38,9 +38,8 @@ pipeline {
                             
                             if [ "\$PARENTS" -gt "2" ]; then
                                 # 병합 커밋인 경우
-                                echo "Merge commit detected"
-                                # backend 브랜치의 이전 커밋과 비교
-                                git diff --name-only HEAD^1 HEAD | grep '^${SERVICE_NAME}/' || true
+                                echo "Merge commit detected" >&2
+                                git diff --name-only HEAD^1 HEAD^2 | grep '^${SERVICE_NAME}/' || true
                             else
                                 # 일반 커밋인 경우
                                 git diff --name-only HEAD^1 HEAD | grep '^${SERVICE_NAME}/' || true
