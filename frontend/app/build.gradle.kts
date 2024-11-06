@@ -54,6 +54,7 @@ android {
 }
 
 dependencies {
+    implementation (libs.androidx.work.runtime.ktx)
     implementation (libs.retrofit)
     implementation (libs.converter.gson)
     implementation (libs.accompanist.insets)
