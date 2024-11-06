@@ -48,6 +48,8 @@ pipeline {
                         returnStdout: true
                     ).trim()
                     
+                    echo "hi"
+
                     // 결과 로깅
                     echo "Manual Trigger: ${isManualTrigger}"
                     echo "Changes in ${SERVICE_NAME}: ${changes}"
