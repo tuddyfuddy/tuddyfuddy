@@ -27,39 +27,43 @@ pipeline {
                     // 저장소 체크아웃
                     checkout scm
                     
-                    // Build Cause 확인
-                    def causes = currentBuild.getBuildCauses()
-                    def isManualTrigger = false
+                    // 수동 트리거 확인
+                    def isManualTrigger = currentBuild.getBuildCauses('hudson.model.Cause$UserIdCause').size() > 0
                     
-                    // 모든 Cause들을 순회하며 수동 트리거 확인
-                    causes.each { cause ->
-                        if (cause._class.contains('UserIdCause')) {
-                            isManualTrigger = true
-                        }
+                    // 변경된 파일 목록 확인 (더 안정적인 방법)
+                    def changes = ""
+                    
+                    if (env.GIT_PREVIOUS_SUCCESSFUL_COMMIT) {
+                        changes = sh(
+                            script: """
+                                git diff --name-only ${env.GIT_PREVIOUS_SUCCESSFUL_COMMIT} ${env.GIT_COMMIT} | grep '^${SERVICE_NAME}/' || true
+                            """,
+                            returnStdout: true
+                        ).trim()
+                    } else {
+                        // 첫 빌드이거나 이전 성공 커밋이 없는 경우
+                        changes = "${SERVICE_NAME}"
                     }
                     
-                    // 변경된 파일 목록 확인
-                    def changes = sh(
-                        script: """
-                            git fetch --no-tags origin +refs/heads/*:refs/remotes/origin/*
-                            LAST_SUCCESSFUL_COMMIT=\$(git rev-parse \${GIT_PREVIOUS_SUCCESSFUL_COMMIT:-HEAD~1})
-                            CURRENT_COMMIT=\$(git rev-parse HEAD)
-                            git diff --name-only \$LAST_SUCCESSFUL_COMMIT \$CURRENT_COMMIT | grep '^${SERVICE_NAME}/' || true
-                        """,
-                        returnStdout: true
-                    ).trim()
+                    // 결과 로깅
+                    echo "Manual Trigger: ${isManualTrigger}"
+                    echo "Changes in ${SERVICE_NAME}: ${changes}"
                     
-                    // Boolean 값을 직접 할당
-                    def shouldRun = changes != '' || isManualTrigger
-                    env.SHOULD_RUN = shouldRun ? 'true' : 'false'
-
-                    echo "Is Manual Trigger: ${isManualTrigger}"
-                    echo "Changes detected in ${SERVICE_NAME}: ${changes}"
-                    echo "Should Run: ${env.SHOULD_RUN}"
-
-                    if (!shouldRun) {  // Boolean 값으로 직접 비교
+                    // 빌드 실행 여부 결정
+                    def shouldRun = isManualTrigger || changes != ''
+                    env.SHOULD_RUN = shouldRun.toString()
+                    
+                    if (!shouldRun) {
                         currentBuild.result = 'NOT_BUILT'
                         error("No changes in ${SERVICE_NAME} directory and not manually triggered. Skipping build.")
+                    }
+                    
+                    // 변경된 파일 목록 출력
+                    if (changes) {
+                        echo "Changed files:"
+                        changes.split('\n').each { file ->
+                            echo "  - ${file}"
+                        }
                     }
                 }
             }
