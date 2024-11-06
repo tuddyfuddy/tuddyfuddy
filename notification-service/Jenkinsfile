@@ -27,22 +27,43 @@ pipeline {
                     // 저장소 체크아웃
                     checkout scm
                     
-                    // 변경된 파일 목록 확인
-                    def changes = sh(
-                        script: "git diff --name-only HEAD^..HEAD | grep '^${SERVICE_NAME}/' || true",
-                        returnStdout: true
-                    ).trim()
+                    // 수동 트리거 확인
+                    def isManualTrigger = currentBuild.getBuildCauses('hudson.model.Cause$UserIdCause').size() > 0
                     
-                    // 수동 트리거이거나 해당 서비스 디렉토리에 변경이 있는 경우에만 실행
-                    env.SHOULD_RUN = (changes != '' || currentBuild.getBuildCauses('hudson.model.Cause$UserIdCause').size() > 0).toString()
-
-                    // 실행 여부 로깅
-                    echo "Changes detected in ${SERVICE_NAME}: ${env.SHOULD_RUN}"
-
-                    // 실행 조건이 맞지 않으면 파이프라인 종료
-                    if (env.SHOULD_RUN == 'false') {
+                    // 변경된 파일 목록 확인 (더 안정적인 방법)
+                    def changes = ""
+                    
+                    if (env.GIT_PREVIOUS_SUCCESSFUL_COMMIT) {
+                        changes = sh(
+                            script: """
+                                git diff --name-only ${env.GIT_PREVIOUS_SUCCESSFUL_COMMIT} ${env.GIT_COMMIT} | grep '^${SERVICE_NAME}/' || true
+                            """,
+                            returnStdout: true
+                        ).trim()
+                    } else {
+                        // 첫 빌드이거나 이전 성공 커밋이 없는 경우
+                        changes = "${SERVICE_NAME}"
+                    }
+                    
+                    // 결과 로깅
+                    echo "Manual Trigger: ${isManualTrigger}"
+                    echo "Changes in ${SERVICE_NAME}: ${changes}"
+                    
+                    // 빌드 실행 여부 결정
+                    def shouldRun = isManualTrigger || changes != ''
+                    env.SHOULD_RUN = shouldRun.toString()
+                    
+                    if (!shouldRun) {
                         currentBuild.result = 'NOT_BUILT'
-                        error("No changes in ${SERVICE_NAME} directory. Skipping build.")
+                        error("No changes in ${SERVICE_NAME} directory and not manually triggered. Skipping build.")
+                    }
+                    
+                    // 변경된 파일 목록 출력
+                    if (changes) {
+                        echo "Changed files:"
+                        changes.split('\n').each { file ->
+                            echo "  - ${file}"
+                        }
                     }
                 }
             }
