@@ -8,6 +8,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -38,7 +39,8 @@ fun ChatBubble(
     searchQuery: String = "",
     isImage: Boolean = false,
     imageUrl: String? = null,
-    showTimestamp: Boolean = true
+    showTimestamp: Boolean = true,
+    isLoading: Boolean = false,
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
@@ -73,18 +75,38 @@ fun ChatBubble(
                     )
                 }
 
-                MessageBubble(
-                    text = text,
-                    timestamp = timestamp,
-                    isAiMessage = isAiMessage,
-                    isFirstInSequence = isFirstInSequence,
-                    searchQuery = searchQuery,
-                    isImage = isImage,
-                    imageUrl = imageUrl,
-                    showTimestamp = showTimestamp
-                )
+                if (isLoading) {
+                    // 로딩 인디케이터 표시
+                    Box(
+                        modifier = Modifier
+                            .background(
+                                color = Color.White,
+                                shape = RoundedCornerShape(10.dp)
+                            )
+                            .padding(8.dp)
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = MaterialTheme.colorScheme.primary,
+                            strokeWidth = 2.dp
+                        )
+                    }
+                } else {
+                    // 기존 MessageBubble 표시
+                    MessageBubble(
+                        text = text,
+                        timestamp = timestamp,
+                        isAiMessage = isAiMessage,
+                        isFirstInSequence = isFirstInSequence,
+                        searchQuery = searchQuery,
+                        isImage = isImage,
+                        imageUrl = imageUrl,
+                        showTimestamp = showTimestamp
+                    )
+                }
             }
         } else {
+            // 사용자 메시지는 로딩 상태가 없으므로 그대로 유지
             MessageBubble(
                 text = text,
                 timestamp = timestamp,
