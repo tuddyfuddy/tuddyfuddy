@@ -285,7 +285,9 @@ fun ChatDetailPage(
                         profileImage = if (showProfile) chatData?.profileImage else null,
                         name = if (showProfile) chatData?.name else null,
                         isFirstInSequence = isFirstInSequence,
-                        searchQuery = searchQuery
+                        searchQuery = searchQuery,
+                        isImage = message.isImage,
+                        imageUrl = message.imageUrl
                     )
                 }
 
