@@ -44,14 +44,15 @@ pipeline {
                         returnStdout: true
                     ).trim()
                     
-                    // 수동 트리거이거나 해당 서비스 디렉토리에 변경이 있는 경우에만 실행
-                    env.SHOULD_RUN = (changes != '' || isManualTrigger).toString()
+                    // Boolean 값을 직접 할당
+                    def shouldRun = changes != '' || isManualTrigger
+                    env.SHOULD_RUN = shouldRun ? 'true' : 'false'
 
                     echo "Is Manual Trigger: ${isManualTrigger}"
                     echo "Changes detected in ${SERVICE_NAME}: ${changes}"
                     echo "Should Run: ${env.SHOULD_RUN}"
 
-                    if (env.SHOULD_RUN == 'false') {
+                    if (!shouldRun) {  // Boolean 값으로 직접 비교
                         currentBuild.result = 'NOT_BUILT'
                         error("No changes in ${SERVICE_NAME} directory and not manually triggered. Skipping build.")
                     }
