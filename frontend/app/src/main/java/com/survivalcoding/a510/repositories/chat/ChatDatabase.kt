@@ -7,10 +7,10 @@ import androidx.room.RoomDatabase
 import com.survivalcoding.a510.repositories.chat.ChatDatabaseMigrations.MIGRATION_1_2
 import com.survivalcoding.a510.repositories.chat.ChatDatabaseMigrations.MIGRATION_2_3
 import com.survivalcoding.a510.repositories.chat.ChatDatabaseMigrations.MIGRATION_3_4
+import com.survivalcoding.a510.repositories.chat.ChatDatabaseMigrations.MIGRATION_4_5
 
 
-
-@Database(entities = [ChatMessage::class, ChatInfo::class], version = 4)
+@Database(entities = [ChatMessage::class, ChatInfo::class], version = 5)
 abstract class ChatDatabase : RoomDatabase() {
     abstract fun chatMessageDao(): ChatMessageDao
     abstract fun chatInfoDao(): ChatInfoDao
@@ -26,7 +26,7 @@ abstract class ChatDatabase : RoomDatabase() {
                     ChatDatabase::class.java,
                     "chat_database"
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
                     .build()
                 INSTANCE = instance
                 instance
