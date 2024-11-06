@@ -30,20 +30,24 @@ pipeline {
                     // 수동 트리거 확인
                     def isManualTrigger = currentBuild.getBuildCauses('hudson.model.Cause$UserIdCause').size() > 0
                     
-                    // 변경된 파일 목록 확인 (더 안정적인 방법)
-                    def changes = ""
-                    
-                    if (env.GIT_PREVIOUS_SUCCESSFUL_COMMIT) {
-                        changes = sh(
-                            script: """
-                                git diff --name-only ${env.GIT_PREVIOUS_SUCCESSFUL_COMMIT} ${env.GIT_COMMIT} | grep '^${SERVICE_NAME}/' || true
-                            """,
-                            returnStdout: true
-                        ).trim()
-                    } else {
-                        // 첫 빌드이거나 이전 성공 커밋이 없는 경우
-                        changes = "${SERVICE_NAME}"
-                    }
+                    // 변경된 파일 목록 확인 (병합 커밋 고려)
+                    def changes = sh(
+                        script: """
+                            # 병합 커밋인지 확인
+                            PARENTS=\$(git rev-list --parents -n 1 HEAD | wc -w)
+                            
+                            if [ "\$PARENTS" -gt "2" ]; then
+                                # 병합 커밋인 경우
+                                echo "Merge commit detected"
+                                # backend 브랜치의 이전 커밋과 비교
+                                git diff --name-only HEAD^1 HEAD | grep '^${SERVICE_NAME}/' || true
+                            else
+                                # 일반 커밋인 경우
+                                git diff --name-only HEAD^1 HEAD | grep '^${SERVICE_NAME}/' || true
+                            fi
+                        """,
+                        returnStdout: true
+                    ).trim()
                     
                     // 결과 로깅
                     echo "Manual Trigger: ${isManualTrigger}"
@@ -53,17 +57,19 @@ pipeline {
                     def shouldRun = isManualTrigger || changes != ''
                     env.SHOULD_RUN = shouldRun.toString()
                     
-                    if (!shouldRun) {
-                        currentBuild.result = 'NOT_BUILT'
-                        error("No changes in ${SERVICE_NAME} directory and not manually triggered. Skipping build.")
-                    }
-                    
                     // 변경된 파일 목록 출력
                     if (changes) {
                         echo "Changed files:"
                         changes.split('\n').each { file ->
                             echo "  - ${file}"
                         }
+                    } else {
+                        echo "No changes detected in ${SERVICE_NAME} directory"
+                    }
+                    
+                    if (!shouldRun) {
+                        currentBuild.result = 'NOT_BUILT'
+                        error("No changes in ${SERVICE_NAME} directory and not manually triggered. Skipping build.")
                     }
                 }
             }
