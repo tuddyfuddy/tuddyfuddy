@@ -146,39 +146,37 @@ class ChatViewModel(application: Application, private val roomId: Int) : Android
     fun handleImageUpload(uri: Uri) {
         viewModelScope.launch {
             try {
-                // 이미지 전송 중임을 사용자에게 알림
+                // 사용자의 이미지 메시지 저장
                 messageDao.insertMessage(
                     ChatMessage(
                         roomId = roomId,
-                        content = "이미지를 분석하고 있습니다...",
-                        isAiMessage = true
+                        content = "",  // 이미지인 경우 content는 비워둠
+                        isAiMessage = false,
+                        isImage = true,
+                        imageUrl = uri.toString()  // 로컬 이미지 URI 저장
                     )
                 )
 
                 // 이미지 업로드 및 분석
                 val response = ImageService.uploadAndAnalyzeImage(getApplication(), uri)
 
-                // 진행 중 메시지 삭제
-                messageDao.deleteLastMessage(roomId)
-
                 if (response.isSuccessful && response.body() != null) {
                     val result = response.body()!!.result
 
-                    // 이미지 분석 결과 메시지 추가
-                    messageDao.insertMessage(
-                        ChatMessage(
-                            roomId = roomId,
-                            content = result.description,
-                            isAiMessage = true
-                        )
-                    )
-
-                    // 채팅방 정보 업데이트
+                    // 채팅방 정보 업데이트 (채팅방 목록에서는 "이미지를 보냈습니다" 표시)
                     chatInfoDao.updateLastMessage(
                         chatId = roomId,
-                        message = result.description,
+                        message = "이미지를 보냈습니다",
                         timestamp = System.currentTimeMillis()
                     )
+
+                    // ChatService로 이미지 분석 결과 전달
+                    ChatService.startService(
+                        getApplication(),
+                        roomId,
+                        "사용자가 이미지를 공유했습니다.\n이미지 URL: ${result.imageUrl}\n이미지 설명: ${result.description}"
+                    )
+
                 } else {
                     val errorMessage = when (response.code()) {
                         413 -> "이미지 크기가 너무 큽니다. 더 작은 이미지를 선택해주세요."

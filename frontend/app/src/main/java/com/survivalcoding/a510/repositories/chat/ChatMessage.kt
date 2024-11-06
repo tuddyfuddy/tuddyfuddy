@@ -11,5 +11,6 @@ data class ChatMessage(
     val content: String,
     val isAiMessage: Boolean,
     val timestamp: Long = System.currentTimeMillis(),
+    val isImage: Boolean = false,
     val imageUrl: String? = null
 )
