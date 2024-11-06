@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit
 
 // Retrofit 인스턴스를 관리하는 싱글톤 객체
 object RetrofitClient {
-    private const val BASE_URL = "http://k11a510.p.ssafy.io:8080/chat-service/"
+    private const val CHAT_BASE_URL = "http://k11a510.p.ssafy.io:8080/chat-service/"
     private const val IMAGE_BASE_URL = "http://k11a510.p.ssafy.io:8080/"
     private lateinit var tokenManager: TokenManager
 
@@ -70,7 +70,7 @@ object RetrofitClient {
 
     // 채팅 서비스용 Retrofit 인스턴스
     private val chatRetrofit = Retrofit.Builder()
-        .baseUrl(BASE_URL)
+        .baseUrl(CHAT_BASE_URL)
         .addConverterFactory(GsonConverterFactory.create())
         .client(
             OkHttpClient.Builder()
