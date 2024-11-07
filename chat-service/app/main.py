@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from py_eureka_client import eureka_client
-from .app.core.config import settings
-from .app.api import chat_controller
+from .core.config import settings
+from .api import chat_controller
 
 import uvicorn
 import os
