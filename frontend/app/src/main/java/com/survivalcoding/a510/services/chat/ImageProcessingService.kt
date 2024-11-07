@@ -52,7 +52,7 @@ class ImageProcessingService : Service() {
                 // 사용자가 보낸 이미지 로컬 저장소로 복사
                 val savedImagePath = saveImageToInternalStorage(imageUri)
 
-                // 이미지 분석 API로 업로드하기
+                // 이미지 분석 API 업로드하기
                 val response = ImageService.uploadAndAnalyzeImage(applicationContext, imageUri)
 
                 if (response.isSuccessful && response.body() != null) {
@@ -65,7 +65,7 @@ class ImageProcessingService : Service() {
                     ChatService.startService(
                         applicationContext,
                         roomId,
-                        "사용자가 이미지를 공유했습니다.\n이미지 URL: ${result.imageUrl}\n이미지 설명: ${result.description}",
+                        "\n이미지 URL: ${result.imageUrl} \n이미지 설명: ${result.description}",
                         null
                     )
                 } else {
