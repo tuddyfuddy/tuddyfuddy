@@ -77,7 +77,7 @@ class ImageProcessingService : Service() {
                         applicationContext,
                         roomId,
                         "\n이미지 URL: ${result.imageUrl} \n이미지 설명: ${result.description}",
-                        null
+                        loadingMessageId
                     )
                 } else {
                     handleError(roomId, "이미지 처리 중 오류가 발생했습니다. (Error: ${response.code()})")

@@ -50,6 +50,9 @@ class ChatService : Service() {
     private fun handleChatRequest(roomId: Int, content: String, loadingMessageId: Long?) {
         serviceScope.launch {
             try {
+                // 디버그용 로그 추가
+                Log.d("ChatService", "받은 loadingMessageId: $loadingMessageId")
+
                 val response = aiChatService.sendChatMessage(
                     // roomId가 5(단톡방)이 아니면 그대로 type에 roomId 보내고, roomId가 5이면... 제작중
                     type = if (roomId != 5) roomId else 1,
@@ -61,12 +64,13 @@ class ChatService : Service() {
                 Log.d("ChatResponse", "응답 코드: ${response.code()}")
                 Log.d("ChatResponse", "응답 메시지: ${response.message()}")
                 Log.d("ChatResponse", "응답 바디: ${response.body()}")
-                Log.d("ChatResponse", "응답 바디: ${response}")
-
 
                 if (response.isSuccessful) {
+                    // 로딩 메시지 삭제 시도 로그
+                    Log.d("ChatService", "로딩 메시지 삭제 시도. ID: $loadingMessageId")
                     loadingMessageId?.let { id ->
                         messageDao.deleteMessageById(id)
+                        Log.d("ChatService", "로딩 메시지 삭제 완료")
                     }
 
                     response.body()?.getMessageList()?.forEach { aiMessage ->
