@@ -36,20 +36,21 @@ def read_root():
     return {"Hello": "World"}
 
 
-# @app.on_event("startup")
-# async def startup_event():
-#     if not app.openapi_schema:
-#         openapi_schema = app.openapi()
-#         openapi_schema["components"]["securitySchemes"] = {
-#             "API Header": {
-#                 "type": "apiKey",
-#                 "name": "x-userid",
-#                 "in": "header",
-#             }
-#         }
-#         openapi_schema["servers"] = [{"url": "/chat-service"}]  # chat-service로 변경
-#         openapi_schema["security"] = [{"API Header": []}]
-#         app.openapi_schema = openapi_schema
+@app.on_event("startup")
+async def startup_event():
+    if not app.openapi_schema:
+        openapi_schema = app.openapi()
+        openapi_schema["components"]["securitySchemes"] = {
+            "API Header": {
+                "type": "apiKey",
+                "name": "x-userid",
+                "in": "header",
+            }
+        }
+        openapi_schema["servers"] = [{"url": "/chat-service"}]  # chat-service로 변경
+        openapi_schema["security"] = [{"API Header": []}]
+        app.openapi_schema = openapi_schema
+
 
 #     await register_to_eureka()
 
