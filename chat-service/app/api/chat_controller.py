@@ -1,11 +1,13 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
+
+from app.api.header_dependencies import get_user_header_info, UserHeaderInfo
 from app.core.logger import setup_logger
 from app.api.chat_service import ChatService
 
 
-router = APIRouter(prefix="/chat", tags=["chat"])
+router = APIRouter(prefix="/chats", tags=["chat"])
 logging = setup_logger("app")
 
 
@@ -13,15 +15,47 @@ class TextRequest(BaseModel):
     text: str
 
 
-@router.post("/{type}")
-async def chat(type: int, user_id: int, request: TextRequest):
+# 임시용
+@router.post("/test/{type}")
+async def chat(
+    type: int,
+    request: TextRequest,
+):
     try:
-        result = await ChatService.process_chat(type, user_id, request.text)
+        result = await ChatService.process_chat(type, 9999, request.text)
         if isinstance(result, JSONResponse):
             return ["응?"]
         return result
     except Exception as e:
         logging.error(f"Error in chat endpoint: {e}")
+        return ["응?"]
+
+
+@router.post("/direct/{type}")
+async def chat(
+    type: int,
+    request: TextRequest,
+    user_info: UserHeaderInfo = Depends(get_user_header_info),
+):
+    try:
+        result = await ChatService.process_chat(type, user_info.user_id, request.text)
+        if isinstance(result, JSONResponse):
+            return ["응?"]
+        return result
+    except Exception as e:
+        logging.error(f"Error in chat endpoint: {e}")
+        return ["응?"]
+
+
+@router.post("/group/{type}")
+async def chat(
+    type: int,
+    request: TextRequest,
+    user_info: UserHeaderInfo = Depends(get_user_header_info),
+):
+    try:
+        return ["응?"]
+    except Exception as e:
         return ["응?"]
 
 
