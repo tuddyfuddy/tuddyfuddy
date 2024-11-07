@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.IBinder
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.survivalcoding.a510.repositories.chat.ChatDatabase
 import com.survivalcoding.a510.repositories.chat.ChatMessage
@@ -54,6 +55,14 @@ class ChatService : Service() {
                     type = if (roomId != 5) roomId else 1,
                     request = ChatRequest(text = content)
                 )
+
+                // 로그 추가
+                Log.d("ChatResponse", "응답 성공 여부: ${response.isSuccessful}")
+                Log.d("ChatResponse", "응답 코드: ${response.code()}")
+                Log.d("ChatResponse", "응답 메시지: ${response.message()}")
+                Log.d("ChatResponse", "응답 바디: ${response.body()}")
+                Log.d("ChatResponse", "응답 바디: ${response}")
+
 
                 if (response.isSuccessful) {
                     loadingMessageId?.let { id ->

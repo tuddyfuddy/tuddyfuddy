@@ -49,6 +49,17 @@ class ImageProcessingService : Service() {
     private fun handleImageProcessing(roomId: Int, imageUri: Uri) {
         serviceScope.launch {
             try {
+                // 로딩 메시지 추가
+                val loadingMessageId = messageDao.insertMessageAndGetId(
+                    ChatMessage(
+                        roomId = roomId,
+                        content = "",
+                        isAiMessage = true,
+                        timestamp = System.currentTimeMillis(),
+                        isLoading = true
+                    )
+                )
+
                 // 사용자가 보낸 이미지 로컬 저장소로 복사
                 val savedImagePath = saveImageToInternalStorage(imageUri)
 
