@@ -178,23 +178,16 @@ class ChatService:
         }
 
         validation_input = {**input_dict, "answer": answer}
-        logging.info(f">>>>>>> 2")
         validation_result = await validation_chain.ainvoke(validation_input)
 
         # 답변 최종 선택(1에서 괜찮으면 그대로, 문제가 있으면 수정본으로)
-        logging.info(f">>>>>>> {answer}")
-        logging.info(
-            f">>>>>>> {validation_result['validation'].content}"
-            if validation_result["validation"].content == "Yes"
-            else ">>>>>>> No"
-        )
-        logging.info(f">>>>>>> {validation_result['validation'].content}")
-
+        logging.info(f">>>>>>> (수정 전) {answer}")
         final_answer = (
             answer
             if validation_result["validation"].content == "Yes"
             else validation_result["validation"].content
         )
+        logging.info(f">>>>>>> (수정 후) {final_answer}")
         # short_term.save_context({"input": message}, {"output": final_answer})
 
         return {"response": [s.strip() for s in final_answer.split("<br>")]}
