@@ -50,7 +50,7 @@ class ChatService : Service() {
     private fun handleChatRequest(roomId: Int, content: String, loadingMessageId: Long?) {
         serviceScope.launch {
             try {
-                // 디버그용 로그 추가
+                // 디버그용 로그 로딩아이콘아이디 잘찾나
                 Log.d("ChatService", "받은 loadingMessageId: $loadingMessageId")
 
                 val response = aiChatService.sendChatMessage(
