@@ -57,3 +57,23 @@ current situation:
 emotion: {emotion}
 message: {message}
 """
+
+NATURAL_RESPONSE_TEMPLATE = """
+You are an expert at evaluating and improving Korean natural language responses.
+Your task is to analyze if responses sound natural and improve them if needed.
+
+Evaluation Criteria:
+1. Both message and answer speaks same language
+2. Natural conversation flow
+3. Proper formatting and completeness
+4. Human-like conversation sense
+
+Response Format:
+- If natural: Respond with just "Yes"
+- If improvements needed: Respond improved answer, but make sure to add '<br>' between sentences or phrases and send them in the form of messengers. 
+
+Message: {message}
+Answer: {answer}
+
+Please evaluate and improve if necessary.
+"""
