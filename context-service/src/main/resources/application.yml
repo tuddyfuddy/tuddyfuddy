@@ -20,6 +20,11 @@ spring:
   jackson:
     time-zone: Asia/Seoul
 
+kakao:
+  api:
+    url: ${KAKAO_API_URL}
+    key: ${KAKAO_API_KEY}
+
 health:
   threshold:
     max-heart-rate: 180
@@ -59,3 +64,5 @@ weather:
   api:
     key: ${WEATHER_API_KEY}
     url: ${WEATHER_API_URL}
+  fetch:
+    cron: ${WEATHER_FETCH_CRON}

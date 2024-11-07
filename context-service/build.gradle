@@ -54,7 +54,7 @@ dependencies {
     // MongoDB
     implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
     implementation 'org.springframework.data:spring-data-mongodb'
-    
+
     // Auditing 지원을 위한 의존성
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 
@@ -70,6 +70,9 @@ dependencies {
     // JSON 처리
     implementation 'com.fasterxml.jackson.core:jackson-databind'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+
+    // open csv
+    implementation 'com.opencsv:opencsv:5.9'
 
     // MapStruct
     implementation 'org.mapstruct:mapstruct:1.4.2.Final'
