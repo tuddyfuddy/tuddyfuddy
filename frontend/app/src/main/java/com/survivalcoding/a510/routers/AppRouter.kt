@@ -65,7 +65,15 @@ fun AppRouter(
                 isLoggedIn = isLoggedIn,
                 onKakaoLoginClick = {
                     onKakaoLoginClick.invoke()
-                    navController.navigate(Routes.CHAT_LIST)
+                    if (isLoggedIn) {
+                        navController.navigate(Routes.CHAT_LIST) {
+                            popUpTo(Routes.WELCOME_SCREEN) { inclusive = true }
+                        }
+                    } else {
+                        navController.navigate(Routes.TERMS_AGREEMENT) {
+                            popUpTo(Routes.WELCOME_SCREEN) { inclusive = true }
+                        }
+                    }
                 }
             )
         }
