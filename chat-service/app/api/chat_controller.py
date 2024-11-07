@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-
+from app.core.uilts import log_api_time
 from app.api.header_dependencies import get_user_header_info, UserHeaderInfo
 from app.core.logger import setup_logger
 from app.api.chat_service import ChatService
@@ -17,6 +17,7 @@ class TextRequest(BaseModel):
 
 # 임시용
 @router.post("/test/{room_id}")
+@log_api_time
 async def chat(
     room_id: int,
     request: TextRequest,
@@ -32,6 +33,7 @@ async def chat(
 
 
 @router.post("/direct/{room_id}")
+@log_api_time
 async def chat(
     room_id: int,
     request: TextRequest,
@@ -50,6 +52,7 @@ async def chat(
 
 
 @router.post("/group/{room_id}")
+@log_api_time
 async def chat(
     room_id: int,
     request: TextRequest,
@@ -62,6 +65,7 @@ async def chat(
 
 
 @router.get("/history/{room_id}")
+@log_api_time
 async def get_history(
     room_id: int, user_info: UserHeaderInfo = Depends(get_user_header_info)
 ):

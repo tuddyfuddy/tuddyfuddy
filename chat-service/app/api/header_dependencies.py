@@ -15,7 +15,6 @@ def get_user_header_info(
     request: Request,
 ):
     user_id = request.headers.get("x-userid")
-    logger.info(request.headers)
     if user_id is None:
         return JSONResponse(
             status_code=400,

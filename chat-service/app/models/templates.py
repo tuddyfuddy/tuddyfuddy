@@ -122,7 +122,8 @@ Improvement Guidelines:
 
 Response Rules:
 - Only return the improved response without any evaluation or explanation
-- Do not use periods (.) at the end of sentences unless absolutely necessary
+- Do not use periods (.)
+- Do not add or remove exclamation marks (!), or question marks (?). maintain them as they appear in the original message
 - Limit responses to a maximum of {max_length} tokens
 - Make sure to add '<br>' between every sentences or phrases
 
