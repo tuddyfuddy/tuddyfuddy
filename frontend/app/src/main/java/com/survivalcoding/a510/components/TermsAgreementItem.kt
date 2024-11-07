@@ -33,7 +33,9 @@ fun TermsAgreementItem(
         Row(
             horizontalArrangement = Arrangement.Start,
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier
+                .weight(1f)
+                .clickable { onCheckedChange(!checked) }
         ) {
             Checkbox(
                 checked = checked,
