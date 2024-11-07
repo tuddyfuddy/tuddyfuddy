@@ -44,6 +44,10 @@ fun ChatBubble(
     showTimestamp: Boolean = true,
     isLoading: Boolean = false,
 ) {
+    if (!isLoading && text.isBlank() && !isImage && imageUrl == null) {
+        return
+    }
+
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = if (isAiMessage) Arrangement.Start else Arrangement.End,
@@ -135,6 +139,10 @@ fun MessageBubble(
     imageUrl: String? = null,
     showTimestamp: Boolean = true
 ) {
+    if (text.isBlank() && !isImage && imageUrl == null) {
+        return
+    }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
