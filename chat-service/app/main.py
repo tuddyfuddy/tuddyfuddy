@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from py_eureka_client import eureka_client
-from .core.config import settings
-from .api import chat_controller
+from .app.core.config import settings
+from .app.api import chat_controller
 
 import uvicorn
 import os
@@ -36,6 +36,13 @@ def read_root():
     return {"Hello": "World"}
 
 
+# 경고 메시지 무시
+import warnings
+
+warnings.filterwarnings("ignore", message="on_event is deprecated.*")
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+
+
 @app.on_event("startup")
 async def startup_event():
     if not app.openapi_schema:
@@ -50,6 +57,7 @@ async def startup_event():
         openapi_schema["servers"] = [{"url": "/chat-service"}]  # chat-service로 변경
         openapi_schema["security"] = [{"API Header": []}]
         app.openapi_schema = openapi_schema
+
 
     await register_to_eureka()
 

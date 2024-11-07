@@ -3,6 +3,9 @@ from langchain_core.messages import SystemMessage, HumanMessage
 from app.core.logger import setup_logger
 from app.core.config import settings
 from langchain_openai import ChatOpenAI
+from langchain.prompts import PromptTemplate
+from langchain.chains import SequentialChain, LLMChain
+from langchain.schema.runnable import RunnablePassthrough
 
 from app.models.memory_manager import UserMemoryManager
 from app.models.templates import (
@@ -11,7 +14,9 @@ from app.models.templates import (
     SYSTEM_MESSAGE_3,
     SYSTEM_MESSAGE_4,
     USER_MESSAGE_TEMPLATE,
+    NATURAL_RESPONSE_TEMPLATE,
 )
+
 
 logging = setup_logger("app")
 
@@ -67,7 +72,37 @@ class ChatService:
         )
 
     @staticmethod
-    async def process_chat(type: int, user_id: int, message: str):
+    def create_response_chain(llm, template: str) -> LLMChain:
+        response_prompt = PromptTemplate(
+            input_variables=[
+                "max_length",
+                "history",
+                "relevant_info",
+                "emotion",
+                "message",
+            ],
+            template=template,
+        )
+        return response_prompt | llm | {"answer": RunnablePassthrough()}
+
+    @staticmethod
+    def create_validation_chain(llm) -> LLMChain:
+        """Creates the validation chain"""
+        validation_prompt = PromptTemplate(
+            input_variables=[
+                "max_length",
+                "history",
+                "relevant_info",
+                "emotion",
+                "message",
+                "answer",
+            ],
+            template=NATURAL_RESPONSE_TEMPLATE,
+        )
+        return validation_prompt | llm | {"validation": RunnablePassthrough()}
+
+    @staticmethod
+    async def process_chat(type: int, user_id: str, message: str):
         # 감정 분석
         emotion = await ChatService.get_emotion(message)
         logging.info(f">>>>>>> ({emotion}) {message}")
@@ -105,14 +140,16 @@ class ChatService:
         # logging.info(f"relevant_docs : \n{relevant_docs}")
         # logging.info(f"relevant_history : \n{relevant_history}")
 
-        # 응답 생성
-
+        # 체인 생성
         system_message = {
             1: SYSTEM_MESSAGE_1,
             2: SYSTEM_MESSAGE_2,
             3: SYSTEM_MESSAGE_3,
             4: SYSTEM_MESSAGE_4,
         }.get(type, SYSTEM_MESSAGE_1)
+
+        response_chain = ChatService.create_response_chain(llm, system_message)
+        validation_chain = ChatService.create_validation_chain(llm)
 
         messages = [
             SystemMessage(content=system_message),
@@ -129,4 +166,28 @@ class ChatService:
         answer = llm.invoke(messages).content
         # short_term.save_context({"input": message}, {"output": answer})
 
-        return {"response": [s.strip() for s in answer.split("<br>")]}
+        # 응답 생성
+        # result = await response_chain.ainvoke(messages)
+
+        input_dict = {
+            "max_length": max_response_length // 3,
+            "history": "no",
+            "relevant_info": "no",
+            "emotion": emotion,
+            "message": message,
+        }
+
+        validation_input = {**input_dict, "answer": answer}
+        validation_result = await validation_chain.ainvoke(validation_input)
+
+        # 답변 최종 선택(1에서 괜찮으면 그대로, 문제가 있으면 수정본으로)
+        logging.info(f">>>>>>> (수정 전) {answer}")
+        final_answer = (
+            answer
+            if validation_result["validation"].content == "Yes"
+            else validation_result["validation"].content
+        )
+        logging.info(f">>>>>>> (수정 후) {final_answer}")
+        # short_term.save_context({"input": message}, {"output": final_answer})
+
+        return {"response": [s.strip() for s in final_answer.split("<br>")]}

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-
+from app.core.uilts import log_api_time
 from app.api.header_dependencies import get_user_header_info, UserHeaderInfo
 from app.core.logger import setup_logger
 from app.api.chat_service import ChatService
@@ -16,13 +16,14 @@ class TextRequest(BaseModel):
 
 
 # 임시용
-@router.post("/test/{type}")
+@router.post("/test/{room_id}")
+@log_api_time
 async def chat(
-    type: int,
+    room_id: int,
     request: TextRequest,
 ):
     try:
-        result = await ChatService.process_chat(type, 9999, request.text)
+        result = await ChatService.process_chat(room_id, 9999, request.text)
         if isinstance(result, JSONResponse):
             return ["응?"]
         return result
@@ -31,14 +32,17 @@ async def chat(
         return ["응?"]
 
 
-@router.post("/direct/{type}")
+@router.post("/direct/{room_id}")
+@log_api_time
 async def chat(
-    type: int,
+    room_id: int,
     request: TextRequest,
     user_info: UserHeaderInfo = Depends(get_user_header_info),
 ):
     try:
-        result = await ChatService.process_chat(type, user_info.user_id, request.text)
+        result = await ChatService.process_chat(
+            room_id, user_info.user_id, request.text
+        )
         if isinstance(result, JSONResponse):
             return ["응?"]
         return result
@@ -47,9 +51,10 @@ async def chat(
         return ["응?"]
 
 
-@router.post("/group/{type}")
+@router.post("/group/{room_id}")
+@log_api_time
 async def chat(
-    type: int,
+    room_id: int,
     request: TextRequest,
     user_info: UserHeaderInfo = Depends(get_user_header_info),
 ):
@@ -59,10 +64,13 @@ async def chat(
         return ["응?"]
 
 
-@router.get("/history/{user_id}")
-async def get_history(user_id: str):
+@router.get("/history/{room_id}")
+@log_api_time
+async def get_history(
+    room_id: int, user_info: UserHeaderInfo = Depends(get_user_header_info)
+):
     try:
-        result = await ChatService.get_history(user_id)
+        result = await ChatService.get_history(user_info.user_id)
         if isinstance(result, JSONResponse):
             return result
         return result
