@@ -147,7 +147,7 @@ class ChatService : Service() {
 
     private fun createNotification() = NotificationCompat.Builder(this, CHANNEL_ID)
         .setContentTitle("채팅 서비스 실행 중")
-        .setContentText("백그라운드에서 메시지를 수신하고 있습니다.")
+        .setContentText("백그라운드에서 AI 답변을 받고 있습니다.")
         .setSmallIcon(android.R.drawable.ic_dialog_info)
         .setPriority(NotificationCompat.PRIORITY_LOW)
         .build()

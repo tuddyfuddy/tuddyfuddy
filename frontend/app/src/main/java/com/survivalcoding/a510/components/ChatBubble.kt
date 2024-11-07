@@ -76,7 +76,7 @@ fun ChatBubble(
                 }
 
                 if (isLoading) {
-                    // 로딩 인디케이터 표시
+                    // 로딩 아이콘 표시
                     Box(
                         modifier = Modifier
                             .background(
@@ -217,7 +217,7 @@ fun MessageBubble(
                         }
                     }
                 } else {
-                    // URI인 경우 로직
+                    // URI 경우 로직
                     val context = LocalContext.current
                     val bitmap = remember(imageUrl) {
                         try {

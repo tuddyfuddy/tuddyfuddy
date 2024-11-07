@@ -171,12 +171,6 @@ class ChatViewModel(application: Application, private val roomId: Int) : Android
     private fun sendCombinedMessage(messages: List<String>) {
         viewModelScope.launch {
             try {
-//                // 로딩 메시지 삭제
-//                loadingMessageId?.let { id ->
-//                    messageDao.deleteMessageById(id)
-//                    loadingMessageId = null
-//                }
-
                 // 백그라운드 서비스로 합쳐진 메시지 전송
                 val combinedContent = messages.joinToString("\n")
 
@@ -226,7 +220,7 @@ class ChatViewModel(application: Application, private val roomId: Int) : Android
     fun handleImageUpload(uri: Uri) {
         viewModelScope.launch {
             try {
-                // 사용자의 이미지 메시지 저장
+                // 사용자가 보낸 이미지 메시지 저장
                 messageDao.insertMessage(
                     ChatMessage(
                         roomId = roomId,
@@ -240,7 +234,7 @@ class ChatViewModel(application: Application, private val roomId: Int) : Android
                 // 채팅방 정보 업데이트
                 chatInfoDao.updateLastMessage(
                     chatId = roomId,
-                    message = "이미지를 보냈습니다",
+                    message = "사진을 전송했습니다.",
                     timestamp = System.currentTimeMillis()
                 )
 
