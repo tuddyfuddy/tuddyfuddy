@@ -74,8 +74,14 @@ class ChatService:
     @staticmethod
     def create_response_chain(llm, template: str) -> LLMChain:
         response_prompt = PromptTemplate(
-            input_variables=["max_length", "history", "relevant_info", "emotion", "message"],
-            template=template
+            input_variables=[
+                "max_length",
+                "history",
+                "relevant_info",
+                "emotion",
+                "message",
+            ],
+            template=template,
         )
         return response_prompt | llm | {"answer": RunnablePassthrough()}
 
@@ -83,13 +89,20 @@ class ChatService:
     def create_validation_chain(llm) -> LLMChain:
         """Creates the validation chain"""
         validation_prompt = PromptTemplate(
-            input_variables=["max_length", "history", "relevant_info", "emotion", "message", "answer"],
-            template=NATURAL_RESPONSE_TEMPLATE
+            input_variables=[
+                "max_length",
+                "history",
+                "relevant_info",
+                "emotion",
+                "message",
+                "answer",
+            ],
+            template=NATURAL_RESPONSE_TEMPLATE,
         )
         return validation_prompt | llm | {"validation": RunnablePassthrough()}
 
     @staticmethod
-    async def process_chat(type: int, user_id: int, message: str):
+    async def process_chat(type: int, user_id: str, message: str):
         # 감정 분석
         emotion = await ChatService.get_emotion(message)
         logging.info(f">>>>>>> ({emotion}) {message}")
@@ -161,7 +174,7 @@ class ChatService:
             "history": "no",
             "relevant_info": "no",
             "emotion": emotion,
-            "message": message
+            "message": message,
         }
 
         validation_input = {**input_dict, "answer": answer}
@@ -170,10 +183,18 @@ class ChatService:
 
         # 답변 최종 선택(1에서 괜찮으면 그대로, 문제가 있으면 수정본으로)
         logging.info(f">>>>>>> {answer}")
-        logging.info(f">>>>>>> {validation_result['validation'].content}" if validation_result['validation'].content == "Yes" else ">>>>>>> No")
+        logging.info(
+            f">>>>>>> {validation_result['validation'].content}"
+            if validation_result["validation"].content == "Yes"
+            else ">>>>>>> No"
+        )
         logging.info(f">>>>>>> {validation_result['validation'].content}")
 
-        final_answer = answer if validation_result['validation'].content == "Yes" else validation_result['validation'].content
+        final_answer = (
+            answer
+            if validation_result["validation"].content == "Yes"
+            else validation_result["validation"].content
+        )
         # short_term.save_context({"input": message}, {"output": final_answer})
 
         return {"response": [s.strip() for s in final_answer.split("<br>")]}
