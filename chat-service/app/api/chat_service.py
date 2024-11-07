@@ -150,29 +150,30 @@ class ChatService:
                 )
             ),
         ]
-        # answer = llm.invoke(messages).content
+        answer = llm.invoke(messages).content
         # short_term.save_context({"input": message}, {"output": answer})
 
         # 응답 생성
-        result = response_chain.ainvoke(messages)
+        # result = await response_chain.ainvoke(messages)
 
         input_dict = {
             "max_length": max_response_length // 3,
-            "history": recent_history,
-            "relevant_info": relevant_history,
+            "history": "no",
+            "relevant_info": "no",
             "emotion": emotion,
             "message": message
         }
 
-        validation_input = {**input_dict, "answer": result["answer"]}
+        validation_input = {**input_dict, "answer": answer}
+        logging.info(f">>>>>>> 2")
         validation_result = await validation_chain.ainvoke(validation_input)
 
         # 답변 최종 선택(1에서 괜찮으면 그대로, 문제가 있으면 수정본으로)
-        logging.info(f">>>>>>> {result["answer"].content}")
+        logging.info(f">>>>>>> {answer}")
         logging.info(f">>>>>>> {validation_result['validation'].content}" if validation_result['validation'].content == "Yes" else ">>>>>>> No")
         logging.info(f">>>>>>> {validation_result['validation'].content}")
 
-        final_answer = result["answer"].content if validation_result['validation'].content == "Yes" else validation_result['validation'].content
-        short_term.save_context({"input": message}, {"output": final_answer})
+        final_answer = answer if validation_result['validation'].content == "Yes" else validation_result['validation'].content
+        # short_term.save_context({"input": message}, {"output": final_answer})
 
         return {"response": [s.strip() for s in final_answer.split("<br>")]}
