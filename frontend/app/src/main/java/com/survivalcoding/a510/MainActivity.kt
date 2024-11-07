@@ -15,6 +15,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.core.view.WindowCompat
 import com.survivalcoding.a510.routers.AppRouter
+import com.survivalcoding.a510.routers.Routes
 import com.survivalcoding.a510.services.RetrofitClient
 import com.survivalcoding.a510.states.AuthState
 import com.survivalcoding.a510.viewmodels.MainViewModel
@@ -53,8 +54,9 @@ class MainActivity : ComponentActivity() {
                             viewModel.handleKakaoLogin(
                                 activity = this@MainActivity,
                                 onSuccess = {
-                                    // 로그인 성공 시 채팅 목록 페이지로 이동
-                                    navController.navigate("chatListPage")
+                                    navController.navigate(Routes.TERMS_AGREEMENT) {
+                                        popUpTo(Routes.WELCOME_SCREEN) { inclusive = true }
+                                    }
                                 },
                                 onError = { error ->
                                     // 로그인 실패 시 에러 메시지 표시

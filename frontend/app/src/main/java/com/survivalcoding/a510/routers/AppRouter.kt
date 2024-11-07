@@ -16,6 +16,7 @@ import com.survivalcoding.a510.pages.ChatDetailPage
 import com.survivalcoding.a510.pages.ChatListPage
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.res.painterResource
@@ -24,11 +25,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.survivalcoding.a510.R
+import com.survivalcoding.a510.pages.PermissionPage
 import com.survivalcoding.a510.pages.SettingPage
+import com.survivalcoding.a510.pages.SignUpCompletePage
+import com.survivalcoding.a510.pages.TermsAgreementPage
+import kotlinx.coroutines.delay
 
 
 object Routes {
     const val WELCOME_SCREEN = "welcomeScreen"
+    const val TERMS_AGREEMENT = "termsAgreement"
+    const val PERMISSION_PAGE = "permissionPage"
+    const val SIGNUP_COMPLETE = "signupComplete"
     const val CHAT_LIST = "chatListPage"
     const val CHAT_DETAIL = "chatDetailPage/{chatId}"
     const val SETTING_PAGE = "settingPage"
@@ -57,9 +65,46 @@ fun AppRouter(
                 isLoggedIn = isLoggedIn,
                 onKakaoLoginClick = {
                     onKakaoLoginClick.invoke()
-                    navController.navigate(Routes.CHAT_LIST)
+                    if (isLoggedIn) {
+                        navController.navigate(Routes.CHAT_LIST) {
+                            popUpTo(Routes.WELCOME_SCREEN) { inclusive = true }
+                        }
+                    } else {
+                        navController.navigate(Routes.TERMS_AGREEMENT) {
+                            popUpTo(Routes.WELCOME_SCREEN) { inclusive = true }
+                        }
+                    }
                 }
             )
+        }
+
+        // 약관 동의 페이지
+        composable(Routes.TERMS_AGREEMENT) {
+            TermsAgreementPage(
+                onNextClick = {
+                    navController.navigate(Routes.PERMISSION_PAGE)
+                }
+            )
+        }
+
+        // 권한 설정 페이지
+        composable(Routes.PERMISSION_PAGE) {
+            PermissionPage(
+                onNextClick = {
+                    navController.navigate(Routes.SIGNUP_COMPLETE)
+                }
+            )
+        }
+
+        // 가입 완료 페이지
+        composable(Routes.SIGNUP_COMPLETE) {
+            SignUpCompletePage()
+            LaunchedEffect(Unit) {
+                delay(2000)
+                navController.navigate(Routes.CHAT_LIST) {
+                    popUpTo(Routes.WELCOME_SCREEN) { inclusive = true }
+                }
+            }
         }
 
         // 권한 설정 페이지
@@ -82,6 +127,8 @@ fun AppRouter(
             val chatId = backStackEntry.arguments?.getInt("chatId") ?: return@composable
             ChatDetailPage(navController, chatId)
         }
+
+
     }
 }
 

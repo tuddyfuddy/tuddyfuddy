@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.survivalcoding.a510.components.TermsAgreementItem
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.ui.Alignment
@@ -133,9 +134,10 @@ private fun AllAgreeCheckbox(
         modifier = modifier
             .fillMaxWidth()
             .background(
-                color = Color(0xFFF5F5F5),  // 연한 회색 배경
+                color = Color(0xFFF5F5F5),
                 shape = RoundedCornerShape(8.dp)
             )
+            .clickable { onCheckedChange(!checked) }
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Start
