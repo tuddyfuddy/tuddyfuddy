@@ -1,7 +1,9 @@
 package com.survivalcoding.a510.components
 
+import android.content.Context
 import android.graphics.BitmapFactory
 import android.net.Uri
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -178,9 +180,21 @@ fun MessageBubble(
                 )
         ) {
             if (isImage && imageUrl != null) {
-                if (imageUrl.startsWith("/data/")) {
-                    // 내부 저장소의 이미지인 경우 로직
-                    val imageFile = File(imageUrl)
+
+                Log.d("ChatBubble", "로딩 이미지 URL!!!!!!!!!: $imageUrl")
+
+                // 내부 저장소의 이미지인 경우 로직
+//                if (imageUrl.startsWith("/data/")) {
+//                if (!imageUrl.startsWith("content://")) {
+//                    val imageFile = File(imageUrl)
+                    val context = LocalContext.current
+                    val directory = context.getDir("images", Context.MODE_PRIVATE)
+                    val imageFile = File(directory, imageUrl)  // 파일 이름으로 전체 경로 생성
+
+                    Log.d("ChatBubble", "풀 이미지 경로!!!!!!!!: ${imageFile.absolutePath}")
+                    Log.d("ChatBubble", "파일 잌지스트!!!!!!!!!!!: ${imageFile.exists()}")
+
+
                     if (imageFile.exists()) {
                         val bitmap = remember(imageUrl) {
                             try {
@@ -201,6 +215,7 @@ fun MessageBubble(
                                 }
                                 BitmapFactory.decodeFile(imageFile.absolutePath, finalOptions)?.asImageBitmap()
                             } catch (e: Exception) {
+                                Log.e("ChatBubble", "이미지 로드 실패", e)
                                 null
                             }
                         }
@@ -216,49 +231,49 @@ fun MessageBubble(
                             )
                         }
                     }
-                } else {
-                    // URI 경우 로직
-                    val context = LocalContext.current
-                    val bitmap = remember(imageUrl) {
-                        try {
-                            val uri = Uri.parse(imageUrl)
-                            val inputStream = context.contentResolver.openInputStream(uri)
-
-                            val options = BitmapFactory.Options().apply {
-                                inJustDecodeBounds = true
-                            }
-                            BitmapFactory.decodeStream(inputStream, null, options)
-                            inputStream?.close()
-
-                            val maxSize = 1024
-                            var sampleSize = 1
-                            while (options.outWidth / sampleSize > maxSize ||
-                                options.outHeight / sampleSize > maxSize) {
-                                sampleSize *= 2
-                            }
-
-                            val finalOptions = BitmapFactory.Options().apply {
-                                inSampleSize = sampleSize
-                            }
-                            context.contentResolver.openInputStream(uri)?.use { stream ->
-                                BitmapFactory.decodeStream(stream, null, finalOptions)?.asImageBitmap()
-                            }
-                        } catch (e: Exception) {
-                            null
-                        }
-                    }
-
-                    bitmap?.let {
-                        Image(
-                            bitmap = it,
-                            contentDescription = "Shared image",
-                            modifier = Modifier
-                                .size(200.dp)
-                                .clip(RoundedCornerShape(10.dp)),
-                            contentScale = ContentScale.Crop
-                        )
-                    }
-                }
+//                } else {
+//                    // URI 경우 로직
+//                    val context = LocalContext.current
+//                    val bitmap = remember(imageUrl) {
+//                        try {
+//                            val uri = Uri.parse(imageUrl)
+//                            val inputStream = context.contentResolver.openInputStream(uri)
+//
+//                            val options = BitmapFactory.Options().apply {
+//                                inJustDecodeBounds = true
+//                            }
+//                            BitmapFactory.decodeStream(inputStream, null, options)
+//                            inputStream?.close()
+//
+//                            val maxSize = 1024
+//                            var sampleSize = 1
+//                            while (options.outWidth / sampleSize > maxSize ||
+//                                options.outHeight / sampleSize > maxSize) {
+//                                sampleSize *= 2
+//                            }
+//
+//                            val finalOptions = BitmapFactory.Options().apply {
+//                                inSampleSize = sampleSize
+//                            }
+//                            context.contentResolver.openInputStream(uri)?.use { stream ->
+//                                BitmapFactory.decodeStream(stream, null, finalOptions)?.asImageBitmap()
+//                            }
+//                        } catch (e: Exception) {
+//                            null
+//                        }
+//                    }
+//
+//                    bitmap?.let {
+//                        Image(
+//                            bitmap = it,
+//                            contentDescription = "Shared image",
+//                            modifier = Modifier
+//                                .size(200.dp)
+//                                .clip(RoundedCornerShape(10.dp)),
+//                            contentScale = ContentScale.Crop
+//                        )
+//                    }
+//                }
 
             } else {
                 HighlightedText(

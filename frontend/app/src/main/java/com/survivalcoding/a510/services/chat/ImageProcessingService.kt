@@ -8,6 +8,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.IBinder
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.survivalcoding.a510.repositories.chat.ChatDatabase
 import com.survivalcoding.a510.repositories.chat.ChatMessage
@@ -49,28 +50,36 @@ class ImageProcessingService : Service() {
     private fun handleImageProcessing(roomId: Int, imageUri: Uri) {
         serviceScope.launch {
             try {
-                // 로딩 메시지 추가
+                // 1. 이미지 저장
+                val savedImagePath = saveImageToInternalStorage(imageUri)
+                Log.d("ImageProcessing", "저장된 이미지 경로: $savedImagePath")
+
+                // 2. 이미지 메시지 저장 (한 번만)
+                val imageMessageId = messageDao.insertMessageAndGetId(
+                    ChatMessage(
+                        roomId = roomId,
+                        content = "",
+                        isAiMessage = false,
+                        isImage = true,
+                        imageUrl = savedImagePath
+                    )
+                )
+                Log.d("ImageProcessing", "생성된 이미지 메시지 ID: $imageMessageId")
+
+                // 3. 로딩 메시지 추가
                 val loadingMessageId = messageDao.insertMessageAndGetId(
                     ChatMessage(
                         roomId = roomId,
                         content = "",
                         isAiMessage = true,
-                        timestamp = System.currentTimeMillis(),
                         isLoading = true
                     )
                 )
 
-                // 사용자가 보낸 이미지 로컬 저장소로 복사
-                val savedImagePath = saveImageToInternalStorage(imageUri)
-
-                // 이미지 분석 API 업로드하기
+                // 4. 이미지 분석 API 호출
                 val response = ImageService.uploadAndAnalyzeImage(applicationContext, imageUri)
-
                 if (response.isSuccessful && response.body() != null) {
                     val result = response.body()!!.result
-
-                    // 기존 메시지의 imageUrl을 로컬 저장소 경로로 변경
-                    messageDao.updateLastMessageImageUrl(roomId, savedImagePath)
 
                     // 이미지 분석 API 결과 전달
                     ChatService.startService(
@@ -83,13 +92,7 @@ class ImageProcessingService : Service() {
                     handleError(roomId, "이미지 처리 중 오류가 발생했습니다. (Error: ${response.code()})")
                 }
             } catch (e: Exception) {
-                val errorMessage = when (e) {
-                    is OutOfMemoryError -> "이미지가 너무 큽니다."
-                    is SecurityException -> "이미지 접근 권한이 없습니다."
-                    is IllegalArgumentException -> "올바르지 않은 이미지 파일입니다."
-                    else -> "이미지 처리 중 오류가 발생했습니다.\n${e.message}"
-                }
-                handleError(roomId, errorMessage)
+                handleError(roomId, "이미지 처리 중 오류가 발생했습니다.\n${e.message}")
             }
         }
     }
@@ -102,13 +105,21 @@ class ImageProcessingService : Service() {
         val directory = applicationContext.getDir("images", Context.MODE_PRIVATE)
         val file = File(directory, filename)
 
-        inputStream?.use { input ->
+        Log.d("ImageProcessing", "이미지 저장한 파일이름!!!!!: $filename")
+
+        applicationContext.contentResolver.openInputStream(uri)?.use { input ->
             FileOutputStream(file).use { output ->
                 input.copyTo(output)
             }
         }
+//        inputStream?.use { input ->
+//            FileOutputStream(file).use { output ->
+//                input.copyTo(output)
+//            }
+//        }
 
-        return file.absolutePath
+//        return file.absolutePath
+        return filename
     }
 
     private suspend fun handleError(roomId: Int, errorMessage: String) {
