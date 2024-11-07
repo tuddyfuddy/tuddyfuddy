@@ -54,7 +54,7 @@ class ChatService : Service() {
                 Log.d("ChatService", "받은 loadingMessageId: $loadingMessageId")
 
                 val response = aiChatService.sendChatMessage(
-                    // roomId가 5(단톡방)이 아니면 그대로 type에 roomId 보내고, roomId가 5이면... 제작중
+                    // TODO roomId가 5(단톡방)이 아니면 그대로 type에 roomId 보내고, roomId가 5이면...
                     type = if (roomId != 5) roomId else 1,
                     request = ChatRequest(text = content)
                 )

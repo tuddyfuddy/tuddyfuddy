@@ -34,11 +34,11 @@ class ChatViewModel(application: Application, private val roomId: Int) : Android
     private var loadingMessageId: Long? = null
 
     init {
-        // 1초 동안 메시지를 모았다가 한 번에 처리
+        // 3초 동안 메시지를 모았다가 한 번에 처리
         viewModelScope.launch {
             @OptIn(kotlinx.coroutines.FlowPreview::class)
             _pendingMessages
-                .debounce(1000) // 로딩아이콘 1초 보여주기
+                .debounce(3000) // 로딩아이콘 3초 보여주기
                 .collect { messages ->
                     if (messages.isNotEmpty()) {
                         sendCombinedMessage(messages)
