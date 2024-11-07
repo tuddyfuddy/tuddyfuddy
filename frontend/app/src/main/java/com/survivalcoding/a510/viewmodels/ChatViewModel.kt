@@ -34,10 +34,11 @@ class ChatViewModel(application: Application, private val roomId: Int) : Android
     private var loadingMessageId: Long? = null
 
     init {
-        // 3초 동안 메시지를 모았다가 한 번에 처리
+        // 1초 동안 메시지를 모았다가 한 번에 처리
         viewModelScope.launch {
+            @OptIn(kotlinx.coroutines.FlowPreview::class)
             _pendingMessages
-                .debounce(1000) // 로딩아이콘 3초 보여주기
+                .debounce(1000) // 로딩아이콘 1초 보여주기
                 .collect { messages ->
                     if (messages.isNotEmpty()) {
                         sendCombinedMessage(messages)
@@ -141,7 +142,7 @@ class ChatViewModel(application: Application, private val roomId: Int) : Android
             )
 
             // 현재 메시지를 pending 목록에 추가
-            _pendingMessages.value = _pendingMessages.value + content
+            _pendingMessages.value += content
 
             // 이전 로딩 메시지가 있다면 삭제
             loadingMessageId?.let { id ->
@@ -164,27 +165,30 @@ class ChatViewModel(application: Application, private val roomId: Int) : Android
                 message = content,
                 timestamp = System.currentTimeMillis()
             )
-
-//            // 백그라운드 서비스 시작시키기
-//            ChatService.startService(getApplication(), roomId, content)
         }
     }
 
     private fun sendCombinedMessage(messages: List<String>) {
         viewModelScope.launch {
             try {
-                // 로딩 메시지 삭제
-                loadingMessageId?.let { id ->
-                    messageDao.deleteMessageById(id)
-                    loadingMessageId = null
-                }
+//                // 로딩 메시지 삭제
+//                loadingMessageId?.let { id ->
+//                    messageDao.deleteMessageById(id)
+//                    loadingMessageId = null
+//                }
 
                 // 백그라운드 서비스로 합쳐진 메시지 전송
                 val combinedContent = messages.joinToString("\n")
-                ChatService.startService(getApplication(), roomId, combinedContent)
+
+                ChatService.startService(
+                    getApplication(),
+                    roomId,
+                    combinedContent,
+                    loadingMessageId,
+                )
             } catch (e: Exception) {
                 // 에러 메시지 추출해서 전달
-                handleError(e.message ?: "알 수 없는 오류가 발생했습니다.")
+                handleError(e.message ?: "이런 오류가 발생함")
             }
         }
     }

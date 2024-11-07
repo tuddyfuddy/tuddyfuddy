@@ -36,14 +36,17 @@ class ChatService : Service() {
                 ACTION_START_CHAT -> {
                     val roomId = it.getIntExtra(EXTRA_ROOM_ID, -1)
                     val content = it.getStringExtra(EXTRA_CONTENT) ?: return@let
-                    handleChatRequest(roomId, content)
+                    val loadingMessageId = if (it.hasExtra(EXTRA_LOADING_MESSAGE_ID)) {
+                        it.getLongExtra(EXTRA_LOADING_MESSAGE_ID, -1)
+                    } else null
+                    handleChatRequest(roomId, content, loadingMessageId)
                 }
             }
         }
         return START_STICKY
     }
 
-    private fun handleChatRequest(roomId: Int, content: String) {
+    private fun handleChatRequest(roomId: Int, content: String, loadingMessageId: Long?) {
         serviceScope.launch {
             try {
                 val response = aiChatService.sendChatMessage(
@@ -53,6 +56,10 @@ class ChatService : Service() {
                 )
 
                 if (response.isSuccessful) {
+                    loadingMessageId?.let { id ->
+                        messageDao.deleteMessageById(id)
+                    }
+
                     response.body()?.getMessageList()?.forEach { aiMessage ->
                         messageDao.insertMessage(
                             ChatMessage(
@@ -81,9 +88,17 @@ class ChatService : Service() {
                         }
                     }
                 } else {
+                    // 로딩 메시지 삭제
+                    loadingMessageId?.let { id ->
+                        messageDao.deleteMessageById(id)
+                    }
                     handleError(roomId, "죄송해요, 메시지를 받지 못했어요.")
                 }
             } catch (e: Exception) {
+                // 로딩 메시지 삭제
+                loadingMessageId?.let { id ->
+                    messageDao.deleteMessageById(id)
+                }
                 handleError(roomId, "네트워크 오류가 발생했어요. 인터넷 연결을 확인해주세요.")
             }
         }
@@ -150,13 +165,17 @@ class ChatService : Service() {
         const val ACTION_START_CHAT = "action_start_chat"
         const val EXTRA_ROOM_ID = "extra_room_id"
         const val EXTRA_CONTENT = "extra_content"
+        const val EXTRA_LOADING_MESSAGE_ID = "extra_loading_message_id"
         private var activeChatRoomId: Int? = null  // 현재 사용자 휴대폰 화면이 몇번 채팅방인지 확인하는 변
 
-        fun startService(context: Context, roomId: Int, content: String) {
+        fun startService(context: Context, roomId: Int, content: String, loadingMessageId: Long?) {
             val intent = Intent(context, ChatService::class.java).apply {
                 action = ACTION_START_CHAT
                 putExtra(EXTRA_ROOM_ID, roomId)
                 putExtra(EXTRA_CONTENT, content)
+                loadingMessageId?.let {
+                    putExtra(EXTRA_LOADING_MESSAGE_ID, it)
+                }
             }
             context.startForegroundService(intent)
         }

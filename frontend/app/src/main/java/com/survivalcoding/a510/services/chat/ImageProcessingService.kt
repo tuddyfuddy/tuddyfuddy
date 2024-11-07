@@ -65,7 +65,8 @@ class ImageProcessingService : Service() {
                     ChatService.startService(
                         applicationContext,
                         roomId,
-                        "사용자가 이미지를 공유했습니다.\n이미지 URL: ${result.imageUrl}\n이미지 설명: ${result.description}"
+                        "사용자가 이미지를 공유했습니다.\n이미지 URL: ${result.imageUrl}\n이미지 설명: ${result.description}",
+                        null
                     )
                 } else {
                     handleError(roomId, "이미지 처리 중 오류가 발생했습니다. (Error: ${response.code()})")
