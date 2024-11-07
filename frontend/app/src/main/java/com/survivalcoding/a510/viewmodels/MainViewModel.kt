@@ -16,7 +16,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-
 // 메인 화면의 인증 관련 로직을 처리하는 ViewModel
 class MainViewModel : ViewModel() {
     // 인증 상태를 관리하는 StateFlow
@@ -101,9 +100,15 @@ class MainViewModel : ViewModel() {
                 try {
                     _authState.value = AuthState.Loading
 
+                    val fcmToken = tokenManager?.getFCMToken()
+                    Log.d("MainViewModel", "Sending FCM token with login: $fcmToken")
+
                     // 서버에 카카오 토큰으로 인증 요청
                     val response = authService.authenticateKakao(
-                        KakaoAuthRequest(token.accessToken)
+                        KakaoAuthRequest(
+                            accessToken = token.accessToken,
+                            fcmToken = fcmToken
+                        )
                     )
 
                     if (response.isSuccessful) {

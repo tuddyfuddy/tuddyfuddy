@@ -13,150 +13,93 @@ import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.survivalcoding.a510.MainActivity
 import com.survivalcoding.a510.R
+import com.survivalcoding.a510.data.TokenManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 
 class MyFirebaseMessagingService : FirebaseMessagingService() {
-    companion object {
-        private const val TAG = "FCMService"
-        private const val CHANNEL_ID = "chat_notifications"
-        private const val CHANNEL_NAME = "Chat Notifications"
-        private const val NOTIFICATION_ID = 1
+
+    private lateinit var tokenManager: TokenManager
+
+    override fun onCreate() {
+        super.onCreate()
+        // TokenManager 초기화
+        tokenManager = TokenManager(this)
     }
 
+    // 1. FCM 토큰이 갱신될 때 호출되어 로컬에만 저장
     override fun onNewToken(token: String) {
         super.onNewToken(token)
-        Log.d(TAG, """
-            New FCM Token Generated:
-            token: $token
-            timestamp: ${System.currentTimeMillis()}
-        """.trimIndent())
-
-        // TODO: FCM 토큰을 서버에 전송하는 로직 구현
-        sendTokenToServer(token)
+        // 새 토큰을 로컬에만 저장
+        tokenManager.saveFCMToken(token)
+        Log.d(TAG, "New FCM token saved locally")
     }
 
-    override fun onMessageReceived(message: RemoteMessage) {
-        super.onMessageReceived(message)
-        Log.d(TAG, """
-            FCM Message Received:
-            from: ${message.from}
-            data: ${message.data}
-            notification: ${message.notification?.body}
-        """.trimIndent())
+    // 2. 푸시 메시지를 수신했을 때 호출
+    override fun onMessageReceived(remoteMessage: RemoteMessage) {
+        super.onMessageReceived(remoteMessage)
+        Log.d(TAG, "FCM message received: ${remoteMessage.data}")
 
-        // 메시지 종류에 따른 처리
-        when {
-            message.data.isNotEmpty() -> handleDataMessage(message.data)
-            message.notification != null -> handleNotificationMessage(message.notification!!)
+        // 수신된 메시지에 데이터 페이로드가 포함되어 있는 경우
+        remoteMessage.data.isNotEmpty().let {
+            Log.d(TAG, "Message data payload: ${remoteMessage.data}")
+            handleDataMessage(remoteMessage.data)
+        }
+
+        // 수신된 메시지에 알림 페이로드가 포함되어 있는 경우
+        remoteMessage.notification?.let {
+            Log.d(TAG, "Message notification payload: ${it.title} - ${it.body}")
+            sendNotification(it.title, it.body)
         }
     }
 
+    // 4. 데이터 메시지 처리
     private fun handleDataMessage(data: Map<String, String>) {
         // 데이터 메시지 처리 로직
-        val messageType = data["type"]
-        val content = data["content"]
-        val senderId = data["senderId"]
-
-        Log.d(TAG, """
-            Data Message Details:
-            type: $messageType
-            content: $content
-            senderId: $senderId
-        """.trimIndent())
-
-        // 데이터 타입에 따른 알림 생성
-        when (messageType) {
-            "chat" -> showNotification(
-                title = "New Message",
-                message = content ?: "You received a new message"
-            )
-            "invite" -> showNotification(
-                title = "New Invitation",
-                message = content ?: "You received a new invitation"
-            )
-            else -> showNotification(
-                title = "New Notification",
-                message = content ?: "You received a new notification"
-            )
-        }
+        val title = data["title"]
+        val message = data["message"]
+        // 필요한 작업 수행
     }
 
-    private fun handleNotificationMessage(notification: RemoteMessage.Notification) {
-        showNotification(
-            title = notification.title ?: "New Message",
-            message = notification.body ?: "You received a new message"
-        )
-    }
+    // 5. 알림 생성 및 표시
+    private fun sendNotification(title: String?, messageBody: String?) {
+        val channelId = "default_channel"
 
-    private fun showNotification(title: String, message: String) {
-        // MainActivity를 시작하는 Intent 생성
-        val intent = Intent(this, MainActivity::class.java).apply {
-            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-        }
-
-        // PendingIntent 생성
+        // 알림 클릭시 실행될 액티비티 설정
+        val intent = Intent(this, MainActivity::class.java)
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
         val pendingIntent = PendingIntent.getActivity(
-            this,
-            0,
-            intent,
-            PendingIntent.FLAG_IMMUTABLE
+            this, 0, intent,
+            PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        // 알림 소리 설정
-        val defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
-
-        // 알림 빌더 설정
-        val notificationBuilder = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_launcher_foreground) // 앱의 실제 아이콘으로 변경 필요
+        // 알림 스타일 설정
+        val notificationBuilder = NotificationCompat.Builder(this, channelId)
+            .setSmallIcon(R.mipmap.ic_launcher)
             .setContentTitle(title)
-            .setContentText(message)
+            .setContentText(messageBody)
             .setAutoCancel(true)
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setSound(defaultSoundUri)
             .setContentIntent(pendingIntent)
 
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-        // 안드로이드 Oreo 이상에서는 채널 생성이 필수
+        // Android Oreo 이상에서는 채널 생성이 필요
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
-                CHANNEL_ID,
-                CHANNEL_NAME,
-                NotificationManager.IMPORTANCE_HIGH
-            ).apply {
-                description = "Receives chat and other important notifications"
-                enableLights(true)
-                enableVibration(true)
-            }
+                channelId,
+                "Default Channel",
+                NotificationManager.IMPORTANCE_DEFAULT
+            )
             notificationManager.createNotificationChannel(channel)
         }
 
         // 알림 표시
-        notificationManager.notify(NOTIFICATION_ID, notificationBuilder.build())
+        notificationManager.notify(0, notificationBuilder.build())
     }
 
-    private fun sendTokenToServer(token: String) {
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                Log.d(TAG, "Sending FCM token to server: $token")
-
-                val fcmService = RetrofitClient.createFCMTokenService()
-                val response = fcmService.updateFCMToken(FCMTokenRequest(token))
-
-                if (response.isSuccessful) {
-                    Log.d(TAG, "Successfully sent FCM token to server")
-                } else {
-                    Log.e(TAG, """
-                    Failed to send FCM token to server:
-                    Response code: ${response.code()}
-                    Error body: ${response.errorBody()?.string()}
-                """.trimIndent())
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "Error sending FCM token to server", e)
-            }
-        }
+    companion object {
+        private const val TAG = "FCMService"
     }
 }

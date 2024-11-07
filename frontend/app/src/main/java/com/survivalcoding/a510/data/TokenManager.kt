@@ -16,12 +16,24 @@ class TokenManager(context: Context) {
             .apply()
     }
 
+    // FCM 토큰을 저장합니다.
+    fun saveFCMToken(fcmToken: String) {
+        prefs.edit()
+            .putString("fcm_token", fcmToken)
+            .apply()
+    }
+
     fun getAccessToken(): String? {
         return prefs.getString("access_token", null)
     }
 
     fun getRefreshToken(): String? {
         return prefs.getString("refresh_token", null)
+    }
+
+    // FCM 토큰을 가져옵니다.
+    fun getFCMToken(): String? {
+        return prefs.getString("fcm_token", null)
     }
 
     // 로그아웃시 사용됨

@@ -18,6 +18,7 @@ interface AuthService {
 
 // 카카오 인증 요청 데이터
 data class KakaoAuthRequest(
-    val accessToken: String  // 카카오에서 받은 액세스 토큰
+    val accessToken: String,  // 카카오에서 받은 액세스 토큰
+    val fcmToken: String?
 )
 
