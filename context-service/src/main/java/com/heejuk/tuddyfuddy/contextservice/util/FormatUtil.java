@@ -24,6 +24,12 @@ public class FormatUtil {
     public static String formatPreviousDateKST(String pattern) {
         ZonedDateTime previousDayKST = ZonedDateTime.now(ZoneId.of("Asia/Seoul"))
                                                     .minusDays(1);
+
+        // 시간에 따라 전날 날짜를 설정
+        if (previousDayKST.getHour() < 6) {
+            previousDayKST = previousDayKST.minusDays(1);
+        }
+
         return previousDayKST.format(DateTimeFormatter.ofPattern(pattern));
     }
 
