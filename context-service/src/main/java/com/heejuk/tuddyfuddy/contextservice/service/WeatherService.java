@@ -7,10 +7,13 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.heejuk.tuddyfuddy.contextservice.client.WeatherApiClient;
+import com.heejuk.tuddyfuddy.contextservice.dto.response.WeatherListResponse;
 import com.heejuk.tuddyfuddy.contextservice.dto.response.WeatherResponse;
+import com.heejuk.tuddyfuddy.contextservice.exception.WeatherApiRequestException;
 import com.heejuk.tuddyfuddy.contextservice.repository.WeatherRepository;
 import com.heejuk.tuddyfuddy.contextservice.util.FormatUtil;
 import com.heejuk.tuddyfuddy.contextservice.util.GridGpsUtil.LatXLngY;
+import com.heejuk.tuddyfuddy.contextservice.util.ParseUtil;
 import feign.FeignException;
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -18,11 +21,17 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -30,85 +39,98 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class WeatherService {
 
+    private static final Duration CACHE_TTL = Duration.ofHours(48); // 이틀
+    private static final String BASE_TIME = "0500";
+
     private final WeatherRepository weatherRepository;
     private final WeatherApiClient weatherApiClient;
+    private final ParseUtil parseUtil;
 
     private final ObjectMapper objectMapper;
+    private final RedisTemplate<String, String> redisTemplate;
 
     @Value("${weather.api.key}")
     private String apiKey;
 
-    private final RedisTemplate<String, String> redisTemplate;
-
-    private static final long CACHE_TTL_MINUTES = 61; // 기상청 API 업데이트 주기에 맞춤
-
-    public WeatherResponse getWeatherByLocation(
-        Double latitude,
-        Double longitude
+    public WeatherListResponse getWeathersByLocation(
+        String latitude,
+        String longitude
     ) {
         LatXLngY latXLngY = convertGRID_GPS(TO_GRID,
-                                            latitude,
-                                            longitude);
+                                            Double.parseDouble(latitude),
+                                            Double.parseDouble(longitude));
         int x = (int) latXLngY.x;
         int y = (int) latXLngY.y;
-        // 1. redis 키
-        String redisKey = generateWeatherKey(x,
-                                             y);
-        // 1.1 redis 값
+
+        String today = FormatUtil.formatDateKST("yyyyMMdd");
+        String yesterday = FormatUtil.formatPreviousDateKST("yyyyMMdd");
+        
+        // 오늘, 어제 날씨데이터
+        WeatherResponse todayWeather = null;
+        WeatherResponse yesterdayWeather = null;
+        try {
+            todayWeather = getDailyWeatherByLocation(x, y, today);
+        } catch (WeatherApiRequestException e) {
+            log.error(
+                "Failed to fetch today weather data for location x:{}, y:{} due to API request failure",
+                x, y);
+        }
+        try {
+            yesterdayWeather = getDailyWeatherByLocation(x, y, yesterday);
+        } catch (WeatherApiRequestException e) {
+            log.error(
+                "Failed to fetch yesterday weather data for location x:{}, y:{} due to API request failure",
+                x, y);
+        }
+
+        // 반환
+        return WeatherListResponse.builder()
+                                  .todayWeather(todayWeather)
+                                  .yesterdayWeather(yesterdayWeather)
+                                  .build();
+    }
+
+    private WeatherResponse getDailyWeatherByLocation(
+        int x,
+        int y,
+        String date
+    ) {
+        String redisKey = generateWeatherKey(x, y, date);
         String cachedJson = redisTemplate.opsForValue()
                                          .get(redisKey);
 
-        // 2. redis 캐시 히트
+        // 캐시 확인
         if (cachedJson != null) {
             try {
-                WeatherResponse cachedWeather = objectMapper.readValue(cachedJson,
-                                                                       WeatherResponse.class);
-                if (isWeatherDataFresh(cachedWeather)) {
-                    log.info("Cache hit for weather data at x:{}, y:{}",
-                             x,
-                             y);
-                    return cachedWeather;
-                }
+                return objectMapper.readValue(cachedJson,
+                                              WeatherResponse.class);
             } catch (JsonProcessingException e) {
                 log.error("Failed to parse cached weather data",
                           e);
+                redisTemplate.delete(redisKey);  // 잘못된 캐시 데이터 삭제
             }
         }
 
+        // 기상청 API 조회
         try {
-            String baseDate = FormatUtil.formatDateKST("yyyyMMdd");
-            String baseTime = "0500";
-            String previousDate = FormatUtil.formatPreviousDateKST("yyyyMMdd");
-            // api 에서 불러오기
             JsonNode curWeatherData = weatherApiClient.fetchWeatherData(
                 apiKey,
                 1,
                 300,
                 "JSON",
-                baseDate,
-                baseTime,
-                x,
-                y
-            );
-            JsonNode prevWeatherData = weatherApiClient.fetchWeatherData(
-                apiKey,
-                1,
-                300,
-                "JSON",
-                baseDate,
-                baseTime,
+                date,
+                BASE_TIME,
                 x,
                 y
             );
 
-            WeatherResponse curWeather = parseJsonToWeather(curWeatherData, x, y, baseDate);
-            WeatherResponse prevWeather = parseJsonToWeather(prevWeatherData, x, y, previousDate);
+            WeatherResponse curWeather = parseJsonToWeather(curWeatherData, x, y, date);
             try {
                 String jsonValue = objectMapper.writeValueAsString(curWeather);
                 redisTemplate.opsForValue()
                              .set(redisKey,
                                   jsonValue,
-                                  Duration.ofMinutes(CACHE_TTL_MINUTES));
+                                  CACHE_TTL);
             } catch (JsonProcessingException e) {
                 log.error("Failed to serialize weather data",
                           e);
@@ -121,7 +143,7 @@ public class WeatherService {
                       x,
                       y,
                       e.getMessage());
-            return null;
+            throw new WeatherApiRequestException("Failed to fetch weather data");
         }
     }
 
@@ -130,13 +152,16 @@ public class WeatherService {
      *
      * @param x
      * @param y
+     * @param date
      * @return
      */
     private String generateWeatherKey(
         int x,
-        int y
+        int y,
+        String date
     ) {
-        return String.format("weather:%d:%d",
+        return String.format("weather:%s:%d:%d",
+                             date,
                              x,
                              y);
     }
@@ -158,7 +183,8 @@ public class WeatherService {
 
         // 기상청 API 요청 에러 처리
         if (!resultCode.equals("00")) {
-            throw new RuntimeException("기상청 API 요청 에러 코드[" + resultCode + "] - " + resultMsg);
+            throw new WeatherApiRequestException(
+                "기상청 API 요청 에러 코드[" + resultCode + "] - " + resultMsg + " - x: " + x + " y: " + y);
         }
 
         JsonNode items = json.path("response")
@@ -201,7 +227,6 @@ public class WeatherService {
             switch (category) {
                 case "TMP": // 기온
                     temperature = Double.parseDouble(value);
-                    System.out.println("temperature = " + temperature);
                     maxTemperature = Math.max(maxTemperature, temperature);
                     minTemperature = Math.min(minTemperature, temperature);
                     break;
@@ -314,17 +339,146 @@ public class WeatherService {
                    .orElse("");
     }
 
-    /**
-     * 캐시된 값이 최근 값인지 여부
-     *
-     * @param weather
-     * @return
-     */
-    private boolean isWeatherDataFresh(WeatherResponse weather) {
-        return Duration.between(weather.timestamp(),
-                                LocalDateTime.now())
-                       .toMinutes() < CACHE_TTL_MINUTES;
+    @Async
+    public void dailyFetchAll() {
+        long startTime = System.currentTimeMillis();
+        String today = FormatUtil.formatDateKST("yyyyMMdd");
+        String resourcePath = "classpath:weather.csv";
+        int skipLines = 1;
+
+        AtomicInteger successCount = new AtomicInteger(0); // 성공한 카운트
+        AtomicInteger failCount = new AtomicInteger(0); // 실패한 카운트
+
+        log.info("Starting daily weather fetch for date: {}", today);
+
+        // csv parsing 한 데이터
+        List<String[]> locations = parseUtil.parseCsv(resourcePath, skipLines);
+
+        // 병렬 처리를 위한 ExecutorService 설정
+        int threadPoolSize = Runtime.getRuntime()
+                                    .availableProcessors();
+        ExecutorService executorService = Executors.newFixedThreadPool(threadPoolSize);
+        // CompletableFuture : 비동기 연산을 위한 인터페이스
+        List<CompletableFuture<Void>> futures = new ArrayList<>();
+
+        try {
+            for (String[] location : locations) {
+                // [
+                // 0: kor,
+                // 1: 1111051500,
+                // 2: 서울특별시,
+                // 3: 종로구,
+                // 4: 청운효자동,
+                // 5: 60, -> X
+                // 6: 127, -> Y
+                // 7: 126,
+                // 8: 58,
+                // 9: 14.35,
+                // 10: 37,
+                // 11: 35,
+                // 12: 2.89,
+                // 13: 126.9706519, -> longitude
+                // 14: 37.5841367,  -> latitude
+                // 15: ,
+                // ]
+                if (location[3].isEmpty() || location[4].isEmpty()) {
+                    continue; // [3, 4] 는 비어있으면 패스
+                }
+
+                CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+                    String regionName = String.join(" ", location[2], location[3], location[4]);
+                    try {
+                        int x = Integer.parseInt(location[5]);
+                        int y = Integer.parseInt(location[6]);
+                        // x, y로 날씨 정보 가져오기
+                        WeatherResponse weatherResponse = getDailyWeatherByLocation(
+                            x, y, today
+                        );
+                        // 성공횟수 증가
+                        successCount.incrementAndGet();
+                        log.debug("Successfully fetched weather data for region: {}", regionName);
+                    } catch (NumberFormatException e) { // number format 에러
+                        failCount.incrementAndGet();
+                        log.error("Invalid coordinate format for region {}: {}", regionName,
+                                  e.getMessage());
+                    } catch (WeatherApiRequestException e) { // weather api 호출 에러
+                        failCount.incrementAndGet();
+                        log.error("Weather API request failed for region {}: {}", regionName,
+                                  e.getMessage());
+                    } catch (Exception e) { // 그 외 에러
+                        failCount.incrementAndGet();
+                        log.error("Unexpected error while processing weather for region {}: {}",
+                                  regionName, e.getMessage(), e);
+                    }
+                }, executorService);
+
+                futures.add(future);
+            }
+
+            // 모든 작업 완료 대기
+            // allOf() : 여러 개의 CompletableFuture를 하나로 결합
+            // join(): 모든 작업이 완료될 때까지 현재 스레드를 블록
+            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
+                             .join();
+        } finally {
+            executorService.shutdown(); // 새 작업 execute 종료. 이미 execute 된 작업은 계속 실행
+            try {
+                // 안전한 종료 대기
+                // awaitTermination: 주어진 시간 동안 모든 작업 완료 대기. 시간 초과 시 강제 종료
+                // shutdownNow(): 실행 중인 작업들에 인터럽트 보냄
+                if (!executorService.awaitTermination(1, TimeUnit.HOURS)) {
+                    log.warn("ExecutorService did not terminate in the specified time.");
+                    executorService.shutdownNow();
+                }
+            } catch (InterruptedException e) { // 종료 대기 중 인터럽트가 발생한 경우 처리
+                // 강제로 모든 작업을 중단
+                log.error("ExecutorService termination interrupted", e);
+                executorService.shutdownNow();
+                // 현재 스레드의 인터럽트 상태를 복원
+                Thread.currentThread()
+                      .interrupt();
+            }
+        }
+
+        log.info("Daily weather fetch completed. Success: {}, Failed: {}, " +
+                     "Total time taken: {} seconds",
+                 successCount.get(),
+                 failCount.get(),
+                 (System.currentTimeMillis() - startTime) / 1000.0);
+
     }
 
+    public void dailyFetchAllSequential() {
+        long startTime = System.currentTimeMillis();
+        String today = FormatUtil.formatDateKST("yyyyMMdd");
+        String resourcePath = "classpath:weather.csv";
 
+        int successCount = 0;
+        int failCount = 0;
+        int skipCount = 0;
+
+        List<String[]> locations = parseUtil.parseCsv(resourcePath, 1);
+
+        for (String[] location : locations) {
+            if (location[3].isEmpty() || location[4].isEmpty()) {
+                skipCount++;
+                continue;
+            }
+
+            try {
+                int x = Integer.parseInt(location[5]);
+                int y = Integer.parseInt(location[6]);
+                getDailyWeatherByLocation(x, y, today);
+                successCount++;
+            } catch (Exception e) {
+                failCount++;
+                log.error("Error processing location: {}", e.getMessage());
+            }
+        }
+
+        log.info("Sequential fetch completed. Success: {}, Failed: {}, Skipped: {}, " +
+                     "Total time taken: {} seconds",
+                 successCount, failCount, skipCount,
+                 (System.currentTimeMillis() - startTime) / 1000.0);
+    }
 }
