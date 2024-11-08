@@ -10,7 +10,6 @@ import com.heejuk.tuddyfuddy.contextservice.client.WeatherApiClient;
 import com.heejuk.tuddyfuddy.contextservice.dto.response.WeatherListResponse;
 import com.heejuk.tuddyfuddy.contextservice.dto.response.WeatherResponse;
 import com.heejuk.tuddyfuddy.contextservice.exception.WeatherApiRequestException;
-import com.heejuk.tuddyfuddy.contextservice.repository.WeatherRepository;
 import com.heejuk.tuddyfuddy.contextservice.util.FormatUtil;
 import com.heejuk.tuddyfuddy.contextservice.util.GridGpsUtil.LatXLngY;
 import com.heejuk.tuddyfuddy.contextservice.util.ParseUtil;
@@ -41,8 +40,10 @@ public class WeatherService {
 
     private static final Duration CACHE_TTL = Duration.ofHours(48); // 이틀
     private static final String BASE_TIME = "0500";
+    private static final int BATCH_SIZE = 1000;
+    private static final int MAX_RETRIES = 3;
+    private static final long RETRY_DELAY_MS = 5000; // 5초
 
-    private final WeatherRepository weatherRepository;
     private final WeatherApiClient weatherApiClient;
     private final ParseUtil parseUtil;
 
@@ -64,7 +65,7 @@ public class WeatherService {
 
         String today = FormatUtil.formatDateKST("yyyyMMdd");
         String yesterday = FormatUtil.formatPreviousDateKST("yyyyMMdd");
-        
+
         // 오늘, 어제 날씨데이터
         WeatherResponse todayWeather = null;
         WeatherResponse yesterdayWeather = null;
@@ -354,6 +355,41 @@ public class WeatherService {
         // csv parsing 한 데이터
         List<String[]> locations = parseUtil.parseCsv(resourcePath, skipLines);
 
+        // 배치 처리를 위한 리스트 나누기
+        List<List<String[]>> batches = partition(locations, BATCH_SIZE);
+
+        for (int batchIndex = 0; batchIndex < batches.size(); batchIndex++) {
+            List<String[]> batch = batches.get(batchIndex);
+            log.info("Processing batch {}/{}", batchIndex + 1, batches.size());
+
+            processBatch(batch, today, successCount, failCount);
+
+            // 배치 간 딜레이 추가
+            if (batchIndex < batches.size() - 1) {
+                try {
+                    Thread.sleep(1000); // 1초 대기 시간으로 서버 부하 감소
+                } catch (InterruptedException e) {
+                    Thread.currentThread()
+                          .interrupt();
+                    break;
+                }
+            }
+        }
+
+        log.info("Daily weather fetch completed. Success: {}, Failed: {}, " +
+                     "Total time taken: {} seconds",
+                 successCount.get(),
+                 failCount.get(),
+                 (System.currentTimeMillis() - startTime) / 1000.0);
+
+    }
+
+    private void processBatch(
+        List<String[]> batch,
+        String today,
+        AtomicInteger successCount,
+        AtomicInteger failCount
+    ) {
         // 병렬 처리를 위한 ExecutorService 설정
         int threadPoolSize = Runtime.getRuntime()
                                     .availableProcessors();
@@ -362,7 +398,7 @@ public class WeatherService {
         List<CompletableFuture<Void>> futures = new ArrayList<>();
 
         try {
-            for (String[] location : locations) {
+            for (String[] location : batch) {
                 // [
                 // 0: kor,
                 // 1: 1111051500,
@@ -382,34 +418,12 @@ public class WeatherService {
                 // 15: ,
                 // ]
                 if (location[3].isEmpty() || location[4].isEmpty()) {
-                    continue; // [3, 4] 는 비어있으면 패스
+                    continue;
                 }
 
                 CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
                     String regionName = String.join(" ", location[2], location[3], location[4]);
-                    try {
-                        int x = Integer.parseInt(location[5]);
-                        int y = Integer.parseInt(location[6]);
-                        // x, y로 날씨 정보 가져오기
-                        WeatherResponse weatherResponse = getDailyWeatherByLocation(
-                            x, y, today
-                        );
-                        // 성공횟수 증가
-                        successCount.incrementAndGet();
-                        log.debug("Successfully fetched weather data for region: {}", regionName);
-                    } catch (NumberFormatException e) { // number format 에러
-                        failCount.incrementAndGet();
-                        log.error("Invalid coordinate format for region {}: {}", regionName,
-                                  e.getMessage());
-                    } catch (WeatherApiRequestException e) { // weather api 호출 에러
-                        failCount.incrementAndGet();
-                        log.error("Weather API request failed for region {}: {}", regionName,
-                                  e.getMessage());
-                    } catch (Exception e) { // 그 외 에러
-                        failCount.incrementAndGet();
-                        log.error("Unexpected error while processing weather for region {}: {}",
-                                  regionName, e.getMessage(), e);
-                    }
+                    processLocationWithRetry(location, today, regionName, successCount, failCount);
                 }, executorService);
 
                 futures.add(future);
@@ -426,7 +440,7 @@ public class WeatherService {
                 // 안전한 종료 대기
                 // awaitTermination: 주어진 시간 동안 모든 작업 완료 대기. 시간 초과 시 강제 종료
                 // shutdownNow(): 실행 중인 작업들에 인터럽트 보냄
-                if (!executorService.awaitTermination(1, TimeUnit.HOURS)) {
+                if (!executorService.awaitTermination(30, TimeUnit.MINUTES)) {
                     log.warn("ExecutorService did not terminate in the specified time.");
                     executorService.shutdownNow();
                 }
@@ -439,13 +453,74 @@ public class WeatherService {
                       .interrupt();
             }
         }
+    }
 
-        log.info("Daily weather fetch completed. Success: {}, Failed: {}, " +
-                     "Total time taken: {} seconds",
-                 successCount.get(),
-                 failCount.get(),
-                 (System.currentTimeMillis() - startTime) / 1000.0);
+    /**
+     * 날씨 가져오기 (실패시 재시도)
+     *
+     * @param location
+     * @param today
+     * @param regionName
+     * @param successCount
+     * @param failCount
+     */
+    private void processLocationWithRetry(
+        String[] location,
+        String today,
+        String regionName,
+        AtomicInteger successCount,
+        AtomicInteger failCount
+    ) {
+        int retryCount = 0;
+        while (retryCount < MAX_RETRIES) {
+            try {
+                int x = Integer.parseInt(location[5]);
+                int y = Integer.parseInt(location[6]);
+                WeatherResponse weatherResponse = getDailyWeatherByLocation(x, y, today);
+                successCount.incrementAndGet();
+                log.debug("Successfully fetched weather data for region: {}", regionName);
+                return;
+            } catch (Exception e) {
+                retryCount++;
+                if (retryCount == MAX_RETRIES) {
+                    failCount.incrementAndGet();
+                    log.error("Failed to fetch weather data for region {} after {} retries: {}",
+                              regionName, MAX_RETRIES, e.getMessage());
+                } else {
+                    log.warn("Retry {}/{} for region {}: {}",
+                             retryCount, MAX_RETRIES, regionName, e.getMessage());
+                    try {
+                        Thread.sleep(RETRY_DELAY_MS); // 해당 시간만큼 대기
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread()
+                              .interrupt();
+                        break;
+                    }
+                }
+            }
+        }
+    }
 
+    /**
+     * 배치 처리를 위한 리스트 나누기
+     *
+     * @param list
+     * @param size
+     * @param <T>
+     * @return
+     */
+    private <T> List<List<T>> partition(
+        List<T> list,
+        int size
+    ) {
+        List<List<T>> partitions = new ArrayList<>();
+        for (int i = 0; i < list.size(); i += size) {
+            partitions.add(list.subList(
+                i,
+                Math.min(i + size, list.size())
+            ));
+        }
+        return partitions;
     }
 
     public void dailyFetchAllSequential() {
