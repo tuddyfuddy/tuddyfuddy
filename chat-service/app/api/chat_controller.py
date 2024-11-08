@@ -23,7 +23,7 @@ async def chat(
     request: TextRequest,
 ):
     try:
-        result = await ChatService.process_chat(room_id, 9999, request.text)
+        result = await ChatService.process_chat(room_id, 1, request.text)
         if isinstance(result, JSONResponse):
             return ["응?"]
         return result
