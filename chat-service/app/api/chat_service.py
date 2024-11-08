@@ -146,23 +146,20 @@ class ChatService:
 
     @staticmethod
     def send_to_kafka(user_id: str, room_id: int, message: str):
-        """Kafka에 채팅 내역 전송 - 비동기, 실패해도 무시"""
         try:
             chat_data = {
                 "userId": user_id,
                 "roomId": room_id,
-                "aiName": room_id,
+                "aiName": "카리나",
                 "message": message,
             }
 
             ChatService.producer.produce(
                 "chat-notification-topic",
                 value=json.dumps(chat_data).encode("utf-8"),
-                # 에러 발생해도 그냥 로깅만
                 callback=lambda err, msg: (
                     logging.error(f"Failed to send message: {err}") if err else None
                 ),
             )
-            # flush 없이 비동기로 전송
         except Exception as e:
             logging.error(f"Failed to send chat data to Kafka (non-critical): {e}")
