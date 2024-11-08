@@ -57,10 +57,8 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
 
     // 4. 데이터 메시지 처리
     private fun handleDataMessage(data: Map<String, String>) {
-        // 데이터 메시지 처리 로직
-        val title = data["title"]
-        val message = data["message"]
-        // 필요한 작업 수행
+        Log.d(TAG, "💬 Data Message: $data")
+        Log.d(TAG, "\n=== Data Message ===\n${data.entries.joinToString("\n")}\n==================")
     }
 
     // 5. 알림 생성 및 표시
