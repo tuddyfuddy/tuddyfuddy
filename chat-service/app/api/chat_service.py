@@ -1,4 +1,7 @@
+import json
+
 import httpx
+from confluent_kafka import Producer
 from langchain_core.messages import SystemMessage, HumanMessage
 from app.core.logger import setup_logger
 from app.core.config import settings
@@ -21,16 +24,33 @@ logging = setup_logger("app")
 
 
 class ChatService:
-    OPENAI_API_KEY = settings.GPT_KEY
-    GPT_MODEL = "gpt-4o-mini"
+
+    # Kafka Producer 초기화
+    producer_config = {
+        "bootstrap.servers": "kafka:9092",
+        "socket.timeout.ms": 1000,
+        "message.timeout.ms": 1000,
+        "retries": 2,
+        "retry.backoff.ms": 100,
+        "request.required.acks": 0,
+        "queue.buffering.max.ms": 0,
+    }
+    producer = Producer(producer_config)
+
+    # LLM  초기화
+    llm = ChatOpenAI(
+        api_key=settings.GPT_KEY,
+        model_name="gpt-4o-mini",
+        temperature=0.7,
+    )
 
     @staticmethod
     def calculate_response_length(message_length: int) -> int:
         """메시지 길이에 따른 토큰 제한"""
         if message_length <= 20:
-            return max(20, int(message_length * 0.7))
+            return 20
         elif message_length <= 50:
-            return max(40, int(message_length * 0.6))
+            return 40
         else:
             return max(90, min(200, int(message_length * 0.5)))
 
@@ -52,14 +72,6 @@ class ChatService:
             except Exception as e:
                 logging.error(f"Error calling emotion API: {e}")
                 return "기타"
-
-    @staticmethod
-    def get_llm(max_response_length: int):
-        return ChatOpenAI(
-            api_key=ChatService.OPENAI_API_KEY,
-            model_name=ChatService.GPT_MODEL,
-            temperature=0.7,
-        )
 
     @staticmethod
     def create_validation_chain(llm) -> LLMChain:
@@ -86,7 +98,6 @@ class ChatService:
         # LLM 설정
         message_length = len(message)
         max_response_length = ChatService.calculate_response_length(message_length)
-        llm = ChatService.get_llm(max_response_length)
 
         # 체인 생성
         system_message = {
@@ -96,9 +107,8 @@ class ChatService:
             4: SYSTEM_MESSAGE_4,
         }.get(type, SYSTEM_MESSAGE_1)
 
-        validation_chain = ChatService.create_validation_chain(llm)
+        validation_chain = ChatService.create_validation_chain(ChatService.llm)
 
-        logging.info(max_response_length)
         # 첫 번째 응답 생성
         messages = [
             SystemMessage(content=system_message),
@@ -112,7 +122,7 @@ class ChatService:
                 )
             ),
         ]
-        answer = llm.invoke(messages).content
+        answer = ChatService.llm.invoke(messages).content
         logging.info(f">>>>>>> (수정 전) {answer}")
 
         # 두 번째 응답 생성
@@ -124,10 +134,35 @@ class ChatService:
             "message": message,
             "answer": answer,
         }
-        print(validation_input)
         validation_result = await validation_chain.ainvoke(validation_input)
 
         final_answer = validation_result["validation"].content
         logging.info(f">>>>>>> (수정 후) {final_answer}")
 
+        # Kafka에 채팅 데이터 전송
+        ChatService.send_to_kafka(user_id, type, message)
+
         return {"response": [s.strip() for s in final_answer.split("<br>")]}
+
+    @staticmethod
+    def send_to_kafka(user_id: str, room_id: int, message: str):
+        """Kafka에 채팅 내역 전송 - 비동기, 실패해도 무시"""
+        try:
+            chat_data = {
+                "userId": user_id,
+                "roomId": room_id,
+                "aiName": room_id,
+                "message": message,
+            }
+
+            ChatService.producer.produce(
+                "chat-notification-topic",
+                value=json.dumps(chat_data).encode("utf-8"),
+                # 에러 발생해도 그냥 로깅만
+                callback=lambda err, msg: (
+                    logging.error(f"Failed to send message: {err}") if err else None
+                ),
+            )
+            # flush 없이 비동기로 전송
+        except Exception as e:
+            logging.error(f"Failed to send chat data to Kafka (non-critical): {e}")
