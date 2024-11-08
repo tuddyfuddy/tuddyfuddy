@@ -1,13 +1,15 @@
+import json
+
 import httpx
+from confluent_kafka import Producer
 from langchain_core.messages import SystemMessage, HumanMessage
 from app.core.logger import setup_logger
 from app.core.config import settings
 from langchain_openai import ChatOpenAI
 from langchain.prompts import PromptTemplate
-from langchain.chains import SequentialChain, LLMChain
+from langchain.chains import LLMChain
 from langchain.schema.runnable import RunnablePassthrough
 
-from app.models.memory_manager import UserMemoryManager
 from app.models.templates import (
     SYSTEM_MESSAGE_1,
     SYSTEM_MESSAGE_2,
@@ -22,18 +24,35 @@ logging = setup_logger("app")
 
 
 class ChatService:
-    OPENAI_API_KEY = settings.GPT_KEY
-    GPT_MODEL = "gpt-4o-mini"
+
+    # Kafka Producer 초기화
+    producer_config = {
+        "bootstrap.servers": "kafka:9092",
+        "socket.timeout.ms": 1000,
+        "message.timeout.ms": 1000,
+        "retries": 2,
+        "retry.backoff.ms": 100,
+        "request.required.acks": 0,
+        "queue.buffering.max.ms": 0,
+    }
+    producer = Producer(producer_config)
+
+    # LLM  초기화
+    llm = ChatOpenAI(
+        api_key=settings.GPT_KEY,
+        model_name="gpt-4o-mini",
+        temperature=0.7,
+    )
 
     @staticmethod
     def calculate_response_length(message_length: int) -> int:
-        """메시지 길이에 따른 응답 길이 계산"""
+        """메시지 길이에 따른 토큰 제한"""
         if message_length <= 20:
-            return message_length * 2
+            return 20
         elif message_length <= 50:
-            return message_length * 1.7
-        else:  # 긴 메시지
-            return message_length * 1.5
+            return 40
+        else:
+            return max(90, min(200, int(message_length * 0.5)))
 
     @staticmethod
     async def get_emotion(text: str) -> str:
@@ -46,44 +65,13 @@ class ChatService:
                         "accept": "application/json",
                         "Content-Type": "application/json",
                     },
-                    timeout=8.0,
+                    timeout=5.0,
                 )
                 response.raise_for_status()
                 return response.text
             except Exception as e:
                 logging.error(f"Error calling emotion API: {e}")
                 return "기타"
-
-    @staticmethod
-    def get_memory_manager():
-        # static variable 활용
-        if not hasattr(ChatService, "_memory_manager"):
-            ChatService._memory_manager = UserMemoryManager(
-                llm=ChatOpenAI(api_key=ChatService.OPENAI_API_KEY, temperature=0.7)
-            )
-        return ChatService._memory_manager
-
-    @staticmethod
-    def get_llm(max_response_length: int):
-        return ChatOpenAI(
-            api_key=ChatService.OPENAI_API_KEY,
-            model_name=ChatService.GPT_MODEL,
-            temperature=0.7,
-        )
-
-    @staticmethod
-    def create_response_chain(llm, template: str) -> LLMChain:
-        response_prompt = PromptTemplate(
-            input_variables=[
-                "max_length",
-                "history",
-                "relevant_info",
-                "emotion",
-                "message",
-            ],
-            template=template,
-        )
-        return response_prompt | llm | {"answer": RunnablePassthrough()}
 
     @staticmethod
     def create_validation_chain(llm) -> LLMChain:
@@ -107,38 +95,9 @@ class ChatService:
         emotion = await ChatService.get_emotion(message)
         logging.info(f">>>>>>> ({emotion}) {message}")
 
-        # LLM 및 메모리 설정
+        # LLM 설정
         message_length = len(message)
         max_response_length = ChatService.calculate_response_length(message_length)
-        llm = ChatService.get_llm(max_response_length)
-        # memory_manager = ChatService.get_memory_manager()
-
-        # 메모리 처리
-        # short_term, entity_memory, vector_store = memory_manager.get_or_create_memories(
-        #     str(user_id)
-        # )
-        # recent_history = short_term.chat_memory.messages
-
-        # entity_memory.save_context({"input": message}, {"output": ""})
-        # memory_variables = entity_memory.load_memory_variables({"input": message})
-        # entity_memory.save_context(
-        #     {"input": message}, {"output": "User message processed"}
-        # )
-        # entities = memory_variables.get("entities", {})
-
-        # if entities:
-        #     vector_store.add_texts(
-        #         [f"User preference: {json.dumps(entities, ensure_ascii=False)}"]
-        #     )
-        # vector_store.add_texts([message])
-
-        # 관련 정보 검색
-        # relevant_docs = vector_store.similarity_search(message, k=2)
-        # relevant_history = [doc.page_content for doc in relevant_docs]
-
-        # logging.info(f"recent_history : \n{recent_history}")
-        # logging.info(f"relevant_docs : \n{relevant_docs}")
-        # logging.info(f"relevant_history : \n{relevant_history}")
 
         # 체인 생성
         system_message = {
@@ -148,9 +107,9 @@ class ChatService:
             4: SYSTEM_MESSAGE_4,
         }.get(type, SYSTEM_MESSAGE_1)
 
-        response_chain = ChatService.create_response_chain(llm, system_message)
-        validation_chain = ChatService.create_validation_chain(llm)
+        validation_chain = ChatService.create_validation_chain(ChatService.llm)
 
+        # 첫 번째 응답 생성
         messages = [
             SystemMessage(content=system_message),
             HumanMessage(
@@ -159,35 +118,48 @@ class ChatService:
                     message=message,
                     history="no",
                     relevant_info="no",
-                    max_response_length=max_response_length // 3,
+                    max_response_length=max_response_length,
                 )
             ),
         ]
-        answer = llm.invoke(messages).content
-        # short_term.save_context({"input": message}, {"output": answer})
+        answer = ChatService.llm.invoke(messages).content
+        logging.info(f">>>>>>> (수정 전) {answer}")
 
-        # 응답 생성
-        # result = await response_chain.ainvoke(messages)
-
-        input_dict = {
-            "max_length": max_response_length // 3,
+        # 두 번째 응답 생성
+        validation_input = {
+            "max_length": max_response_length,
             "history": "no",
             "relevant_info": "no",
             "emotion": emotion,
             "message": message,
+            "answer": answer,
         }
-
-        validation_input = {**input_dict, "answer": answer}
         validation_result = await validation_chain.ainvoke(validation_input)
 
-        # 답변 최종 선택(1에서 괜찮으면 그대로, 문제가 있으면 수정본으로)
-        logging.info(f">>>>>>> (수정 전) {answer}")
-        final_answer = (
-            answer
-            if validation_result["validation"].content == "Yes"
-            else validation_result["validation"].content
-        )
+        final_answer = validation_result["validation"].content
         logging.info(f">>>>>>> (수정 후) {final_answer}")
-        # short_term.save_context({"input": message}, {"output": final_answer})
+
+        # Kafka에 채팅 데이터 전송
+        ChatService.send_to_kafka(user_id, type, message)
 
         return {"response": [s.strip() for s in final_answer.split("<br>")]}
+
+    @staticmethod
+    def send_to_kafka(user_id: str, room_id: int, message: str):
+        try:
+            chat_data = {
+                "userId": user_id,
+                "roomId": room_id,
+                "aiName": "카리나",
+                "message": message,
+            }
+
+            ChatService.producer.produce(
+                "chat-notification-topic",
+                value=json.dumps(chat_data).encode("utf-8"),
+                callback=lambda err, msg: (
+                    logging.error(f"Failed to send message: {err}") if err else None
+                ),
+            )
+        except Exception as e:
+            logging.error(f"Failed to send chat data to Kafka (non-critical): {e}")
