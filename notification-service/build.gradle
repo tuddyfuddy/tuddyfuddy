@@ -30,6 +30,7 @@ ext {
 dependencies {
     // web
     implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 
     // devtools
@@ -38,6 +39,16 @@ dependencies {
     // lombok
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
+
+    // postgresql
+    runtimeOnly 'org.postgresql:postgresql'
+
+    // redis
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+    //kafka
+    implementation 'org.springframework.kafka:spring-kafka'
+    testImplementation 'org.springframework.kafka:spring-kafka-test'
 
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
@@ -50,6 +61,9 @@ dependencies {
     // micrometer, actuator for prometheus metric
     implementation 'io.micrometer:micrometer-registry-prometheus'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+    // Firebase Admin
+    implementation 'com.google.firebase:firebase-admin:9.1.1'
 }
 
 dependencyManagement {

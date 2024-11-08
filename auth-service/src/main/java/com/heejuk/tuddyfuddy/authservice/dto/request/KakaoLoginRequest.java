@@ -6,7 +6,10 @@ import io.swagger.v3.oas.annotations.media.Schema;
 public record KakaoLoginRequest(
 
     @Schema(description = "카카오 액세스 토큰")
-    String accessToken
+    String accessToken,
+
+    @Schema(description = "FCM 토큰")
+    String fcmToken
 
 ) {
 

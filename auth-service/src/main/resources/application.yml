@@ -9,6 +9,12 @@ spring:
       host:  ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
 #      password: ${REDIS_PASSWORD:1234}
+  message:
+    kafka:
+      host: ${KAFKA_HOST}
+      port: ${KAFKA_PORT}
+      group-id: ${KAFKA_GROUP}
+
 
 jwt:
   secret: ${JWT_SECRET}

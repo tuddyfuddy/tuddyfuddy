@@ -5,9 +5,12 @@ import static com.heejuk.tuddyfuddy.authservice.constant.JWT_SET.*;
 import com.heejuk.tuddyfuddy.authservice.client.KakaoApiClient;
 import com.heejuk.tuddyfuddy.authservice.client.UserServiceClient;
 import com.heejuk.tuddyfuddy.authservice.dto.CommonResponse;
+import com.heejuk.tuddyfuddy.authservice.dto.request.KakaoLoginRequest;
+import com.heejuk.tuddyfuddy.authservice.dto.response.FcmTokenMessageResponse;
 import com.heejuk.tuddyfuddy.authservice.dto.response.KakaoUserInfo;
 import com.heejuk.tuddyfuddy.authservice.dto.response.UserResponse;
 import com.heejuk.tuddyfuddy.authservice.exception.AuthenticationException;
+import com.heejuk.tuddyfuddy.authservice.service.kafka.KafkaProducerService;
 import com.heejuk.tuddyfuddy.authservice.util.CookieUtil;
 import com.heejuk.tuddyfuddy.authservice.util.JWTUtil;
 import jakarta.servlet.http.Cookie;
@@ -26,11 +29,12 @@ public class AuthService {
     private final KakaoApiClient kakaoApiClient;
     private final UserServiceClient userServiceClient;
     private final ReissueService refreshService;
+    private final KafkaProducerService kafkaProducerService;
 
-    public void processKakaoLogin(String kakaoAccessToken, HttpServletResponse response) {
+    public void processKakaoLogin(KakaoLoginRequest request, HttpServletResponse response) {
         try {
             KakaoUserInfo kakaoUserInfo = kakaoApiClient.getKakaoUserInfo(
-                "Bearer " + kakaoAccessToken);
+                "Bearer " + request.accessToken());
             CommonResponse<UserResponse> userResponse = userServiceClient.loginKakaoUser(
                 kakaoUserInfo);
 
@@ -66,6 +70,10 @@ public class AuthService {
             // Refresh Token을 쿠키에 설정
             Cookie refreshCookie = CookieUtil.createCookie("refresh_token", refreshToken);
             CookieUtil.addSameSiteCookieAttribute(response, refreshCookie);
+
+            // fcm 토큰 전송
+            kafkaProducerService.sendFcmToken(FcmTokenMessageResponse.of(user.userId(),
+                request.fcmToken()));
 
         } catch (Exception e) {
             log.error("Error processing kakao login", e);
