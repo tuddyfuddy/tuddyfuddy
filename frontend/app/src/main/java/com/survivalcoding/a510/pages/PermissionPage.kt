@@ -2,6 +2,7 @@ package com.survivalcoding.a510.pages
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
@@ -17,6 +18,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.survivalcoding.a510.components.NextButton
 import com.survivalcoding.a510.components.PermissionItem
+import com.survivalcoding.a510.services.DailyWeatherWorker
 
 @Composable
 fun PermissionPage(
@@ -76,6 +78,18 @@ fun PermissionPage(
     ) { permissionsResult ->
         permissionsResult.forEach { (permission, isGranted) ->
             permissionsState[permission] = isGranted
+        }
+
+        // 위치 권한이 승인되었는지 확인
+        val isLocationPermissionGranted = permissionsResult[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+                permissionsResult[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+
+        // 위치 권한이 방금 승인되었다면 Worker 스케줄링
+        if (isLocationPermissionGranted) {
+            context.applicationContext?.let { appContext ->
+                DailyWeatherWorker.schedule(appContext)
+                Log.d("PermissionPage", "Weather Worker scheduled after location permission granted")
+            }
         }
 
         currentGroupIndex++

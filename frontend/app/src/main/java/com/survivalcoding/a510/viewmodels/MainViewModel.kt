@@ -67,12 +67,12 @@ class MainViewModel : ViewModel() {
         if (UserApiClient.instance.isKakaoTalkLoginAvailable(activity)) {
             // 카카오톡이 설치되어 있으면 카카오톡으로 로그인
             UserApiClient.instance.loginWithKakaoTalk(activity) { token, error ->
-                handleKakaoLoginResult(token, error, onSuccess, onError)
+                handleKakaoLoginResult(activity, token, error, onSuccess, onError)
             }
         } else {
             // 카카오톡이 설치되어 있지 않으면 카카오계정으로 로그인
             UserApiClient.instance.loginWithKakaoAccount(activity) { token, error ->
-                handleKakaoLoginResult(token, error, onSuccess, onError)
+                handleKakaoLoginResult(activity, token, error, onSuccess, onError)
             }
         }
     }
@@ -85,6 +85,7 @@ class MainViewModel : ViewModel() {
      * @param onError 에러 콜백
      */
     private fun handleKakaoLoginResult(
+        activity: ComponentActivity,
         token: OAuthToken?,
         error: Throwable?,
         onSuccess: () -> Unit,
