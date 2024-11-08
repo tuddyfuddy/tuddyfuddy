@@ -5,6 +5,7 @@ import com.kakao.sdk.common.KakaoSdk
 import com.kakao.sdk.common.util.Utility
 import android.util.Log
 import com.survivalcoding.a510.services.RetrofitClient
+import com.survivalcoding.a510.services.chat.ImageCleanupWorker
 
 class GlobalApplication : Application() {
     override fun onCreate() {
@@ -14,5 +15,6 @@ class GlobalApplication : Application() {
         Log.e("KeyHash", "키해시 값: $keyHash")
 
         RetrofitClient.initialize(this)
+        ImageCleanupWorker.schedule(this)
     }
 }

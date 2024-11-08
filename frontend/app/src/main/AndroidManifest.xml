@@ -6,6 +6,7 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
 
     <!--카메라 접근권한-->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
@@ -31,6 +32,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.A510"
         android:enableOnBackInvokedCallback="true"
+        android:persistent="true"
         tools:targetApi="31">
         <activity
             android:name=".MainActivity"
@@ -45,10 +47,23 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <service
             android:name=".services.chat.ChatService"
             android:foregroundServiceType="dataSync"
+            android:enabled="true"
+            android:exported="false">
+
+            <intent-filter>
+                <action android:name="com.survivalcoding.a510.START_CHAT_SERVICE" />
+            </intent-filter>
+        </service>
+
+        <service
+            android:name=".services.chat.ImageProcessingService"
+            android:enabled="true"
             android:exported="false" />
+
         <activity
             android:name="com.kakao.sdk.auth.AuthCodeHandlerActivity"
             android:exported="true">

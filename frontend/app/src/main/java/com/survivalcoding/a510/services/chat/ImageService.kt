@@ -78,7 +78,7 @@ object ImageService {
             outputStream.reset()
             scaledBitmap.compress(Bitmap.CompressFormat.JPEG, quality, outputStream)
             Log.d(TAG, "Compressed with quality $quality, size: ${outputStream.size()} bytes")
-            quality -= 10  // 더 적극적인 압축을 위해 10씩 감소
+            quality -= 10  // 더 많이 압축하기 위해 10씩 감소
         } while (outputStream.size() > MAX_FILE_SIZE && quality > 10)
 
         if (quality <= 10) {

@@ -13,6 +13,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.graphics.Color
 
 
@@ -82,15 +83,19 @@ fun ChatListItem(
                     Box(
                         modifier = Modifier
                             .padding(start = 8.dp)
-                            .size(18.dp)
+//                            .size(18.dp)
+                            .height(20.dp)
+                            .width(30.dp)
                             .background(
                                 color = Color(0xFF04C628),
-                                shape = CircleShape
+                                shape = RoundedCornerShape(10.dp)
+//                                shape = CircleShape
                             ),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = unreadCount.toString(),
+                            text = "new",
+//                            text = unreadCount.toString(),
                             color = Color.White,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,

@@ -18,6 +18,7 @@ import java.util.concurrent.TimeUnit
 object RetrofitClient {
     private const val CHAT_BASE_URL = "http://k11a510.p.ssafy.io:8080/chat-service/"
     private const val IMAGE_BASE_URL = "http://k11a510.p.ssafy.io:8080/"
+    private const val WEATHER_BASE_URL = "http://k11a510.p.ssafy.io:8080/"
     private lateinit var tokenManager: TokenManager
 
     // RetrofitClient 초기화 (앱 시작 시 호출 필요)
@@ -95,6 +96,19 @@ object RetrofitClient {
         )
         .build()
 
+    // Weather 서비스용 Retrofit 인스턴스
+    private val weatherRetrofit = Retrofit.Builder()
+        .baseUrl(WEATHER_BASE_URL)
+        .addConverterFactory(GsonConverterFactory.create())
+        .client(
+            OkHttpClient.Builder()
+                .connectTimeout(30, TimeUnit.SECONDS)
+                .readTimeout(30, TimeUnit.SECONDS)
+                .writeTimeout(30, TimeUnit.SECONDS)
+                .build()
+        )
+        .build()
+
     // 채팅 서비스
     val aiChatService: AIChatService = chatRetrofit.create(AIChatService::class.java)
 
@@ -119,5 +133,8 @@ object RetrofitClient {
             .build()
             .create(FCMTokenService::class.java)
     }
+
+    // Weather 서비스
+    val weatherService: WeatherService = weatherRetrofit.create(WeatherService::class.java)
 }
 

@@ -17,7 +17,7 @@ data class ChatRequest(
  * 응답이 문자열 리스트로 옴
  */
 data class ChatResponse(
-    val response: List<String>  // String에서 List<String>으로 변경
+    val response: List<String>  // String List<String>으로 변경
 )
 
 /**

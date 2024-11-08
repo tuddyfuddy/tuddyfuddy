@@ -257,6 +257,7 @@ fun ChatDetailPage(
             items(messageList.size) { index ->
                 val message = messageList[index]
                 val previousMessage = if (index < messageList.size - 1) messageList[index + 1] else null
+                val nextMessage = if (index > 0) messageList[index - 1] else null
 
                 val showProfile = message.isAiMessage && (
                         previousMessage == null ||
@@ -266,6 +267,18 @@ fun ChatDetailPage(
                         )
 
                 val isFirstInSequence = previousMessage == null || previousMessage.isAiMessage != message.isAiMessage
+
+                // 타임스탬프를 표시할지 결정하는 조건
+                val showTimestamp = when {
+                    // 다음 메시지가 없는 경우 (가장 최근 메시지)
+                    nextMessage == null -> true
+                    // 다음 메시지와 시간이 다른 경우
+                    TimeUtils.formatChatTime(message.timestamp) != TimeUtils.formatChatTime(nextMessage.timestamp) -> true
+                    // 다음 메시지와 발신자가 다른 경우
+                    message.isAiMessage != nextMessage.isAiMessage -> true
+                    // 그 외의 경우는 타임스탬프를 표시하지 않음
+                    else -> false
+                }
 
                 Row(
                     modifier = Modifier
@@ -287,7 +300,9 @@ fun ChatDetailPage(
                         isFirstInSequence = isFirstInSequence,
                         searchQuery = searchQuery,
                         isImage = message.isImage,
-                        imageUrl = message.imageUrl
+                        imageUrl = message.imageUrl,
+                        showTimestamp = showTimestamp,
+                        isLoading = message.isLoading,
                     )
                 }
 

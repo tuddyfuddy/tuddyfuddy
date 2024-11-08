@@ -1,13 +1,16 @@
 package com.survivalcoding.a510.components
 
+import android.content.Context
 import android.graphics.BitmapFactory
 import android.net.Uri
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -23,6 +26,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.survivalcoding.a510.utils.TimeUtils
+import java.io.File
+import androidx.compose.runtime.remember
 
 @Composable
 fun ChatBubble(
@@ -35,8 +40,14 @@ fun ChatBubble(
     isFirstInSequence: Boolean = true,
     searchQuery: String = "",
     isImage: Boolean = false,
-    imageUrl: String? = null
+    imageUrl: String? = null,
+    showTimestamp: Boolean = true,
+    isLoading: Boolean = false,
 ) {
+    if (!isLoading && text.isBlank() && !isImage && imageUrl == null) {
+        return
+    }
+
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = if (isAiMessage) Arrangement.Start else Arrangement.End,
@@ -70,10 +81,48 @@ fun ChatBubble(
                     )
                 }
 
-                MessageBubble(text, timestamp, isAiMessage, isFirstInSequence, searchQuery, isImage, imageUrl)
+                if (isLoading) {
+                    // 로딩 아이콘 표시
+                    Box(
+                        modifier = Modifier
+                            .background(
+                                color = Color.White,
+                                shape = RoundedCornerShape(10.dp)
+                            )
+                            .padding(8.dp)
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = MaterialTheme.colorScheme.primary,
+                            strokeWidth = 2.dp
+                        )
+                    }
+                } else {
+                    // 기존 MessageBubble 표시
+                    MessageBubble(
+                        text = text,
+                        timestamp = timestamp,
+                        isAiMessage = isAiMessage,
+                        isFirstInSequence = isFirstInSequence,
+                        searchQuery = searchQuery,
+                        isImage = isImage,
+                        imageUrl = imageUrl,
+                        showTimestamp = showTimestamp
+                    )
+                }
             }
         } else {
-            MessageBubble(text, timestamp, isAiMessage, isFirstInSequence, searchQuery, isImage, imageUrl)
+            // 사용자 메시지는 로딩 상태가 없으므로 그대로 유지
+            MessageBubble(
+                text = text,
+                timestamp = timestamp,
+                isAiMessage = isAiMessage,
+                isFirstInSequence = isFirstInSequence,
+                searchQuery = searchQuery,
+                isImage = isImage,
+                imageUrl = imageUrl,
+                showTimestamp = showTimestamp
+            )
         }
     }
 }
@@ -87,8 +136,13 @@ fun MessageBubble(
     isFirstInSequence: Boolean,
     searchQuery: String = "",
     isImage: Boolean = false,
-    imageUrl: String? = null
+    imageUrl: String? = null,
+    showTimestamp: Boolean = true
 ) {
+    if (text.isBlank() && !isImage && imageUrl == null) {
+        return
+    }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -96,7 +150,7 @@ fun MessageBubble(
         horizontalArrangement = if (isAiMessage) Arrangement.Start else Arrangement.End,
         verticalAlignment = Alignment.Bottom
     ) {
-        if (!isAiMessage) {
+        if (!isAiMessage && showTimestamp) {
             Text(
                 text = TimeUtils.formatChatTime(timestamp),
                 style = MaterialTheme.typography.bodySmall,
@@ -134,49 +188,101 @@ fun MessageBubble(
                 )
         ) {
             if (isImage && imageUrl != null) {
-                val context = LocalContext.current
-                val bitmap = androidx.compose.runtime.remember(imageUrl) {
-                    try {
-                        val uri = Uri.parse(imageUrl)
-                        val inputStream = context.contentResolver.openInputStream(uri)
 
-                        // 비트맵 옵션을 사용하여 이미지 크기 조절
-                        val options = BitmapFactory.Options().apply {
-                            inJustDecodeBounds = true
-                        }
-                        BitmapFactory.decodeStream(inputStream, null, options)
-                        inputStream?.close()
+                Log.d("ChatBubble", "로딩 이미지 URL!!!!!!!!!: $imageUrl")
 
-                        // 적절한 샘플 크기 계산
-                        val maxSize = 1024
-                        var sampleSize = 1
-                        while (options.outWidth / sampleSize > maxSize ||
-                            options.outHeight / sampleSize > maxSize) {
-                            sampleSize *= 2
+                // 내부 저장소의 이미지인 경우 로직
+//                if (imageUrl.startsWith("/data/")) {
+//                if (!imageUrl.startsWith("content://")) {
+//                    val imageFile = File(imageUrl)
+                    val context = LocalContext.current
+                    val directory = context.getDir("images", Context.MODE_PRIVATE)
+                    val imageFile = File(directory, imageUrl)  // 파일 이름으로 전체 경로 생성
+
+                    Log.d("ChatBubble", "풀 이미지 경로!!!!!!!!: ${imageFile.absolutePath}")
+                    Log.d("ChatBubble", "파일 잌지스트!!!!!!!!!!!: ${imageFile.exists()}")
+
+
+                    if (imageFile.exists()) {
+                        val bitmap = remember(imageUrl) {
+                            try {
+                                val options = BitmapFactory.Options().apply {
+                                    inJustDecodeBounds = true
+                                }
+                                BitmapFactory.decodeFile(imageFile.absolutePath, options)
+
+                                val maxSize = 1024
+                                var sampleSize = 1
+                                while (options.outWidth / sampleSize > maxSize ||
+                                    options.outHeight / sampleSize > maxSize) {
+                                    sampleSize *= 2
+                                }
+
+                                val finalOptions = BitmapFactory.Options().apply {
+                                    inSampleSize = sampleSize
+                                }
+                                BitmapFactory.decodeFile(imageFile.absolutePath, finalOptions)?.asImageBitmap()
+                            } catch (e: Exception) {
+                                Log.e("ChatBubble", "이미지 로드 실패", e)
+                                null
+                            }
                         }
 
-                        // 실제 비트맵 로드
-                        val finalOptions = BitmapFactory.Options().apply {
-                            inSampleSize = sampleSize
+                        bitmap?.let {
+                            Image(
+                                bitmap = it,
+                                contentDescription = "Shared image",
+                                modifier = Modifier
+                                    .size(200.dp)
+                                    .clip(RoundedCornerShape(10.dp)),
+                                contentScale = ContentScale.Crop
+                            )
                         }
-                        context.contentResolver.openInputStream(uri)?.use { stream ->
-                            BitmapFactory.decodeStream(stream, null, finalOptions)?.asImageBitmap()
-                        }
-                    } catch (e: Exception) {
-                        null
                     }
-                }
+//                } else {
+//                    // URI 경우 로직
+//                    val context = LocalContext.current
+//                    val bitmap = remember(imageUrl) {
+//                        try {
+//                            val uri = Uri.parse(imageUrl)
+//                            val inputStream = context.contentResolver.openInputStream(uri)
+//
+//                            val options = BitmapFactory.Options().apply {
+//                                inJustDecodeBounds = true
+//                            }
+//                            BitmapFactory.decodeStream(inputStream, null, options)
+//                            inputStream?.close()
+//
+//                            val maxSize = 1024
+//                            var sampleSize = 1
+//                            while (options.outWidth / sampleSize > maxSize ||
+//                                options.outHeight / sampleSize > maxSize) {
+//                                sampleSize *= 2
+//                            }
+//
+//                            val finalOptions = BitmapFactory.Options().apply {
+//                                inSampleSize = sampleSize
+//                            }
+//                            context.contentResolver.openInputStream(uri)?.use { stream ->
+//                                BitmapFactory.decodeStream(stream, null, finalOptions)?.asImageBitmap()
+//                            }
+//                        } catch (e: Exception) {
+//                            null
+//                        }
+//                    }
+//
+//                    bitmap?.let {
+//                        Image(
+//                            bitmap = it,
+//                            contentDescription = "Shared image",
+//                            modifier = Modifier
+//                                .size(200.dp)
+//                                .clip(RoundedCornerShape(10.dp)),
+//                            contentScale = ContentScale.Crop
+//                        )
+//                    }
+//                }
 
-                bitmap?.let {
-                    Image(
-                        bitmap = it,
-                        contentDescription = "Shared image",
-                        modifier = Modifier
-                            .size(200.dp)
-                            .clip(RoundedCornerShape(10.dp)),
-                        contentScale = ContentScale.Crop
-                    )
-                }
             } else {
                 HighlightedText(
                     text = text,
@@ -189,7 +295,7 @@ fun MessageBubble(
             }
         }
 
-        if (isAiMessage) {
+        if (isAiMessage && showTimestamp) {
             Spacer(modifier = Modifier.width(4.dp))
             Text(
                 text = TimeUtils.formatChatTime(timestamp),
