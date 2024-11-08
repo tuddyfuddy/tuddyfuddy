@@ -81,6 +81,10 @@ dependencies {
     // circuitbreaker
     implementation 'org.springframework.cloud:spring-cloud-starter-circuitbreaker-resilience4j'
     implementation 'io.github.resilience4j:resilience4j-spring-boot3'
+
+    // JAX-RS API
+    implementation 'jakarta.ws.rs:jakarta.ws.rs-api:3.1.0'
+    implementation 'org.glassfish.jersey.core:jersey-common:3.1.1'
 }
 
 dependencyManagement {
