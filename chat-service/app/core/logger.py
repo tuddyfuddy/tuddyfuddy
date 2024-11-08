@@ -43,7 +43,7 @@ def setup_logger(name):
     console_handler.setLevel(logging.DEBUG)
 
     file_handler = RotatingFileHandler(
-        "app.log", maxBytes=10 * 1024 * 1024, backupCount=5, encoding="utf-8"
+        "/var/log/applications/chat-service/application.log", maxBytes=10 * 1024 * 1024, backupCount=5, encoding="utf-8"
     )
     file_handler.setLevel(logging.DEBUG)
 

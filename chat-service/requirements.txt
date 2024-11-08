@@ -37,3 +37,4 @@ python-dotenv
 langchain-openai
 langchain-community
 faiss-cpu
+prometheus-fastapi-instrumentator

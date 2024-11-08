@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from py_eureka_client import eureka_client
 from .core.config import settings
 from .api import chat_controller
+from prometheus_fastapi_instrumentator import Instrumentator
 
 import uvicorn
 import os
@@ -13,6 +14,7 @@ app = FastAPI(
 )
 app.include_router(chat_controller.router)
 
+Instrumentator().instrument(app).expose(app)
 
 async def register_to_eureka():
     # Docker 환경에서는 hostname이 container name이 되어야 함
