@@ -21,7 +21,7 @@ public class FcmTokenService {
     private final RedisTemplate<String, String> redisTemplate;
 
     private static final String FCM_TOKEN_PREFIX = "fcm:token:";
-    private static final Duration TOKEN_TTL = Duration.ofDays(30);
+    private static final Duration TOKEN_TTL = Duration.ofDays(7);
 
     @Transactional
     public void saveToken(FcmTokenRequest request) {

@@ -22,14 +22,14 @@ public class AiInfo {
     private Long id;
 
     @Column(nullable = false, unique = true)
-    private String aiType;
+    private String aiName;
 
     @Column(nullable = false)
     private String imageUrl;
 
     @Builder
-    public AiInfo(String aiType, String imageUrl) {
-        this.aiType = aiType;
+    public AiInfo(String aiName, String imageUrl) {
+        this.aiName = aiName;
         this.imageUrl = imageUrl;
     }
 }

@@ -8,6 +8,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface AiInfoRepository extends JpaRepository<AiInfo, Long> {
 
-    Optional<AiInfo> findByAiType(String aiType);
+    Optional<AiInfo> findByAiName(String aiName);
 
 }
