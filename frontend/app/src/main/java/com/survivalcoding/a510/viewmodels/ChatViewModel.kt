@@ -38,7 +38,7 @@ class ChatViewModel(application: Application, private val roomId: Int) : Android
         viewModelScope.launch {
             @OptIn(kotlinx.coroutines.FlowPreview::class)
             _pendingMessages
-                .debounce(4000) // 로딩아이콘 N초 보여주기
+                .debounce(2000) // 로딩아이콘 N초 보여주기
                 .collect { messages ->
                     if (messages.isNotEmpty()) {
                         sendCombinedMessage(messages)
