@@ -73,14 +73,23 @@ class ChatService : Service() {
                         Log.d("ChatService", "로딩 메시지 삭제 완료")
                     }
 
-                    response.body()?.getMessageList()?.forEach { aiMessage ->
-                        messageDao.insertMessage(
-                            ChatMessage(
-                                roomId = roomId,
-                                content = aiMessage,
-                                isAiMessage = true
+                    response.body()?.getMessageList()?.forEachIndexed { index, aiMessage ->
+                        // 빈 문자열이면 말풍선 안생기게 if문으로 조건 걸기
+                        // 근데 이거 효과 없어서 ChatBubble(MessageBubble)에 if문 조건 달아서 해결
+                        if (aiMessage.isNotBlank()) {
+                            // 첫 번째 메시지가 아닌 경우 1초 대기
+                            if (index > 0) {
+                                kotlinx.coroutines.delay(1000)
+                            }
+
+                            messageDao.insertMessage(
+                                ChatMessage(
+                                    roomId = roomId,
+                                    content = aiMessage,
+                                    isAiMessage = true
+                                )
                             )
-                        )
+                        }
                     }
 
                     response.body()?.getMessageList()?.lastOrNull()?.let { lastAiMessage ->
