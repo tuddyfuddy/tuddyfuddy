@@ -54,7 +54,7 @@ class ImageProcessingService : Service() {
                 val savedImagePath = saveImageToInternalStorage(imageUri)
                 Log.d("ImageProcessing", "저장된 이미지 경로: $savedImagePath")
 
-                // 2. 이미지 메시지 저장 (한 번만)
+                // 2. 이미지 메시지 저장
                 val imageMessageId = messageDao.insertMessageAndGetId(
                     ChatMessage(
                         roomId = roomId,
@@ -112,13 +112,6 @@ class ImageProcessingService : Service() {
                 input.copyTo(output)
             }
         }
-//        inputStream?.use { input ->
-//            FileOutputStream(file).use { output ->
-//                input.copyTo(output)
-//            }
-//        }
-
-//        return file.absolutePath
         return filename
     }
 

@@ -34,14 +34,19 @@ class ChatViewModel(application: Application, private val roomId: Int) : Android
     private var loadingMessageId: Long? = null
 
     init {
-        // N초 동안 메시지를 모았다가 한 번에 처리
         viewModelScope.launch {
             @OptIn(kotlinx.coroutines.FlowPreview::class)
-            _pendingMessages
-                .debounce(2000) // 로딩아이콘 N초 보여주기
+            _pendingMessages  // 묶음 전송 처리를 위한 보류중인 메세지
+                .debounce(4000)
                 .collect { messages ->
                     if (messages.isNotEmpty()) {
-                        sendCombinedMessage(messages)
+                        val combinedContent = messages.joinToString("<br>")
+                        ChatService.startService(
+                            getApplication(),
+                            roomId,
+                            combinedContent,
+                            loadingMessageId
+                        )
                         _pendingMessages.value = emptyList()
                     }
                 }
@@ -117,11 +122,8 @@ class ChatViewModel(application: Application, private val roomId: Int) : Android
         }
     }
 
-
-
     private suspend fun scrollToCurrentMatch(listState: LazyListState, screenHeight: Int) {
         val targetIndex = _searchMatches.value[_currentSearchIndex.value]
-        // 화면어디에 검색한 단어가 있는 말풍선이 보이게 할지 정하는 숫자
         val targetOffset = (screenHeight * 0.8).toInt()
 
         listState.scrollToItem(
@@ -141,9 +143,6 @@ class ChatViewModel(application: Application, private val roomId: Int) : Android
                 )
             )
 
-            // 현재 메시지를 pending 목록에 추가
-            _pendingMessages.value += content
-
             // 이전 로딩 메시지가 있다면 삭제
             loadingMessageId?.let { id ->
                 messageDao.deleteMessageById(id)
@@ -156,6 +155,7 @@ class ChatViewModel(application: Application, private val roomId: Int) : Android
                 isAiMessage = true,
                 isLoading = true
             )
+
             val insertedId = messageDao.insertMessageAndGetId(loadingMessage)
             loadingMessageId = insertedId
 
@@ -165,55 +165,9 @@ class ChatViewModel(application: Application, private val roomId: Int) : Android
                 message = content,
                 timestamp = System.currentTimeMillis()
             )
-        }
-    }
 
-    private fun sendCombinedMessage(messages: List<String>) {
-        viewModelScope.launch {
-            try {
-                // 백그라운드 서비스로 합쳐진 메시지 전송
-                val combinedContent = messages.joinToString("\n")
-
-                ChatService.startService(
-                    getApplication(),
-                    roomId,
-                    combinedContent,
-                    loadingMessageId,
-                )
-            } catch (e: Exception) {
-                // 에러 메시지 추출해서 전달
-                handleError(e.message ?: "이런 오류가 발생함")
-            }
-        }
-    }
-
-    private suspend fun handleError(errorMessage: String) {
-        // 에러 메시지를 AI 메시지로 표시
-        messageDao.insertMessage(
-            ChatMessage(
-                roomId = roomId,
-                content = errorMessage,
-                isAiMessage = true
-            )
-        )
-
-        // 채팅방 정보 업데이트
-        chatInfoDao.updateLastMessage(
-            chatId = roomId,
-            message = errorMessage,
-            timestamp = System.currentTimeMillis()
-        )
-
-        // 로딩 상태 초기화
-        loadingMessageId = null
-    }
-
-
-
-    // 채팅방 들어가면 읽지 않은 메세지 수 다시 0으로 초기화
-    fun markAsRead() {
-        viewModelScope.launch {
-            chatInfoDao.updateUnreadCount(roomId, 0)
+            // pending 메시지 목록에 추가
+            _pendingMessages.value += content
         }
     }
 
@@ -263,6 +217,27 @@ class ChatViewModel(application: Application, private val roomId: Int) : Android
                 message = "친구와 새로운 대화를 시작해보세요!",
                 timestamp = System.currentTimeMillis()
             )
+        }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        // ViewModel 제거될 때 사용자가 보냈던 묶음 메시지가 있다면 무조건 전송
+        if (_pendingMessages.value.isNotEmpty()) {
+            val combinedContent = _pendingMessages.value.joinToString("<br>")
+            ChatService.startService(
+                getApplication(),
+                roomId,
+                combinedContent,
+                loadingMessageId
+            )
+        }
+    }
+
+    // 채팅방 들어가면 읽지 않은 메세지 수 다시 0으로 초기화
+    fun markAsRead() {
+        viewModelScope.launch {
+            chatInfoDao.updateUnreadCount(roomId, 0)
         }
     }
 }
