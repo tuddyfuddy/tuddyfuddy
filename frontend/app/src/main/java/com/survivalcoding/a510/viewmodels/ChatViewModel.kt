@@ -109,17 +109,20 @@ class ChatViewModel(application: Application, private val roomId: Int) : Android
                                 messageDao.deleteMessageById(id)
                             }
 
-                            // 새로운 로딩 메시지 추가
-                            val loadingMessage = ChatMessage(
-                                roomId = roomId,
-                                content = "",
-                                isAiMessage = true,
-                                isLoading = true
-                            )
+                            // 단톡방이 아닐 때만 로딩 메시지 생성
+                            if (roomId != 5) {
+                                // 새로운 로딩 메시지 추가
+                                val loadingMessage = ChatMessage(
+                                    roomId = roomId,
+                                    content = "",
+                                    isAiMessage = true,
+                                    isLoading = true
+                                )
 
-                            // 새로운 로딩 아이콘 만들기
-                            val insertedId = messageDao.insertMessageAndGetId(loadingMessage)
-                            loadingMessageId = insertedId
+                                // 새로운 로딩 아이콘 만들기
+                                val insertedId = messageDao.insertMessageAndGetId(loadingMessage)
+                                loadingMessageId = insertedId
+                            }
 
                             // 이미지 분석 결과가 오면 보류중인 메세지에 분석결과 추가하기
                             _pendingMessages.value += message
