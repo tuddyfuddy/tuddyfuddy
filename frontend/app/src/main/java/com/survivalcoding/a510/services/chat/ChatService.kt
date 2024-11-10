@@ -70,10 +70,21 @@ class ChatService : Service() {
                     loadingMessageId?.let { id ->
                         messageDao.deleteMessageById(id)
                     }
-                    // 김유정(3번)과 카리나(4qjs)의 응답을 김유정-카리나 순서로 받기
-                    val types = listOf(3, 4) // 김유정, 카리나
 
-                    for (type in types) {
+                    // 4가지 케이스 담을 리스트
+                    val patterns = listOf(
+                        listOf(3, 4),  // 3번 -> 4번
+                        listOf(4, 3),  // 4번 -> 3번
+                        listOf(3),     // 3번만
+                        listOf(4)      // 4번만
+                    )
+
+                    // 4가지 케이스 중 하나를 랜덤으로 고르기
+                    val selectedPattern = patterns.random()
+                    nextResponderId = selectedPattern.firstOrNull()  // 첫번째 AIdml ID 저장
+
+                    // 랜덤으로 정해진 케이스의 AI만 API 요청 보내기
+                    for (type in selectedPattern) {
                         // 각 AI별로 로딩 메시지 생성
                         val newLoadingMessage = ChatMessage(
                             roomId = roomId,
@@ -135,7 +146,7 @@ class ChatService : Service() {
                         }
 
                         // 캐릭터 응답 사이에 약간의 딜레이
-                        kotlinx.coroutines.delay(1500)
+                        kotlinx.coroutines.delay(700)
                     }
                 } else {
                     // 디버그용 로그
@@ -143,6 +154,13 @@ class ChatService : Service() {
                     Log.d("roomId","방 아이디 roomId@@@@@@@@@ : $roomId")
                     Log.d("content","내용 content@@@@@@@@@ : $content")
 
+                    // 1:1 채팅방인 경우 로딩 메시지 생성 추가
+                    val loadingMessage = ChatMessage(
+                        roomId = roomId,
+                        content = "",
+                        isAiMessage = true,
+                        isLoading = true
+                    )
 
                     // 챗API에 채팅 메세지 전송
                     val response = aiChatService.sendChatMessage(
@@ -296,6 +314,15 @@ class ChatService : Service() {
         const val EXTRA_CONTENT = "extra_content"               // 채팅 내용 키
         const val EXTRA_LOADING_MESSAGE_ID = "extra_loading_message_id"     // 로딩 메시지 ID 키
         private var activeChatRoomId: Int? = null  // 현재 사용자 휴대폰 화면이 몇번 채팅방인지 확인하는 변수
+        private var nextResponderId: Int? = null  // 다음 응답자 ID를 저장
+
+        fun getNextResponderId(): Int? {
+            return nextResponderId
+        }
+
+        fun setNextResponderId(id: Int?) {
+            nextResponderId = id
+        }
 
         // 채팅 서비스 시작하는 함수
         fun startService(context: Context, roomId: Int, content: String, loadingMessageId: Long?) {
