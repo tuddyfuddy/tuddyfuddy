@@ -37,6 +37,14 @@ object DummyAIData {
             timestamp = "방금 전",
             unreadCount = 1
         ),
+        ChatData(
+            id = 5,
+            profileImage = R.drawable.grouptalk,
+            name = "김유정, 카리나",
+            message = "단톡방에서 여러 친구들과 함께 대화를 시작해보세요!",
+            timestamp = "방금 전",
+            unreadCount = 1
+        ),
     )
 
     fun getChatById(id: Int): ChatData? = chatList.find { it.id == id }
