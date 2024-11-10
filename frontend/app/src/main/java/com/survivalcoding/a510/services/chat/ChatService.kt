@@ -71,20 +71,34 @@ class ChatService : Service() {
                         messageDao.deleteMessageById(id)
                     }
 
-                    // 4가지 케이스 담을 리스트
+                    // 6가지 경우의 수 만들기
                     val patterns = listOf(
-                        listOf(3, 4),  // 3번 -> 4번
-                        listOf(4, 3),  // 4번 -> 3번
-                        listOf(3),     // 3번만
-                        listOf(4)      // 4번만
+                        Pair(listOf(3, 4), false),    // 3번 - 4번 순으로 호출하기 (각각 사용자 메시지에 응답)
+                        Pair(listOf(4, 3), false),    // 4번 - 3번 순으로 호출하기 (각각 사용자 메시지에 응답)
+                        Pair(listOf(3), false),       // 3번만 호출하기
+                        Pair(listOf(4), false),       // 4번만 호출하기
+                        Pair(listOf(3, 4), true),     // 3번 호출하고 3번 응답으로 4번 호출하기
+                        Pair(listOf(4, 3), true)      // 4번 호출하고 4번 응답으로 3번 호출하기
                     )
 
-                    // 4가지 케이스 중 하나를 랜덤으로 고르기
+                    // 6가지 케이스 중 하나를 랜덤으로 고르기
                     val selectedPattern = patterns.random()
-                    nextResponderId = selectedPattern.firstOrNull()  // 첫번째 AIdml ID 저장
+                    Log.d("ChatPattern", "선택된 패턴: AI 순서=${selectedPattern.first}, 연쇄응답=${selectedPattern.second}")
+
+                    val types = selectedPattern.first
+                    val isChainedResponse = selectedPattern.second
+                    nextResponderId = types.firstOrNull()
+
+                    var previousResponse = content  // 처음엔 사용자 메시지로 초기화
 
                     // 랜덤으로 정해진 케이스의 AI만 API 요청 보내기
-                    for (type in selectedPattern) {
+                    for (type in types) {
+                        Log.d("ChatRequest", """
+                            요청 정보:
+                            - AI 타입: $type
+                            - 연쇄응답?: $isChainedResponse
+                            - 보내는 내용: $previousResponse
+                        """.trimIndent())
                         // 각 AI별로 로딩 메시지 생성
                         val newLoadingMessage = ChatMessage(
                             roomId = roomId,
@@ -98,7 +112,7 @@ class ChatService : Service() {
                         // API 호출
                         val response = aiChatService.sendChatMessage(
                             type = type,
-                            request = ChatRequest(text = content)
+                            request = ChatRequest(text = previousResponse)
                         )
 
                         // 응답 내용 보는 디버그용 로그
@@ -118,20 +132,28 @@ class ChatService : Service() {
                             Log.d("ChatService", "로딩 메시지 삭제 완료")
 
                             // 응답 메시지 처리
-                            response.body()?.getMessageList()?.forEachIndexed { index, aiMessage ->
-                                if (aiMessage.isNotBlank()) {
-                                    if (index > 0) {
-                                        kotlinx.coroutines.delay(1000)
-                                    }
+                            response.body()?.let { body ->
+                                // 모든 메시지 처리 및 저장
+                                body.getMessageList().forEachIndexed { index, aiMessage ->
+                                    if (aiMessage.isNotBlank()) {
+                                        if (index > 0) {
+                                            kotlinx.coroutines.delay(1000)
+                                        }
 
-                                    messageDao.insertMessage(
-                                        ChatMessage(
-                                            roomId = roomId,
-                                            content = aiMessage,
-                                            isAiMessage = true,
-                                            aiType = type
+                                        messageDao.insertMessage(
+                                            ChatMessage(
+                                                roomId = roomId,
+                                                content = aiMessage,
+                                                isAiMessage = true,
+                                                aiType = type
+                                            )
                                         )
-                                    )
+                                    }
+                                }
+
+                                // 연쇄 응답일 경우, 모든 메시지를 합쳐서 다음 AI의 입력으로 저장
+                                if (isChainedResponse) {
+                                    previousResponse = body.getMessageList().joinToString(" ")
                                 }
                             }
 
@@ -145,7 +167,7 @@ class ChatService : Service() {
                             }
                         }
 
-                        // 캐릭터 응답 사이에 약간의 딜레이
+                        // AI 간 응답 사이에 약간의 딜레이
                         kotlinx.coroutines.delay(700)
                     }
                 } else {
