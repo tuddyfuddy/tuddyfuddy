@@ -246,18 +246,30 @@ class ChatViewModel(application: Application, private val roomId: Int) : Android
                 messageDao.deleteMessageById(id)
             }
 
-            // 새로운 로딩 메시지 추가
-            val loadingMessage = ChatMessage(
-                roomId = roomId,
-                content = "",
-                isAiMessage = true,
-                isLoading = true
-            )
-
-            // 로딩 메세지 ID 추가 (새로운 사용자 메세지가 추가되면 기존 로딩메세지 삭제하기 위해서)
-            val insertedId = messageDao.insertMessageAndGetId(loadingMessage)
-            loadingMessageId = insertedId
-
+            // roomId가 5(단톡방)이고 loadingMessageId가 null일 때만
+            // 첫 번째 응답자(김유정)의 로딩 메시지 생성
+            if (roomId == 5 && loadingMessageId == null) {
+                val loadingMessage = ChatMessage(
+                    roomId = roomId,
+                    content = "",
+                    isAiMessage = true,
+                    isLoading = true,
+                    aiType = 3  // 김유정으로 첫 로딩 메시지 말풍 생성
+                )
+                val insertedId = messageDao.insertMessageAndGetId(loadingMessage)
+                loadingMessageId = insertedId
+            } else {
+                // 1대1 채팅이거나 처음 이후 로딩 메시지는 ChatService에서 처리
+                val loadingMessage = ChatMessage(
+                    roomId = roomId,
+                    content = "",
+                    isAiMessage = true,
+                    isLoading = true
+                )
+                val insertedId = messageDao.insertMessageAndGetId(loadingMessage)
+                loadingMessageId = insertedId
+            }
+            
             // 채팅목록 페이지 업데이트
             // 채팅목록 페이지에서 마지막 메시지, 시간 표시해주는거
             chatInfoDao.updateLastMessage(
