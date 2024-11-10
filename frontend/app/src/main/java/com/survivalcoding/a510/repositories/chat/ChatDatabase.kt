@@ -9,9 +9,10 @@ import com.survivalcoding.a510.repositories.chat.ChatDatabaseMigrations.MIGRATIO
 import com.survivalcoding.a510.repositories.chat.ChatDatabaseMigrations.MIGRATION_3_4
 import com.survivalcoding.a510.repositories.chat.ChatDatabaseMigrations.MIGRATION_4_5
 import com.survivalcoding.a510.repositories.chat.ChatDatabaseMigrations.MIGRATION_5_6
+import com.survivalcoding.a510.repositories.chat.ChatDatabaseMigrations.MIGRATION_6_7
 
 
-@Database(entities = [ChatMessage::class, ChatInfo::class], version = 6)
+@Database(entities = [ChatMessage::class, ChatInfo::class], version = 7)
 abstract class ChatDatabase : RoomDatabase() {
     abstract fun chatMessageDao(): ChatMessageDao
     abstract fun chatInfoDao(): ChatInfoDao
@@ -32,7 +33,8 @@ abstract class ChatDatabase : RoomDatabase() {
                         MIGRATION_2_3,
                         MIGRATION_3_4,
                         MIGRATION_4_5,
-                        MIGRATION_5_6
+                        MIGRATION_5_6,
+                        MIGRATION_6_7,
                     )
                     .build()
                 INSTANCE = instance
