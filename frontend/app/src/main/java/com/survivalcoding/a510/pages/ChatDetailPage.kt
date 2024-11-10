@@ -46,6 +46,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import android.content.pm.PackageManager
 import androidx.core.content.ContextCompat
 import android.os.Build
+import com.survivalcoding.a510.R
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -295,8 +296,18 @@ fun ChatDetailPage(
                         text = message.content,
                         timestamp = message.timestamp,
                         isAiMessage = message.isAiMessage,
-                        profileImage = if (showProfile) chatData?.profileImage else null,
-                        name = if (showProfile) chatData?.name else null,
+                        profileImage = when {  // 단톡방에서 type에 따라 AI 프로필 이미지 변경
+                            message.aiType == 3 -> R.drawable.kim
+                            message.aiType == 4 -> R.drawable.karina
+                            message.isAiMessage && showProfile -> chatData?.profileImage
+                            else -> null
+                        },
+                        name = when {   // 단톡방에서 type에 따라 AI 말풍선 이름 변경
+                            message.aiType == 3 -> "김유정"
+                            message.aiType == 4 -> "카리나"
+                            showProfile -> chatData?.name
+                            else -> null
+                        },
                         isFirstInSequence = isFirstInSequence,
                         searchQuery = searchQuery,
                         isImage = message.isImage,
