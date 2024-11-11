@@ -166,7 +166,7 @@ class ImageProcessingService : Service() {
         .setContentTitle("이미지 처리 중")                        // 알림 제목
         .setContentText("백그라운드에서 이미지를 처리하고 있습니다.")  // 알림 내용
         .setSmallIcon(android.R.drawable.ic_menu_gallery)      // 알림 아이콘
-        .setPriority(NotificationCompat.PRIORITY_LOW)          // 알림 우선순위 낮
+        .setPriority(NotificationCompat.PRIORITY_LOW)          // 알림 우선순위 낮음
         .build()                                               // 알림 생성
 
     // onBind 함수: 서비스가 바인딩되지 않도록 null 반환

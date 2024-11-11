@@ -8,12 +8,8 @@ import androidx.lifecycle.viewModelScope
 import com.survivalcoding.a510.repositories.chat.ChatDatabase
 import com.survivalcoding.a510.repositories.chat.ChatMessage
 import com.survivalcoding.a510.repositories.chat.ChatRepository
-import com.survivalcoding.a510.services.RetrofitClient
-import com.survivalcoding.a510.services.chat.ChatRequest
 import com.survivalcoding.a510.services.chat.ChatService
 import com.survivalcoding.a510.services.chat.ImageProcessingService
-import com.survivalcoding.a510.services.chat.ImageService
-import com.survivalcoding.a510.services.chat.getMessageList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -23,6 +19,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+//import com.survivalcoding.a510.services.RetrofitClient
+
 
 class ChatViewModel(application: Application, private val roomId: Int) : AndroidViewModel(application) {
     // Room 데이터베이스 인스턴스를 초기화
@@ -35,7 +33,7 @@ class ChatViewModel(application: Application, private val roomId: Int) : Android
     private val chatInfoDao = database.chatInfoDao()
 
     // AI 채팅 서비스와 통신하기 위한 Retrofit 서비스 인스턴스 (근데 지금 안쓰임)
-    private val aiChatService = RetrofitClient.aiChatService
+//    private val aiChatService = RetrofitClient.aiChatService
 
     // 채팅 관련 데이터 처리를 담당하는 Repository
     private val repository: ChatRepository = ChatRepository(application)
@@ -49,13 +47,13 @@ class ChatViewModel(application: Application, private val roomId: Int) : Android
     private var loadingMessageId: Long? = null
 
     // 이미지 분석 결과를 임시 저장하기 위한 데이터 클래스
-    private data class PendingImageAnalysis(
-        val index: Int,     // 텍스트, 이미지 순서 유지하기 위한 인덱스
-        val result: String  // 이미지 분석 결과 데스크립션
-    )
+//    private data class PendingImageAnalysis(
+//        val index: Int,     // 텍스트, 이미지 순서 유지하기 위한 인덱스
+//        val result: String  // 이미지 분석 결과 데스크립션
+//    )
 
     // 처리 대기 중인 이미지 분석 결과들 저장하는 Flow (이제 안쓰이는거임)
-    private val _pendingImageResults = MutableStateFlow<List<PendingImageAnalysis>>(emptyList())
+//    private val _pendingImageResults = MutableStateFlow<List<PendingImageAnalysis>>(emptyList())
 
     // 전체 메시지(텍스트+이미지) 순서 관리용
     private data class PendingItem(
