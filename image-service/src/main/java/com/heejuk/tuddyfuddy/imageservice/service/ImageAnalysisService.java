@@ -26,10 +26,11 @@ public class ImageAnalysisService {
             String prompt = """
                 이 이미지를 간단 명료하게 분석해주세요.
                 이미지에 보이는 주요 객체나 인물, 전반적인 분위기나 상황을 고려해서 한 짧은 묘사를 해주세요.
+                주요 객체 한 줄로 분석.
 
                 예를 들어, '산책하는 강아지'.
                 이런식으로 한국어로 자연스럽고 간단하고 직관적으로 설명해주세요.
-                마침표는 빼주세요. 
+                마침표는 빼주세요.
                 """;
 
             String response = chatClient.prompt()
