@@ -70,48 +70,47 @@ object RetrofitClient {
             .create(AuthService::class.java)
     }
 
+    // 공통 OkHttpClient를 생성하는 private 함수
+    private fun createClient(): OkHttpClient {
+        return OkHttpClient.Builder()
+//            .addInterceptor(TokenInterceptor(tokenManager))
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .writeTimeout(30, TimeUnit.SECONDS)
+            .build()
+    }
+
     // 채팅 서비스용 Retrofit 인스턴스
-    private val chatRetrofit = Retrofit.Builder()
-        .baseUrl(CHAT_BASE_URL)
-        .addConverterFactory(GsonConverterFactory.create())
-        .client(
-            OkHttpClient.Builder()
-                .connectTimeout(30, TimeUnit.SECONDS)
-                .readTimeout(30, TimeUnit.SECONDS)
-                .writeTimeout(30, TimeUnit.SECONDS)
-                .build()
-        )
-        .build()
+    private val chatRetrofit by lazy {
+        Retrofit.Builder()
+            .baseUrl(CHAT_BASE_URL)
+            .addConverterFactory(GsonConverterFactory.create())
+            .client(createClient())
+            .build()
+    }
 
     // 이미지 분석용 Retrofit 인스턴스
-    private val imageRetrofit = Retrofit.Builder()
-        .baseUrl(IMAGE_BASE_URL)
-        .addConverterFactory(GsonConverterFactory.create())
-        .client(
-            OkHttpClient.Builder()
-                .connectTimeout(30, TimeUnit.SECONDS)
-                .readTimeout(30, TimeUnit.SECONDS)
-                .writeTimeout(30, TimeUnit.SECONDS)
-                .build()
-        )
-        .build()
+    private val imageRetrofit by lazy {
+        Retrofit.Builder()
+            .baseUrl(IMAGE_BASE_URL)
+            .addConverterFactory(GsonConverterFactory.create())
+            .client(createClient())
+            .build()
+    }
 
     // Weather 서비스용 Retrofit 인스턴스
-    private val weatherRetrofit = Retrofit.Builder()
-        .baseUrl(WEATHER_BASE_URL)
-        .addConverterFactory(GsonConverterFactory.create())
-        .client(
-            OkHttpClient.Builder()
-                .connectTimeout(30, TimeUnit.SECONDS)
-                .readTimeout(30, TimeUnit.SECONDS)
-                .writeTimeout(30, TimeUnit.SECONDS)
-                .build()
-        )
-        .build()
+    private val weatherRetrofit by lazy {
+        Retrofit.Builder()
+            .baseUrl(WEATHER_BASE_URL)
+            .addConverterFactory(GsonConverterFactory.create())
+            .client(createClient())
+            .build()
+    }
 
     // 채팅 서비스
-    val aiChatService: AIChatService = chatRetrofit.create(AIChatService::class.java)
-
+    val aiChatService: AIChatService by lazy {
+        chatRetrofit.create(AIChatService::class.java)
+    }
     // 이미지 분석 서비스
     val imageAnalysisService: ImageAnalysisService by lazy {
         imageRetrofit.create(ImageAnalysisService::class.java)
@@ -135,6 +134,7 @@ object RetrofitClient {
     }
 
     // Weather 서비스
-    val weatherService: WeatherService = weatherRetrofit.create(WeatherService::class.java)
-}
+    val weatherService: WeatherService by lazy {
+        weatherRetrofit.create(WeatherService::class.java)
+    }}
 
