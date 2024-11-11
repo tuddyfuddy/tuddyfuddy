@@ -25,7 +25,7 @@ public class HealthService {
 
     public HealthResponse saveHealthData(
         HealthRequest health,
-        Long userId
+        String userId
     ) {
         Health entity = healthMapper.toEntity(health);
 
@@ -38,7 +38,7 @@ public class HealthService {
     }
 
     public List<HealthResponse> getUserHealthData(
-        Long userId,
+        String userId,
         LocalDateTime start,
         LocalDateTime end
     ) {
