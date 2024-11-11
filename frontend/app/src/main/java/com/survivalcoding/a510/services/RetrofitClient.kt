@@ -8,6 +8,7 @@ import okhttp3.Cookie
 import okhttp3.CookieJar
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -113,6 +114,23 @@ object RetrofitClient {
     // 이미지 분석 서비스
     val imageAnalysisService: ImageAnalysisService by lazy {
         imageRetrofit.create(ImageAnalysisService::class.java)
+    }
+
+    // FCM 토큰 업데이트를 위한 서비스
+    fun createFCMTokenService(): FCMTokenService {
+        val client = OkHttpClient.Builder()
+            .addInterceptor(TokenInterceptor(tokenManager))
+            .addInterceptor(HttpLoggingInterceptor().apply {
+                level = HttpLoggingInterceptor.Level.BODY
+            })
+            .build()
+
+        return Retrofit.Builder()
+            .baseUrl("http://k11a510.p.ssafy.io:8080/")
+            .client(client)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+            .create(FCMTokenService::class.java)
     }
 
     // Weather 서비스

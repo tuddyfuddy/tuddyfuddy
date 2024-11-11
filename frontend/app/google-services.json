@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "358940657679",
+    "project_id": "tuddyfuddy-e2aa7",
+    "storage_bucket": "tuddyfuddy-e2aa7.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:358940657679:android:a2ca0b956b1cd26b5b3b7a",
+        "android_client_info": {
+          "package_name": "com.survivalcoding.a510"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDsStgzTaMfK0PAZof2YZjUO_Pl_ncoilc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
