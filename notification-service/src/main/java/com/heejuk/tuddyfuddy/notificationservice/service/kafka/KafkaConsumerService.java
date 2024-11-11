@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.heejuk.tuddyfuddy.notificationservice.dto.request.ChatMessageRequest;
 import com.heejuk.tuddyfuddy.notificationservice.dto.request.FcmTokenRequest;
+import com.heejuk.tuddyfuddy.notificationservice.exception.ErrorCode;
+import com.heejuk.tuddyfuddy.notificationservice.exception.NotificationException;
 import com.heejuk.tuddyfuddy.notificationservice.service.FcmTokenService;
 import com.heejuk.tuddyfuddy.notificationservice.service.NotificationService;
 import lombok.RequiredArgsConstructor;
@@ -28,24 +30,20 @@ public class KafkaConsumerService {
 
     @KafkaListener(topics = "chat-notification-topic")
     public void consumeChatNotification(String message) throws JsonProcessingException {
-        log.info("채팅 알림 메시지 수신: {}", message);
-
         try {
+            log.info("채팅 알림 메시지 수신: {}", message);
+
             ChatMessageRequest request = objectMapper.readValue(message, ChatMessageRequest.class);
-            log.debug("변환된 채팅 메시지: userId={}, roomId={}, aiName={}, message={}",
-                request.userId(),
-                request.roomId(),
-                request.aiName(),
-                request.message());
+            log.debug("메시지 변환 완료: {}", request);
 
             notificationService.sendChatNotification(request);
 
         } catch (JsonProcessingException e) {
-            log.error("채팅 메시지 파싱 실패. 원본 메시지: {}", message, e);
+            log.error("메시지 파싱 실패: {}", message, e);
             throw e;
         } catch (Exception e) {
-            log.error("채팅 알림 처리 중 오류 발생. 원본 메시지: {}", message, e);
-            throw e;
+            log.error("메시지 처리 실패: {}", message, e);
+            throw new NotificationException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
 }
