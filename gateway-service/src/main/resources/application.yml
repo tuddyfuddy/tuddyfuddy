@@ -57,14 +57,16 @@ spring:
         - id: context-service
           uri: lb://context-service
           predicates:
-            - Path=/context-service/**
+            - Path=/context/*
           filters:
-            - RewritePath=/context-service/(?<segment>.*), /$\{segment}
+            - AuthorizationHeaderFilter
 
         - id: context-service
           uri: lb://context-service
           predicates:
-            - Path=/context/**
+            - Path=/context-service/**
+          filters:
+            - RewritePath=/context-service/(?<segment>.*), /$\{segment}
 
         - id: notification-service
           uri: lb://notification-service
@@ -86,7 +88,7 @@ spring:
             - Path=/image-service/**
           filters:
             - RewritePath=/image-service/(?<segment>.*), /$\{segment}
-        
+
         - id: image-service
           uri: lb://image-service
           predicates:
