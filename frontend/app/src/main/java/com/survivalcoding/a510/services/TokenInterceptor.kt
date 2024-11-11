@@ -1,5 +1,6 @@
 package com.survivalcoding.a510.services
 
+import android.util.Log
 import com.survivalcoding.a510.data.TokenManager
 import okhttp3.Interceptor
 import okhttp3.Response
@@ -12,6 +13,7 @@ class TokenInterceptor(
         val request = chain.request().newBuilder()
             .addHeader("Authorization", "Bearer ${tokenManager.getAccessToken()}")
             .build()
+        Log.d("request@@@@@@@@@@@@@@@@@@@@@@@@@@","request@@@@@@@@@@@@@@@@@@@@@@@@@@ : $request")
         return chain.proceed(request)
     }
 }
