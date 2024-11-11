@@ -61,7 +61,7 @@ fun ChatBubble(
                     modifier = Modifier
                         .size(38.dp)
                         .clip(CircleShape)
-                        .border(1.dp, Color.LightGray, CircleShape),
+                        .border(0.dp, Color.LightGray, CircleShape),
                     contentScale = ContentScale.Crop
                 )
             } else {
@@ -191,10 +191,6 @@ fun MessageBubble(
 
                 Log.d("ChatBubble", "로딩 이미지 URL!!!!!!!!!: $imageUrl")
 
-                // 내부 저장소의 이미지인 경우 로직
-//                if (imageUrl.startsWith("/data/")) {
-//                if (!imageUrl.startsWith("content://")) {
-//                    val imageFile = File(imageUrl)
                     val context = LocalContext.current
                     val directory = context.getDir("images", Context.MODE_PRIVATE)
                     val imageFile = File(directory, imageUrl)  // 파일 이름으로 전체 경로 생성

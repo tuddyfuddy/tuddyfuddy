@@ -83,7 +83,7 @@ class ChatService : Service() {
 
                     // 6가지 케이스 중 하나를 랜덤으로 고르기
                     val selectedPattern = patterns.random()
-                    Log.d("ChatPattern", "선택된 패턴: AI 순서=${selectedPattern.first}, 연쇄응답=${selectedPattern.second}")
+                    Log.d("ChatPattern", "선택된 패턴: AI 순서=${selectedPattern.first}, AI끼리 응답=${selectedPattern.second}")
 
                     val types = selectedPattern.first
                     val isChainedResponse = selectedPattern.second
@@ -96,9 +96,10 @@ class ChatService : Service() {
                         Log.d("ChatRequest", """
                             요청 정보:
                             - AI 타입: $type
-                            - 연쇄응답?: $isChainedResponse
+                            - AI끼리 응답?: $isChainedResponse
                             - 보내는 내용: $previousResponse
                         """.trimIndent())
+
                         // 각 AI별로 로딩 메시지 생성
                         val newLoadingMessage = ChatMessage(
                             roomId = roomId,
@@ -107,6 +108,7 @@ class ChatService : Service() {
                             isLoading = true,
                             aiType = type
                         )
+
                         val newLoadingId = messageDao.insertMessageAndGetId(newLoadingMessage)
 
                         // API 호출
@@ -151,7 +153,7 @@ class ChatService : Service() {
                                     }
                                 }
 
-                                // 연쇄 응답일 경우, 모든 메시지를 합쳐서 다음 AI의 입력으로 저장
+                                // AI끼리 응답일 경우, 모든 메시지를 합쳐서 다음 AI의 입력으로 저장
                                 if (isChainedResponse) {
                                     previousResponse = body.getMessageList().joinToString(" ")
                                 }
@@ -358,7 +360,7 @@ class ChatService : Service() {
             }
             context.startForegroundService(intent)
         }
-    
+
         // 현재 화면이 몇번 채팅방인지 채팅방 ID 설정 하기 위한 함수
         fun setActiveChatRoom(roomId: Int?) {
             activeChatRoomId = roomId

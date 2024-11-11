@@ -74,6 +74,17 @@ fun ChatDetailPage(
     val currentSearchIndex by viewModel.currentSearchIndex.collectAsState()
     val searchMatches by viewModel.searchMatches.collectAsState()
     val context = LocalContext.current
+    // 배경색 결정을 위한 조건부 로직
+
+    val backgroundColor = when (chatId) {
+        2, 4 -> Color(0x54E0B88A) // 연갈색 0x54E0B88A
+        else -> Color(0x54E3F2FD) // 하늘색
+    }
+
+    val topBarBackgroundColor = when (chatId) {
+        2, 4 -> Color(0x54E0B88A) // 연갈색
+        else -> Color(0xFFE5F4FF) // 조금 더 진한 하늘색 0xFFD9EFFF
+    }
 
     // 이미지 선택 launcher
     val imagePickerLauncher = rememberLauncherForActivityResult(
@@ -138,12 +149,12 @@ fun ChatDetailPage(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(color = Color(0xFFE3F2FD))
+            .background(color = backgroundColor)
     ) {
         TopAppBar(
             modifier = Modifier.height(60.dp),
             colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = Color(0xFFE3F2FD)
+                containerColor = topBarBackgroundColor
             ),
             title = {
                 if (isSearchMode) {
@@ -250,7 +261,7 @@ fun ChatDetailPage(
                 .fillMaxWidth(),
             reverseLayout = true,
             verticalArrangement = Arrangement.spacedBy(10.dp),
-            contentPadding = PaddingValues(bottom = 8.dp)
+            contentPadding = PaddingValues(bottom = 8.dp, top = 8.dp)
         ) {
             val messageList = messages.reversed()
 
@@ -269,7 +280,7 @@ fun ChatDetailPage(
 
                 val isFirstInSequence = previousMessage == null || previousMessage.isAiMessage != message.isAiMessage
 
-                // 타임스탬프를 표시할지 결정하는 조건
+                // 타임스탬프를 표시할지 표시 안할지 결정하는 조건
                 val showTimestamp = when {
                     // 다음 메시지가 없는 경우 (가장 최근 메시지)
                     nextMessage == null -> true
@@ -404,7 +415,8 @@ fun ChatDetailPage(
                             }
                         }
                     }
-                }
+                },
+                chatId = chatId
             )
         }
     }

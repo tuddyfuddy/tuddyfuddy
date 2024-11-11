@@ -5,6 +5,8 @@ import android.net.Uri
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.survivalcoding.a510.mocks.DummyAIData
+import com.survivalcoding.a510.models.ChatData
 import com.survivalcoding.a510.repositories.chat.ChatDatabase
 import com.survivalcoding.a510.repositories.chat.ChatMessage
 import com.survivalcoding.a510.repositories.chat.ChatRepository
@@ -68,10 +70,15 @@ class ChatViewModel(application: Application, private val roomId: Int) : Android
     // 메세지 순서를 지키기 위해 해당 메세지들을 저장하는 FLow
     private val _orderedPendingItems = MutableStateFlow<List<PendingItem>>(emptyList())
 
+    private val _chatData = MutableStateFlow<ChatData?>(null)
+    val chatData = _chatData.asStateFlow()
+
+
     // ViewModel이 생성될 때 무조건 제일 먼저 실행되야 하는 것들은 init에 포함시키기
     init {
         viewModelScope.launch {
             launch {
+                _chatData.value = DummyAIData.getChatById(roomId)
                 // 메세지 모아서 처리하는 로직
                 @OptIn(kotlinx.coroutines.FlowPreview::class)
                 _pendingMessages

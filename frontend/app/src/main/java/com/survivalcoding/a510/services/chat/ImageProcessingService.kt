@@ -96,7 +96,7 @@ class ImageProcessingService : Service() {
         // 현재 시간을 기준으로 타임스탬프 변수를 생성
         val timestamp = System.currentTimeMillis()
 
-        // 파일 이름을 "image_타임스탬프.jpg" 형식으로 설정
+        // 이미지 파일 이름을 "image_타임스탬프.jpg" 형식으로 설정
         val filename = "image_$timestamp.jpg"
 
         // 내부 저장소에 images 디렉토리를 생성(이미 있으면 기존 디렉토리 사용)

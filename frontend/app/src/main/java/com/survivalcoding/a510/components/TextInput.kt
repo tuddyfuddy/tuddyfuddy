@@ -18,6 +18,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
+import androidx.compose.runtime.remember
+import com.survivalcoding.a510.mocks.DummyAIData
 
 
 @Composable
@@ -27,12 +29,20 @@ fun TextInput(
     onValueChange: (String) -> Unit,
     onSendClick: () -> Unit,
     onCameraClick: () -> Unit = {},
-    onVoiceClick: () -> Unit = {}
+    onVoiceClick: () -> Unit = {},
+    chatId: Int,
 ) {
+    val chatData = remember { DummyAIData.getChatById(chatId) }
+
+    val topBarBackgroundColor = when (chatId) {
+        2, 4 -> Color(0x54E0B88A) // 연갈색
+        else -> Color(0xFFE5F4FF) // 조금 더 진한 하늘색 0xFFD9EFFF
+    }
+
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .background(color = Color(0xFFE7EBFF))
+            .background(color = topBarBackgroundColor)
             .padding(horizontal = 8.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
