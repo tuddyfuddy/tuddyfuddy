@@ -27,6 +27,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import com.survivalcoding.a510.R
+import com.survivalcoding.a510.components.ChatListBottom
 
 @Composable
 fun ChatListPage(
@@ -56,11 +57,6 @@ fun ChatListPage(
                         .padding(top = 25.dp, start = 16.dp, bottom = 16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-//                    Column(
-//                        modifier = Modifier.weight(1f)
-//                    ) {
-//                        Spacer(modifier = Modifier.height(20.dp))
-
                         Text(
                             text = "Tuddy Fuddy",
                             fontSize = 38.sp
@@ -75,18 +71,8 @@ fun ChatListPage(
                             Text(
                                 text = "나만을 위한 AI 친구",
                                 fontSize = 13.sp,
-//                                style = MaterialTheme.typography.bodySmall,
-//                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
-
-//                    }
-//                    Image(
-//                        painter = painterResource(id = R.drawable.maincha),
-//                        contentDescription = "Main Character",
-//                        modifier = Modifier
-//                            .size(80.dp)
-//                    )
                 }
 
                 // 채팅방 목록
@@ -111,22 +97,13 @@ fun ChatListPage(
                 }
             }
 
-            // 하단 캐럭터 및 말풍선
-            Box(
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(end = 25.dp, bottom = 20.dp)
-            ) {
-                Row {
-                    Box(
-                        modifier = Modifier.offset(y = (-35).dp, x = 5.dp)
-                    ) {
-                        SpeechBubble(text = "조금은 차갑지만 마음은 따뜻한 Tuddy \n언제나 따뜻하게 나를 반겨주는 Fuddy")
-                    }
-                    Spacer(modifier = Modifier.width(14.dp))
-                    CircleCharacter(onClick = {})
-                }
-            }
+            // 하단 캐릭터 사진 및 설명
+            ChatListBottom(
+                name = "Tuddy",
+                description = "말투는 조금 차갑고 무뚝뚝해도\n속마음은 따뜻한 나만의 친구",
+                characterImageRes = R.drawable.big_boy2,
+                modifier = Modifier.align(Alignment.BottomStart)
+            )
         }
     }
 }
