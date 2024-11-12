@@ -27,6 +27,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import com.survivalcoding.a510.R
+import com.survivalcoding.a510.components.AnimatedChatListBottom
 import com.survivalcoding.a510.components.ChatListBottom
 
 @Composable
@@ -98,12 +99,18 @@ fun ChatListPage(
             }
 
             // 하단 캐릭터 사진 및 설명
-            ChatListBottom(
-                name = "Tuddy",
-                description = "말투는 조금 차갑고 무뚝뚝해도\n속마음은 따뜻한 나만의 친구",
-                characterImageRes = R.drawable.big_boy2,
+//            ChatListBottom(
+//                name = "Tuddy",
+//                description = "말투는 조금 차갑고 무뚝뚝해도\n속마음은 따뜻한 나만의 친구",
+//                characterImageRes = R.drawable.big_boy2,
+//                modifier = Modifier.align(Alignment.BottomStart)
+//            )
+
+            AnimatedChatListBottom(
                 modifier = Modifier.align(Alignment.BottomStart)
             )
+
+
         }
     }
 }
