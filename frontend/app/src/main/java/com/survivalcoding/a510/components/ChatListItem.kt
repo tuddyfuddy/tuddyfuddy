@@ -57,8 +57,8 @@ fun ChatListItem(
 
                 Text(
                     text = timestamp,
-                    fontSize = 14.sp,
-                    color = androidx.compose.ui.graphics.Color.Gray
+                    fontSize = 12.sp,
+                    color = Color.Gray
                 )
             }
 
