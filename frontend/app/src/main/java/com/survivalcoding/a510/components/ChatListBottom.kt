@@ -1,5 +1,6 @@
 package com.survivalcoding.a510.components
 
+import android.R.attr.fontFamily
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -8,12 +9,17 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.survivalcoding.a510.R
 
 
 @Composable
@@ -23,6 +29,16 @@ fun ChatListBottom(
     characterImageRes: Int,
     modifier: Modifier = Modifier
 ) {
+
+    val notoSansKr = FontFamily(
+        Font(R.font.notosanskr_thin, FontWeight.Thin),
+        Font(R.font.notosanskr_light, FontWeight.Light),
+        Font(R.font.notosanskr_regular, FontWeight.Normal),
+        Font(R.font.notosanskr_medium, FontWeight.Medium),
+        Font(R.font.notosanskr_bold, FontWeight.Bold),
+        Font(R.font.notosanskr_black, FontWeight.Black)
+    )
+
     Box(
         modifier = modifier
     ) {
@@ -33,15 +49,15 @@ fun ChatListBottom(
                 Column {
                     Text(
                         text = name,
-                        fontSize = 30.sp,
+                        style = MaterialTheme.typography.headlineLarge
                     )
 
                     Spacer(modifier = Modifier.height(5.dp))
 
                     Text(
+                        modifier = Modifier.offset(x = 3.dp),
                         text = description,
-                        fontSize = 14.sp,
-                        modifier = Modifier.offset(x = 3.dp)
+                        style = MaterialTheme.typography.bodyMedium
                     )
                 }
             }
