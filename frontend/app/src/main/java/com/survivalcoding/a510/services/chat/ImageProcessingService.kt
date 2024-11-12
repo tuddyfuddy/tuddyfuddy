@@ -80,13 +80,8 @@ class ImageProcessingService : Service() {
             if (response.isSuccessful && response.body() != null) {
                 val result = response.body()!!.result
 
-                // 한 번만 pendingMessageCallback 설정
-                val analysisResult = "[[사진]${result.description}]"
-                if (pendingMessageCallback.value?.second != analysisResult) {
-                    pendingMessageCallback.value = Pair(roomId, analysisResult)
-                }
                 // Flow를 통해 메시지 전달
-//                pendingMessageCallback.value = Pair(roomId, "[[사진]${result.description}]")
+                pendingMessageCallback.value = Pair(roomId, "[[사진]${result.description}]")
             }
         } catch (e: Exception) {
             handleError(roomId, "이미지 처리 중 오류가 발생했습니다.\n${e.message}")
