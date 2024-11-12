@@ -54,7 +54,7 @@ class ChatService : Service() {
         return START_STICKY
     }
 
-    // 챗API로 AI 답변 생성 요청을 처리하는 함수
+    // 챗API로 요청보내면 AI 답변 생성 요청을 처리하는 함수
     private fun handleChatRequest(roomId: Int, content: String, loadingMessageId: Long?) {
         serviceScope.launch {
             try {
@@ -66,24 +66,24 @@ class ChatService : Service() {
                 Log.d("content","내용 content@@@@@@@@@ : $content")
 
                 if (roomId == 5) {
-                    // 로딩 메시지 삭제
+                    // 로딩 메시지가 있으면 삭제
                     loadingMessageId?.let { id ->
                         messageDao.deleteMessageById(id)
                     }
 
-                    // 6가지 경우의 수 만들기
+                    // AI가 답변하는 여러가지 경우 케이스 6개 만들기
                     val patterns = listOf(
-                        Pair(listOf(3, 4), false),    // 3번 - 4번 순으로 호출하기 (각각 사용자 메시지에 응답)
-                        Pair(listOf(4, 3), false),    // 4번 - 3번 순으로 호출하기 (각각 사용자 메시지에 응답)
+                        Pair(listOf(3, 4), false),    // 3번 - 4번 순으로 호출하기 (둘다 사용자 메시지에 응답)
+                        Pair(listOf(4, 3), false),    // 4번 - 3번 순으로 호출하기 (둘다 사용자 메시지에 응답)
                         Pair(listOf(3), false),       // 3번만 호출하기
                         Pair(listOf(4), false),       // 4번만 호출하기
-                        Pair(listOf(3, 4), true),     // 3번 호출하고 3번 응답으로 4번 호출하기
-                        Pair(listOf(4, 3), true)      // 4번 호출하고 4번 응답으로 3번 호출하기
+                        Pair(listOf(3, 4), true),     // 3번 호출하고 3번 응답으로 4번 호출하기 (AI끼리 대답시키기)
+                        Pair(listOf(4, 3), true)      // 4번 호출하고 4번 응답으로 3번 호출하기(AI끼리 대답시키기)
                     )
 
                     // 6가지 케이스 중 하나를 랜덤으로 고르기
                     val selectedPattern = patterns.random()
-                    Log.d("ChatPattern", "선택된 패턴: AI 순서=${selectedPattern.first}, AI끼리 응답=${selectedPattern.second}")
+                    Log.d("선택된 패턴 케이스", "AI 순서=${selectedPattern.first}, AI끼리 응답=${selectedPattern.second}")
 
                     val types = selectedPattern.first
                     val isChainedResponse = selectedPattern.second
@@ -93,11 +93,12 @@ class ChatService : Service() {
 
                     // 랜덤으로 정해진 케이스의 AI만 API 요청 보내기
                     for (type in types) {
-                        Log.d("ChatRequest", """
-                            요청 정보:
-                            - AI 타입: $type
-                            - AI끼리 응답?: $isChainedResponse
-                            - 보내는 내용: $previousResponse
+
+                        // 무슨 케이스로 랜덤된건지 확인하는 로`
+                        Log.d("랜덤케이스 걸린거 확인용 로그", """
+                            AI 종: $type
+                            AI끼리 응답 여부: $isChainedResponse
+                            요청 보내는 내용: $previousResponse
                         """.trimIndent())
 
                         // 각 AI별로 로딩 메시지 생성
