@@ -59,7 +59,7 @@ fun AnimatedChatListBottom(
     var isVisible by remember { mutableStateOf(true) }
 
     LaunchedEffect(key1 = true) {
-        // Fade in -out 애니메이션 효과 추가하기
+        // 페이드인아웃 애니메이션 효과 추가하기
         while (true) {
             delay(3000) // 3초마다 컾모넌트 내용 바꾸기
             isVisible = false
