@@ -33,7 +33,6 @@ public class KafkaConsumerConfig {
 
     @Bean
     public ConsumerFactory<String, String> consumerFactory() {
-
         Map<String, Object> properties = new HashMap<>();
         properties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaHost + ":" + kafkaPort);
         properties.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
@@ -41,7 +40,7 @@ public class KafkaConsumerConfig {
         properties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
 
         properties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
-        properties.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
+        properties.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, true);
         properties.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 500);
 
         return new DefaultKafkaConsumerFactory<>(properties);
@@ -49,12 +48,14 @@ public class KafkaConsumerConfig {
 
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory() {
-
         ConcurrentKafkaListenerContainerFactory<String, String> factory =
             new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory());
-        factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL_IMMEDIATE);
 
+        // AckMode를 RECORD로 변경 (메시지 단위로 처리)
+        factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.RECORD);
+
+        // 에러 핸들러
         DefaultErrorHandler errorHandler = new DefaultErrorHandler(
             (consumerRecord, exception) -> {
                 if (exception instanceof IllegalArgumentException ||
@@ -65,7 +66,7 @@ public class KafkaConsumerConfig {
                         exception);
                 }
             },
-            new FixedBackOff(1000L, 0L)  // 재시도 없이 바로 다음 메시지로 넘어가도록 설정
+            new FixedBackOff(1000L, 0L)
         );
 
         errorHandler.addNotRetryableExceptions(
