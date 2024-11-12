@@ -78,6 +78,12 @@ class ChatService : Service() {
                         Pair(listOf(3), false),       // 3번만 호출하기
                         Pair(listOf(4), false),       // 4번만 호출하기
                         Pair(listOf(3, 4), true),     // 3번 호출하고 3번 응답으로 4번 호출하기 (AI끼리 대답시키기)
+                        Pair(listOf(4, 3), true),      // 4번 호출하고 4번 응답으로 3번 호출하기(AI끼리 대답시키기)
+
+                        // 아래 내용은
+                        Pair(listOf(3, 4), false),    // 3번 - 4번 순으로 호출하기 (둘다 사용자 메시지에 응답)
+                        Pair(listOf(4, 3), false),    // 4번 - 3번 순으로 호출하기 (둘다 사용자 메시지에 응답)
+                        Pair(listOf(3, 4), true),     // 3번 호출하고 3번 응답으로 4번 호출하기 (AI끼리 대답시키기)
                         Pair(listOf(4, 3), true)      // 4번 호출하고 4번 응답으로 3번 호출하기(AI끼리 대답시키기)
                     )
 
