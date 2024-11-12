@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.sp
 import com.survivalcoding.a510.utils.TimeUtils
 import java.io.File
 import androidx.compose.runtime.remember
+import com.survivalcoding.a510.utils.ImageUtils
 
 @Composable
 fun ChatBubble(
@@ -189,96 +190,33 @@ fun MessageBubble(
         ) {
             if (isImage && imageUrl != null) {
 
-                Log.d("ChatBubble", "로딩 이미지 URL!!!!!!!!!: $imageUrl")
+                Log.d("ChatBubble", "저장한 이미지 파일 이름: $imageUrl")
 
                     val context = LocalContext.current
                     val directory = context.getDir("images", Context.MODE_PRIVATE)
                     val imageFile = File(directory, imageUrl)  // 파일 이름으로 전체 경로 생성
 
-                    Log.d("ChatBubble", "풀 이미지 경로!!!!!!!!: ${imageFile.absolutePath}")
-                    Log.d("ChatBubble", "파일 잌지스트!!!!!!!!!!!: ${imageFile.exists()}")
+                    Log.d("ChatBubble", "이미지 절대 경로: ${imageFile.absolutePath}")
+                    Log.d("ChatBubble", "이미지 파일 있는지 체크하는거: ${imageFile.exists()}")
 
 
-                    if (imageFile.exists()) {
-                        val bitmap = remember(imageUrl) {
-                            try {
-                                val options = BitmapFactory.Options().apply {
-                                    inJustDecodeBounds = true
-                                }
-                                BitmapFactory.decodeFile(imageFile.absolutePath, options)
-
-                                val maxSize = 1024
-                                var sampleSize = 1
-                                while (options.outWidth / sampleSize > maxSize ||
-                                    options.outHeight / sampleSize > maxSize) {
-                                    sampleSize *= 2
-                                }
-
-                                val finalOptions = BitmapFactory.Options().apply {
-                                    inSampleSize = sampleSize
-                                }
-                                BitmapFactory.decodeFile(imageFile.absolutePath, finalOptions)?.asImageBitmap()
-                            } catch (e: Exception) {
-                                Log.e("ChatBubble", "이미지 로드 실패", e)
-                                null
-                            }
-                        }
-
-                        bitmap?.let {
-                            Image(
-                                bitmap = it,
-                                contentDescription = "Shared image",
-                                modifier = Modifier
-                                    .size(200.dp)
-                                    .clip(RoundedCornerShape(10.dp)),
-                                contentScale = ContentScale.Crop
-                            )
-                        }
+                if (imageFile.exists()) {
+                    val bitmap = remember(imageUrl) {
+                        ImageUtils.loadAndRotateImage(imageFile)
                     }
-//                } else {
-//                    // URI 경우 로직
-//                    val context = LocalContext.current
-//                    val bitmap = remember(imageUrl) {
-//                        try {
-//                            val uri = Uri.parse(imageUrl)
-//                            val inputStream = context.contentResolver.openInputStream(uri)
-//
-//                            val options = BitmapFactory.Options().apply {
-//                                inJustDecodeBounds = true
-//                            }
-//                            BitmapFactory.decodeStream(inputStream, null, options)
-//                            inputStream?.close()
-//
-//                            val maxSize = 1024
-//                            var sampleSize = 1
-//                            while (options.outWidth / sampleSize > maxSize ||
-//                                options.outHeight / sampleSize > maxSize) {
-//                                sampleSize *= 2
-//                            }
-//
-//                            val finalOptions = BitmapFactory.Options().apply {
-//                                inSampleSize = sampleSize
-//                            }
-//                            context.contentResolver.openInputStream(uri)?.use { stream ->
-//                                BitmapFactory.decodeStream(stream, null, finalOptions)?.asImageBitmap()
-//                            }
-//                        } catch (e: Exception) {
-//                            null
-//                        }
-//                    }
-//
-//                    bitmap?.let {
-//                        Image(
-//                            bitmap = it,
-//                            contentDescription = "Shared image",
-//                            modifier = Modifier
-//                                .size(200.dp)
-//                                .clip(RoundedCornerShape(10.dp)),
-//                            contentScale = ContentScale.Crop
-//                        )
-//                    }
-//                }
 
+                    bitmap?.let {
+                        Image(
+                            bitmap = it,
+                            contentDescription = "Shared image",
+                            modifier = Modifier
+                                .widthIn(max = 800.dp)
+                                .heightIn(max = 800.dp)
+                                .clip(RoundedCornerShape(10.dp)),
+                            contentScale = ContentScale.Inside
+                        )
+                    }
+                }
             } else {
                 HighlightedText(
                     text = text,
