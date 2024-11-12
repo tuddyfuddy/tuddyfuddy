@@ -44,7 +44,7 @@ fun SpeechBubble(
             text = text,
             color = BubbleTheme.textColor,
             fontSize = BubbleTheme.largeFontSize,
-            textAlign = TextAlign.Center,
+            textAlign = TextAlign.Start,
             lineHeight = BubbleTheme.lineHeight
         )
     }

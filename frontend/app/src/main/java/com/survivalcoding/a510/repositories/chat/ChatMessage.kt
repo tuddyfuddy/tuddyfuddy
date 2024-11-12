@@ -14,4 +14,5 @@ data class ChatMessage(
     val isImage: Boolean = false,
     val imageUrl: String? = null,
     val isLoading: Boolean = false,
+    val aiType: Int? = null,
 )

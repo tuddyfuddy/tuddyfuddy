@@ -13,7 +13,7 @@ import androidx.core.app.NotificationCompat
 import com.survivalcoding.a510.repositories.chat.ChatDatabase
 import com.survivalcoding.a510.repositories.chat.ChatMessage
 import com.survivalcoding.a510.services.chat.ChatService.Companion.EXTRA_ROOM_ID
-import com.survivalcoding.a510.services.chat.ImageService.uploadAndAnalyzeImage
+import com.survivalcoding.a510.services.chat.ImageService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -59,7 +59,7 @@ class ImageProcessingService : Service() {
             // 1. 이미지 저장
             // imageUri가 알려주는 이미지를 내부저장소에 저장하고, 저장경로 반환
             val savedImagePath = saveImageToInternalStorage(imageUri)
-            Log.d("ImageProcessing", "저장된 이미지 경로: $savedImagePath")
+            Log.d("ImageProcessing", "저장한 이미지 파일 이름: $savedImagePath")
 
             // 2. 이미지 메시지 저장
             // RoomDB에도 해당 이미지 저장
@@ -72,7 +72,7 @@ class ImageProcessingService : Service() {
                     imageUrl = savedImagePath
                 )
             )
-            Log.d("ImageProcessing", "생성된 이미지 메시지 ID: $imageMessageId")
+            Log.d("ImageProcessing", "저장한 이미지 메시지 ID: $imageMessageId")
 
             // 3. 이미지 분석 API 호출
             // ImageService를 호출하여 이미지를 분석 API로 보낸 후 분석 결과를 받음
@@ -96,7 +96,7 @@ class ImageProcessingService : Service() {
         // 현재 시간을 기준으로 타임스탬프 변수를 생성
         val timestamp = System.currentTimeMillis()
 
-        // 파일 이름을 "image_타임스탬프.jpg" 형식으로 설정
+        // 이미지 파일 이름을 "image_타임스탬프.jpg" 형식으로 설정
         val filename = "image_$timestamp.jpg"
 
         // 내부 저장소에 images 디렉토리를 생성(이미 있으면 기존 디렉토리 사용)
@@ -105,7 +105,7 @@ class ImageProcessingService : Service() {
         // 저장될 파일의 경로와 이름을 설정
         val file = File(directory, filename)
 
-        Log.d("ImageProcessing", "이미지 저장한 파일이름!!!!!: $filename")
+        Log.d("ImageProcessing", "저장한 이미지 파일 이름: $filename")
 
         // 입력 스트림으로부터 데이터를 읽어 파일에 복사
         applicationContext.contentResolver.openInputStream(uri)?.use { input ->

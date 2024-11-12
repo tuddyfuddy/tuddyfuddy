@@ -54,86 +54,209 @@ class ChatService : Service() {
         return START_STICKY
     }
 
-    // 챗API로 AI 답변 생성 요청을 처리하는 함수
+    // 챗API로 요청보내면 AI 답변 생성 요청을 처리하는 함수
     private fun handleChatRequest(roomId: Int, content: String, loadingMessageId: Long?) {
         serviceScope.launch {
             try {
+                // TODO roomId가 5(단톡방)이 아니면 그대로 type에 roomId 보내고, roomId가 5이면 3,4에 보내기
+
                 // 디버그용 로그
                 Log.d("ChatService", "받은 loadingMessageId: $loadingMessageId")
                 Log.d("roomId","방 아이디 roomId@@@@@@@@@ : $roomId")
                 Log.d("content","내용 content@@@@@@@@@ : $content")
 
-
-                // 챗API에 채팅 메세지 전송
-                val response = aiChatService.sendChatMessage(
-                    // TODO roomId가 5(단톡방)이 아니면 그대로 type에 roomId 보내고, roomId가 5이면...
-                    type = if (roomId != 5) roomId else 1,
-                    request = ChatRequest(text = content)
-                )
-
-                // 응답 내용 보는 디버그용 로그
-                Log.d("ChatResponse", "응답 성공 여부: ${response.isSuccessful}")
-                Log.d("ChatResponse", "응답 코드: ${response.code()}")
-                Log.d("ChatResponse", "응답 메시지: ${response.message()}")
-                Log.d("ChatResponse", "응답 바디: ${response.body()}")
-
-                if (response.isSuccessful) {
-                    // 로딩 메시지 삭제 시도 로그
-                    Log.d("ChatService", "로딩 메시지 삭제 시도. ID: $loadingMessageId")
-                    
-                    // 로딩 메세지 삭제
+                if (roomId == 5) {
+                    // 로딩 메시지가 있으면 삭제
                     loadingMessageId?.let { id ->
                         messageDao.deleteMessageById(id)
-                        Log.d("ChatService", "로딩 메시지 삭제 완료")
                     }
 
-                    // 챗API 응답 메세지들을 순서대로 처리하기
-                    response.body()?.getMessageList()?.forEachIndexed { index, aiMessage ->
-                        // 빈 문자열이면 말풍선 안생기게 if문으로 조건 걸기
-                        // 근데 이거 효과 없어서 ChatBubble(MessageBubble)에 if문 조건 달아서 해결
-                        if (aiMessage.isNotBlank()) {
-                            // 첫 번째 메시지가 아닌 경우 1초 대기
-                            if (index > 0) {
-                                kotlinx.coroutines.delay(1000)
-                            }
+                    // AI가 답변하는 여러가지 경우 케이스 6개 만들기
+                    val patterns = listOf(
+                        Pair(listOf(3, 4), false),    // 3번 - 4번 순으로 호출하기 (둘다 사용자 메시지에 응답)
+                        Pair(listOf(4, 3), false),    // 4번 - 3번 순으로 호출하기 (둘다 사용자 메시지에 응답)
+                        Pair(listOf(3), false),       // 3번만 호출하기
+                        Pair(listOf(4), false),       // 4번만 호출하기
+                        Pair(listOf(3, 4), true),     // 3번 호출하고 3번 응답으로 4번 호출하기 (AI끼리 대답시키기)
+                        Pair(listOf(4, 3), true)      // 4번 호출하고 4번 응답으로 3번 호출하기(AI끼리 대답시키기)
+                    )
 
-                            // RoomDB에 메세지 저장
-                            messageDao.insertMessage(
-                                ChatMessage(
-                                    roomId = roomId,
-                                    content = aiMessage,
-                                    isAiMessage = true
-                                )
-                            )
-                        }
-                    }
+                    // 6가지 케이스 중 하나를 랜덤으로 고르기
+                    val selectedPattern = patterns.random()
+                    Log.d("선택된 패턴 케이스", "AI 순서=${selectedPattern.first}, AI끼리 응답=${selectedPattern.second}")
 
-                    // 챗API 응답으로 온 마지막 AI 메세지인 경우 ChatInfo 업데이트
-                    response.body()?.getMessageList()?.lastOrNull()?.let { lastAiMessage ->
-                        // 채팅목록 페이지에서 보여질 데이터 업데이트
-                        chatInfoDao.updateLastMessage(
-                            chatId = roomId,
-                            message = lastAiMessage,
-                            timestamp = System.currentTimeMillis()
+                    val types = selectedPattern.first
+                    val isChainedResponse = selectedPattern.second
+                    nextResponderId = types.firstOrNull()
+
+                    var previousResponse = content  // 처음엔 사용자 메시지로 초기화
+
+                    // 랜덤으로 정해진 케이스의 AI만 API 요청 보내기
+                    for (type in types) {
+
+                        // 무슨 케이스로 랜덤된건지 확인하는 로`
+                        Log.d("랜덤케이스 걸린거 확인용 로그", """
+                            AI 종: $type
+                            AI끼리 응답 여부: $isChainedResponse
+                            요청 보내는 내용: $previousResponse
+                        """.trimIndent())
+
+                        // 각 AI별로 로딩 메시지 생성
+                        val newLoadingMessage = ChatMessage(
+                            roomId = roomId,
+                            content = "",
+                            isAiMessage = true,
+                            isLoading = true,
+                            aiType = type
                         )
 
-                        // 현재 사용자 화면이 해당 채팅방이 아니라면 읽지 않은 메세지 수 증가시키기
-                        if (activeChatRoomId != roomId) {
-                            val currentChat = chatInfoDao.getChatById(roomId)
-                            currentChat?.let {
-                                chatInfoDao.updateUnreadCount(
+                        val newLoadingId = messageDao.insertMessageAndGetId(newLoadingMessage)
+
+                        // API 호출
+                        val response = aiChatService.sendChatMessage(
+                            type = type,
+                            request = ChatRequest(text = previousResponse)
+                        )
+
+                        // 응답 내용 보는 디버그용 로그
+                        Log.d("ChatResponse", "응답 성공 여부: ${response.isSuccessful}")
+                        Log.d("ChatResponse", "응답 코드: ${response.code()}")
+                        Log.d("ChatResponse", "응답 메시지: ${response.message()}")
+                        Log.d("ChatResponse", "응답 바디: ${response.body()}")
+                        Log.d("ChatResponse", "응답 타입(룸아이디): $type")
+
+                        // 응답 처리
+                        if (response.isSuccessful) {
+                            // 로딩 메시지 삭제
+                            Log.d("ChatService", "로딩 메시지 삭제 시도. ID: $loadingMessageId")
+
+                            messageDao.deleteMessageById(newLoadingId)
+
+                            Log.d("ChatService", "로딩 메시지 삭제 완료")
+
+                            // 응답 메시지 처리
+                            response.body()?.let { body ->
+                                // 모든 메시지 처리 및 저장
+                                body.getMessageList().forEachIndexed { index, aiMessage ->
+                                    if (aiMessage.isNotBlank()) {
+                                        if (index > 0) {
+                                            kotlinx.coroutines.delay(1000)
+                                        }
+
+                                        messageDao.insertMessage(
+                                            ChatMessage(
+                                                roomId = roomId,
+                                                content = aiMessage,
+                                                isAiMessage = true,
+                                                aiType = type
+                                            )
+                                        )
+                                    }
+                                }
+
+                                // AI끼리 응답일 경우, 모든 메시지를 합쳐서 다음 AI의 입력으로 저장
+                                if (isChainedResponse) {
+                                    previousResponse = body.getMessageList().joinToString(" ")
+                                }
+                            }
+
+                            // 마지막 메시지로 ChatInfo 업데이트
+                            response.body()?.getMessageList()?.lastOrNull()?.let { lastAiMessage ->
+                                chatInfoDao.updateLastMessage(
                                     chatId = roomId,
-                                    count = it.unreadCount + 1
+                                    message = lastAiMessage,
+                                    timestamp = System.currentTimeMillis()
                                 )
                             }
                         }
+
+                        // AI 간 응답 사이에 약간의 딜레이
+                        kotlinx.coroutines.delay(700)
                     }
                 } else {
-                    // API 응답 실패 하면 나오는 에러
-                    loadingMessageId?.let { id ->
-                        messageDao.deleteMessageById(id)
+                    // 디버그용 로그
+                    Log.d("ChatService", "받은 loadingMessageId: $loadingMessageId")
+                    Log.d("roomId","방 아이디 roomId@@@@@@@@@ : $roomId")
+                    Log.d("content","내용 content@@@@@@@@@ : $content")
+
+                    // 1:1 채팅방인 경우 로딩 메시지 생성 추가
+                    val loadingMessage = ChatMessage(
+                        roomId = roomId,
+                        content = "",
+                        isAiMessage = true,
+                        isLoading = true
+                    )
+
+                    // 챗API에 채팅 메세지 전송
+                    val response = aiChatService.sendChatMessage(
+                        type = roomId,
+                        request = ChatRequest(text = content)
+                    )
+
+                    // 응답 내용 보는 디버그용 로그
+                    Log.d("ChatResponse", "응답 성공 여부: ${response.isSuccessful}")
+                    Log.d("ChatResponse", "응답 코드: ${response.code()}")
+                    Log.d("ChatResponse", "응답 메시지: ${response.message()}")
+                    Log.d("ChatResponse", "응답 바디: ${response.body()}")
+
+                    if (response.isSuccessful) {
+                        // 로딩 메시지 삭제 시도 로그
+                        Log.d("ChatService", "로딩 메시지 삭제 시도. ID: $loadingMessageId")
+
+                        // 로딩 메세지 삭제
+                        loadingMessageId?.let { id ->
+                            messageDao.deleteMessageById(id)
+                            Log.d("ChatService", "로딩 메시지 삭제 완료")
+                        }
+
+                        // 챗API 응답 메세지들을 순서대로 처리하기
+                        response.body()?.getMessageList()?.forEachIndexed { index, aiMessage ->
+                            // 빈 문자열이면 말풍선 안생기게 if문으로 조건 걸기
+                            // 근데 이거 효과 없어서 ChatBubble(MessageBubble)에 if문 조건 달아서 해결
+                            if (aiMessage.isNotBlank()) {
+                                // 첫 번째 메시지가 아닌 경우 1초 대기
+                                if (index > 0) {
+                                    kotlinx.coroutines.delay(1000)
+                                }
+
+                                // RoomDB에 메세지 저장
+                                messageDao.insertMessage(
+                                    ChatMessage(
+                                        roomId = roomId,
+                                        content = aiMessage,
+                                        isAiMessage = true
+                                    )
+                                )
+                            }
+                        }
+
+                        // 챗API 응답으로 온 마지막 AI 메세지인 경우 ChatInfo 업데이트
+                        response.body()?.getMessageList()?.lastOrNull()?.let { lastAiMessage ->
+                            // 채팅목록 페이지에서 보여질 데이터 업데이트
+                            chatInfoDao.updateLastMessage(
+                                chatId = roomId,
+                                message = lastAiMessage,
+                                timestamp = System.currentTimeMillis()
+                            )
+
+                            // 현재 사용자 화면이 해당 채팅방이 아니라면 읽지 않은 메세지 수 증가시키기
+                            if (activeChatRoomId != roomId) {
+                                val currentChat = chatInfoDao.getChatById(roomId)
+                                currentChat?.let {
+                                    chatInfoDao.updateUnreadCount(
+                                        chatId = roomId,
+                                        count = it.unreadCount + 1
+                                    )
+                                }
+                            }
+                        }
+                    } else {
+                        // API 응답 실패 하면 나오는 에러
+                        loadingMessageId?.let { id ->
+                            messageDao.deleteMessageById(id)
+                        }
+                        handleError(roomId, "죄송해요, 메시지를 받지 못했어요.")
                     }
-                    handleError(roomId, "죄송해요, 메시지를 받지 못했어요.")
                 }
             } catch (e: Exception) {
                 // 인터넷 연결 등 오류 발생하면 나오는 에러
@@ -216,6 +339,15 @@ class ChatService : Service() {
         const val EXTRA_CONTENT = "extra_content"               // 채팅 내용 키
         const val EXTRA_LOADING_MESSAGE_ID = "extra_loading_message_id"     // 로딩 메시지 ID 키
         private var activeChatRoomId: Int? = null  // 현재 사용자 휴대폰 화면이 몇번 채팅방인지 확인하는 변수
+        private var nextResponderId: Int? = null  // 다음 응답자 ID를 저장
+
+        fun getNextResponderId(): Int? {
+            return nextResponderId
+        }
+
+        fun setNextResponderId(id: Int?) {
+            nextResponderId = id
+        }
 
         // 채팅 서비스 시작하는 함수
         fun startService(context: Context, roomId: Int, content: String, loadingMessageId: Long?) {
@@ -229,7 +361,7 @@ class ChatService : Service() {
             }
             context.startForegroundService(intent)
         }
-    
+
         // 현재 화면이 몇번 채팅방인지 채팅방 ID 설정 하기 위한 함수
         fun setActiveChatRoom(roomId: Int?) {
             activeChatRoomId = roomId

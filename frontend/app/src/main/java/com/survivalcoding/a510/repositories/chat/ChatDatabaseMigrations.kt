@@ -94,5 +94,12 @@ object ChatDatabaseMigrations {
         }
     }
 
+    val MIGRATION_6_7 = object : Migration(6, 7) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // messages 테이블에 aiType 컬럼 추가
+            database.execSQL("ALTER TABLE messages ADD COLUMN aiType INTEGER DEFAULT NULL")
+        }
+    }
+
 }
 

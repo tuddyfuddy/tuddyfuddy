@@ -5,11 +5,14 @@ import android.net.Uri
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.survivalcoding.a510.mocks.DummyAIData
+import com.survivalcoding.a510.models.ChatData
 import com.survivalcoding.a510.repositories.chat.ChatDatabase
 import com.survivalcoding.a510.repositories.chat.ChatMessage
 import com.survivalcoding.a510.repositories.chat.ChatRepository
 import com.survivalcoding.a510.services.chat.ChatService
 import com.survivalcoding.a510.services.chat.ImageProcessingService
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -18,8 +21,8 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOf
 //import com.survivalcoding.a510.services.RetrofitClient
+import kotlinx.coroutines.flow.flowOf
 
 
 class ChatViewModel(application: Application, private val roomId: Int) : AndroidViewModel(application) {
@@ -68,16 +71,24 @@ class ChatViewModel(application: Application, private val roomId: Int) : Android
     // 메세지 순서를 지키기 위해 해당 메세지들을 저장하는 FLow
     private val _orderedPendingItems = MutableStateFlow<List<PendingItem>>(emptyList())
 
+    private val _chatData = MutableStateFlow<ChatData?>(null)
+    val chatData = _chatData.asStateFlow()
+
+
     // ViewModel이 생성될 때 무조건 제일 먼저 실행되야 하는 것들은 init에 포함시키기
     init {
         viewModelScope.launch {
+            // 이미지 처리 상태를 추적하는 플래그
+            var isProcessingImage = false
+
             launch {
+                _chatData.value = DummyAIData.getChatById(roomId)
                 // 메세지 모아서 처리하는 로직
                 @OptIn(kotlinx.coroutines.FlowPreview::class)
                 _pendingMessages
                     .debounce(6000)
                     .collect { messages ->
-                        if (messages.isNotEmpty()) {
+                        if (messages.isNotEmpty() && !isProcessingImage) {
 
                             // 마지막 메세지 기준 정해진 N초 동안 대기 후 추가 입력 없으면 해당 메세지들 <br>로 구분해서 묶음
                             val combinedContent = messages.joinToString("<br>")
@@ -101,27 +112,50 @@ class ChatViewModel(application: Application, private val roomId: Int) : Android
                     pair?.let { (messageRoomId, message) ->
                         // 현재 사용자 화면 채팅방이랑 같은 roomId인지 확인하기
                         if (messageRoomId == roomId) {
+                            try {
+                                isProcessingImage = true // 이미지 처리 시작
 
-                            // 이전 로딩 아이콘이 있면 삭제
-                            loadingMessageId?.let { id ->
-                                messageDao.deleteMessageById(id)
+                                // 이전 로딩 아이콘이 있면 삭제
+                                loadingMessageId?.let { id ->
+                                    messageDao.deleteMessageById(id)
+                                }
+
+                                // 단톡방이 아닐 때만 로딩 메시지 생성
+                                if (roomId != 5) {
+                                    // 새로운 로딩 메시지 추가
+                                    val loadingMessage = ChatMessage(
+                                        roomId = roomId,
+                                        content = "",
+                                        isAiMessage = true,
+                                        isLoading = true
+                                    )
+
+                                    // 새로운 로딩 아이콘 만들기
+                                    val insertedId =
+                                        messageDao.insertMessageAndGetId(loadingMessage)
+                                    loadingMessageId = insertedId
+                                }
+
+                                // 이미지 분석 결과가 오면 보류중인 메세지에 분석결과 추가하기
+                                _pendingMessages.value += message
+                                ImageProcessingService.clearPendingMessage()
+
+                                // 이미지 처리가 완료되면 6초 대기 후 메시지 전송
+                                delay(6000)
+                                if (_pendingMessages.value.isNotEmpty()) {
+                                    val combinedContent =
+                                        _pendingMessages.value.joinToString("<br>")
+                                    ChatService.startService(
+                                        getApplication(),
+                                        roomId,
+                                        combinedContent,
+                                        loadingMessageId
+                                    )
+                                    _pendingMessages.value = emptyList()
+                                }
+                            } finally {
+                                isProcessingImage = false // 이미지 처리 완료
                             }
-
-                            // 새로운 로딩 메시지 추가
-                            val loadingMessage = ChatMessage(
-                                roomId = roomId,
-                                content = "",
-                                isAiMessage = true,
-                                isLoading = true
-                            )
-
-                            // 새로운 로딩 아이콘 만들기
-                            val insertedId = messageDao.insertMessageAndGetId(loadingMessage)
-                            loadingMessageId = insertedId
-
-                            // 이미지 분석 결과가 오면 보류중인 메세지에 분석결과 추가하기
-                            _pendingMessages.value += message
-                            ImageProcessingService.clearPendingMessage()
                         }
                     }
                 }
@@ -243,18 +277,19 @@ class ChatViewModel(application: Application, private val roomId: Int) : Android
             loadingMessageId?.let { id ->
                 messageDao.deleteMessageById(id)
             }
-
-            // 새로운 로딩 메시지 추가
-            val loadingMessage = ChatMessage(
-                roomId = roomId,
-                content = "",
-                isAiMessage = true,
-                isLoading = true
-            )
-
-            // 로딩 메세지 ID 추가 (새로운 사용자 메세지가 추가되면 기존 로딩메세지 삭제하기 위해서)
-            val insertedId = messageDao.insertMessageAndGetId(loadingMessage)
-            loadingMessageId = insertedId
+            
+            if (roomId != 5) {
+                // 1대1 채팅인 경우에만 로딩 메시지 생성
+                // 단톡일 때는 랜덤으로 순서 정해진 다음에 ChatService에서 생성됨
+                val loadingMessage = ChatMessage(
+                    roomId = roomId,
+                    content = "",
+                    isAiMessage = true,
+                    isLoading = true
+                )
+                val insertedId = messageDao.insertMessageAndGetId(loadingMessage)
+                loadingMessageId = insertedId
+            }
 
             // 채팅목록 페이지 업데이트
             // 채팅목록 페이지에서 마지막 메시지, 시간 표시해주는거
