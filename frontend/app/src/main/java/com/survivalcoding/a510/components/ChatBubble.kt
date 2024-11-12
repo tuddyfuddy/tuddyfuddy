@@ -77,7 +77,7 @@ fun ChatBubble(
                 name?.let {
                     Text(
                         text = it,
-                        fontSize = 13.sp,
+                        fontSize = (13.5).sp,
                         color = Color.Black
                     )
                 }
@@ -154,7 +154,7 @@ fun MessageBubble(
         if (!isAiMessage && showTimestamp) {
             Text(
                 text = TimeUtils.formatChatTime(timestamp),
-                style = MaterialTheme.typography.bodySmall,
+                style = MaterialTheme.typography.bodyMedium,
                 color = Color.Gray,
                 modifier = Modifier.align(Alignment.Bottom),
             )
