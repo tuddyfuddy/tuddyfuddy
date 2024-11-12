@@ -22,13 +22,13 @@ public class KafkaConsumerService {
     private final FcmTokenService fcmTokenService;
     private final ObjectMapper objectMapper;
 
-    @KafkaListener(topics = "fcm-token-topic")
+    @KafkaListener(topics = "fcm-token-topic", groupId = "${spring.message.kafka.group-id}")
     public void consumeFcmToken(String message) throws JsonProcessingException {
         FcmTokenRequest request = objectMapper.readValue(message, FcmTokenRequest.class);
         fcmTokenService.saveToken(request);
     }
 
-    @KafkaListener(topics = "chat-notification-topic")
+    @KafkaListener(topics = "chat-notification-topic", groupId = "${spring.message.kafka.group-id}")
     public void consumeChatNotification(String message) throws JsonProcessingException {
         try {
             log.info("채팅 알림 메시지 수신: {}", message);
