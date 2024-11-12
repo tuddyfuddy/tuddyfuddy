@@ -16,7 +16,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-
 // 메인 화면의 인증 관련 로직을 처리하는 ViewModel
 class MainViewModel : ViewModel() {
     // 인증 상태를 관리하는 StateFlow
@@ -46,7 +45,7 @@ class MainViewModel : ViewModel() {
         viewModelScope.launch {
             val accessToken = tokenManager?.getAccessToken()
             _authState.value = if (accessToken != null) {
-                AuthState.Success(null, null, accessToken)
+                AuthState.Success(accessToken)
             } else {
                 AuthState.Initial
             }
@@ -101,9 +100,15 @@ class MainViewModel : ViewModel() {
                 try {
                     _authState.value = AuthState.Loading
 
+                    val fcmToken = tokenManager?.getFCMToken()
+                    Log.d("MainViewModel", "Sending FCM token with login: $fcmToken")
+
                     // 서버에 카카오 토큰으로 인증 요청
                     val response = authService.authenticateKakao(
-                        KakaoAuthRequest(token.accessToken)
+                        KakaoAuthRequest(
+                            accessToken = token.accessToken,
+                            fcmToken = fcmToken
+                        )
                     )
 
                     if (response.isSuccessful) {
@@ -119,16 +124,8 @@ class MainViewModel : ViewModel() {
                         if (accessToken != null) {
                             // TokenManager에 저장 (refresh token은 자동으로 저장됨)
                             tokenManager?.saveTokens(accessToken, "")
-
-                            // 응답 바디에서 사용자 정보 추출
-                            response.body()?.let { authResponse ->
-                                _authState.value = AuthState.Success(
-                                    kakaoUserId = null,
-                                    nickname = authResponse.nickname,
-                                    jwtToken = accessToken
-                                )
-                                onSuccess()
-                            }
+                            _authState.value = AuthState.Success(jwtToken = accessToken)
+                            onSuccess()
                         } else {
                             _authState.value = AuthState.Error("No access token in response")
                             onError(Exception("No access token in response"))
