@@ -307,12 +307,12 @@ fun ChatDetailPage(
                         text = message.content,
                         timestamp = message.timestamp,
                         isAiMessage = message.isAiMessage,
-                        profileImage = when {  // 단톡방에서 type에 따라 AI 프로필 이미지 변경
+                        profileImage = when {  // 단톡방에서 type에 따라 AI 프로필 이미지 변경 -> 하드코딩 수정
                             message.aiType != null -> DummyAIData.getChatById(message.aiType)?.profileImage
                             message.isAiMessage && showProfile -> chatData?.profileImage
                             else -> null
                         },
-                        name = when {   // 단톡방에서 type에 따라 AI 말풍선 이름 변경
+                        name = when {   // 단톡방에서 type에 따라 AI 말풍선 이름 변경 -> 하드코딩 수정
                             message.aiType != null -> DummyAIData.getChatById(message.aiType)?.name
                             showProfile -> chatData?.name
                             else -> null
