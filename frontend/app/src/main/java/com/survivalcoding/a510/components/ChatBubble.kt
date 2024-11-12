@@ -154,7 +154,7 @@ fun MessageBubble(
         if (!isAiMessage && showTimestamp) {
             Text(
                 text = TimeUtils.formatChatTime(timestamp),
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodySmall,
                 color = Color.Gray,
                 modifier = Modifier.align(Alignment.Bottom),
             )
