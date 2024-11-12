@@ -308,14 +308,12 @@ fun ChatDetailPage(
                         timestamp = message.timestamp,
                         isAiMessage = message.isAiMessage,
                         profileImage = when {  // 단톡방에서 type에 따라 AI 프로필 이미지 변경
-                            message.aiType == 3 -> R.drawable.kim
-                            message.aiType == 4 -> R.drawable.karina
+                            message.aiType != null -> DummyAIData.getChatById(message.aiType)?.profileImage
                             message.isAiMessage && showProfile -> chatData?.profileImage
                             else -> null
                         },
                         name = when {   // 단톡방에서 type에 따라 AI 말풍선 이름 변경
-                            message.aiType == 3 -> "김유정"
-                            message.aiType == 4 -> "카리나"
+                            message.aiType != null -> DummyAIData.getChatById(message.aiType)?.name
                             showProfile -> chatData?.name
                             else -> null
                         },
