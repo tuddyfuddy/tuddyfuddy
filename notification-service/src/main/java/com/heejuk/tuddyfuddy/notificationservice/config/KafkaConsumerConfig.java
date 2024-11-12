@@ -1,5 +1,6 @@
 package com.heejuk.tuddyfuddy.notificationservice.config;
 
+import com.heejuk.tuddyfuddy.notificationservice.exception.NotificationException;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -54,20 +55,23 @@ public class KafkaConsumerConfig {
         factory.setConsumerFactory(consumerFactory());
         factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL_IMMEDIATE);
 
-        // 에러 핸들러 추가
         DefaultErrorHandler errorHandler = new DefaultErrorHandler(
             (consumerRecord, exception) -> {
-                if (exception instanceof IllegalArgumentException &&
-                    exception.getMessage().startsWith("Invalid UUID string")) {
-                    log.error("Invalid UUID format - skipping message: {}", consumerRecord.value());
+                if (exception instanceof IllegalArgumentException ||
+                    exception.getCause() instanceof IllegalArgumentException ||
+                    exception instanceof NotificationException ||
+                    exception.getCause() instanceof NotificationException) {
+                    log.error("Message processing failed, skipping: {}", consumerRecord.value(),
+                        exception);
                 }
             },
-            // 1초 간격으로 최대 3번 재시도
-            new FixedBackOff(1000L, 2L)  // interval = 1000ms, maxAttempts = 2 (초기 시도 + 2번 재시도)
+            new FixedBackOff(1000L, 0L)  // 재시도 없이 바로 다음 메시지로 넘어가도록 설정
         );
 
-        // UUID 파싱 에러는 재시도하지 않도록 설정
-        errorHandler.addNotRetryableExceptions(IllegalArgumentException.class);
+        errorHandler.addNotRetryableExceptions(
+            IllegalArgumentException.class,
+            NotificationException.class
+        );
 
         factory.setCommonErrorHandler(errorHandler);
 
