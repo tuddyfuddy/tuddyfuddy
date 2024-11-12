@@ -1,5 +1,7 @@
 package com.heejuk.tuddyfuddy.notificationservice.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 
@@ -20,4 +22,16 @@ public record ChatMessageRequest(
 
 ) {
 
+    @JsonCreator
+    public ChatMessageRequest(
+        @JsonProperty("userId") String userId,
+        @JsonProperty("roomId") Integer roomId,
+        @JsonProperty("aiName") String aiName,
+        @JsonProperty("message") String message
+    ) {
+        this.userId = userId;
+        this.roomId = roomId;
+        this.aiName = aiName;
+        this.message = message;
+    }
 }

@@ -5,6 +5,7 @@ import com.heejuk.tuddyfuddy.notificationservice.entity.FcmToken;
 import com.heejuk.tuddyfuddy.notificationservice.repository.FcmTokenRepository;
 import java.time.Duration;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -85,5 +86,46 @@ public class FcmTokenService {
 
     private String getRedisKey(String userId) {
         return FCM_TOKEN_PREFIX + userId;
+    }
+
+    public void checkRedisCache(String userId) {
+        String key = getRedisKey(userId);
+
+        // 값 확인
+        String cachedToken = redisTemplate.opsForValue().get(key);
+        log.info("Redis 캐시 확인 - userId: {}, cached token: {}", userId, cachedToken);
+
+        // TTL 확인
+        Long ttl = redisTemplate.getExpire(key);
+        log.info("Redis TTL 확인 - userId: {}, TTL: {}초", userId, ttl);
+
+        // 키 존재 여부 확인
+        Boolean hasKey = redisTemplate.hasKey(key);
+        log.info("Redis 키 존재 여부 - userId: {}, exists: {}", userId, hasKey);
+    }
+
+    // 모든 FCM 토큰 캐시 확인
+    public void checkAllCachedTokens() {
+        Set<String> keys = redisTemplate.keys(FCM_TOKEN_PREFIX + "*");
+        if (keys != null) {
+            for (String key : keys) {
+                String userId = key.replace(FCM_TOKEN_PREFIX, "");
+                String token = redisTemplate.opsForValue().get(key);
+                log.info("캐시된 토큰 - userId: {}, token: {}", userId, token);
+            }
+        }
+    }
+
+    // 캐시 수동 갱신
+    public void refreshCache(String userId) {
+        tokenRepository.findByUserId(UUID.fromString(userId))
+            .ifPresent(token -> {
+                redisTemplate.opsForValue().set(
+                    getRedisKey(userId),
+                    token.getFcmToken(),
+                    TOKEN_TTL
+                );
+                log.info("캐시 수동 갱신 완료 - userId: {}", userId);
+            });
     }
 }
