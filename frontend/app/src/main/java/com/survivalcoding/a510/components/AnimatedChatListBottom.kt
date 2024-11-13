@@ -81,7 +81,7 @@ fun AnimatedChatListBottom(
     ) {
         Row {
             Box(
-                modifier = Modifier.offset(y = 70.dp, x = 20.dp)
+                modifier = Modifier.offset(y = 100.dp, x = 20.dp)
             ) {
                 Column {
                     Box(
