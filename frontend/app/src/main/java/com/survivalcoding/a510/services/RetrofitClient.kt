@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit
 object RetrofitClient {
     private const val CHAT_BASE_URL = "http://k11a510.p.ssafy.io:8080/chat-service/"
     private const val IMAGE_BASE_URL = "http://k11a510.p.ssafy.io:8080/"
-    private const val WEATHER_BASE_URL = "http://k11a510.p.ssafy.io:8080/"
+    private const val BASE_URL = "http://k11a510.p.ssafy.io:8080/"
     private lateinit var tokenManager: TokenManager
 
     // RetrofitClient 초기화 (앱 시작 시 호출 필요)
@@ -101,19 +101,19 @@ object RetrofitClient {
     // Weather 서비스용 Retrofit 인스턴스
     private val weatherRetrofit by lazy {
         Retrofit.Builder()
-            .baseUrl(WEATHER_BASE_URL)
+            .baseUrl(BASE_URL)
             .addConverterFactory(GsonConverterFactory.create())
             .client(createClient())
             .build()
     }
 
-    // 채팅 서비스
-    val aiChatService: AIChatService by lazy {
-        chatRetrofit.create(AIChatService::class.java)
-    }
-    // 이미지 분석 서비스
-    val imageAnalysisService: ImageAnalysisService by lazy {
-        imageRetrofit.create(ImageAnalysisService::class.java)
+    // Calendar 서비스용 Retrofit 인스턴스
+    private val calendarRetrofit by lazy {
+        Retrofit.Builder()
+            .baseUrl(BASE_URL)
+            .addConverterFactory(GsonConverterFactory.create())
+            .client(createClient())
+            .build()
     }
 
     // FCM 토큰 업데이트를 위한 서비스
@@ -133,8 +133,24 @@ object RetrofitClient {
             .create(FCMTokenService::class.java)
     }
 
+    // 채팅 서비스
+    val aiChatService: AIChatService by lazy {
+        chatRetrofit.create(AIChatService::class.java)
+    }
+    // 이미지 분석 서비스
+    val imageAnalysisService: ImageAnalysisService by lazy {
+        imageRetrofit.create(ImageAnalysisService::class.java)
+    }
+
     // Weather 서비스
     val weatherService: WeatherService by lazy {
         weatherRetrofit.create(WeatherService::class.java)
-    }}
+    }
+
+    // Calendar 서비스
+    val calendarService: CalendarService by lazy {
+        calendarRetrofit.create(CalendarService::class.java)
+    }
+
+}
 
