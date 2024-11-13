@@ -77,13 +77,15 @@ fun ChatDetailPage(
     
     // 배경색 결정을 위한 변수조건 설정
     val backgroundColor = when (chatId) {
-        2, 4 -> Color(0x54E0B88A) // 연갈색
-        else -> Color(0x54E3F2FD) // 하늘색
+        2, 4 -> Color(0x54E0B88A) // 연갈색, F 친구들
+        5 -> Color(0x54E3F2FD)    // 하늘색, 단톡방 배경
+        else -> Color(0x54E3F2FD) // 하늘색, T 친구들
     }
 
     val topBarBackgroundColor = when (chatId) {
-        2, 4 -> Color(0x54E0B88A) // 연갈색
-        else -> Color(0xFFE5F4FF) // 조금 더 진한 하늘색
+        2, 4 -> Color(0x54E0B88A) // 연갈색, F 친구들
+        5 -> Color(0xFFE5F4FF)    // 조금 더 진한 하늘색, 단톡방
+        else -> Color(0xFFE5F4FF) // 조금 더 진한 하늘색, T 친구들
     }
 
     // 이미지 선택 launcher
