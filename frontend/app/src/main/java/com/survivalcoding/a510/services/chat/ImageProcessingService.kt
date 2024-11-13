@@ -149,10 +149,14 @@ class ImageProcessingService : Service() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 CHANNEL_ID, // 채널 아이디
-                "Image Processing Service",     // 채널 이름
-                NotificationManager.IMPORTANCE_LOW    // 채널 중요도 낮음
+                "Silent Channel",     // 채널 이름
+                NotificationManager.IMPORTANCE_MIN    // 채널 중요도 낮음
             ).apply {
-                description = "Processes images in background"
+                description = ""
+                setShowBadge(false)
+                enableLights(false) // LED 끄기
+                enableVibration(false) // 진동 끄기
+                setSound(null, null) // 알림음 없애기
             }
 
             // NotificationManager를 통해 채널을 등록
@@ -163,11 +167,11 @@ class ImageProcessingService : Service() {
 
     // 알림을 생성하는 함수
     private fun createNotification() = NotificationCompat.Builder(this, CHANNEL_ID)
-        .setContentTitle("이미지 처리 중")                        // 알림 제목
-        .setContentText("백그라운드에서 이미지를 처리하고 있습니다.")  // 알림 내용
-        .setSmallIcon(android.R.drawable.ic_menu_gallery)      // 알림 아이콘
-        .setPriority(NotificationCompat.PRIORITY_LOW)          // 알림 우선순위 낮음
-        .build()                                               // 알림 생성
+        .setContentTitle("") // 빈 제목
+        .setContentText("")  // 빈 내용
+        .setSmallIcon(android.R.drawable.ic_menu_gallery)
+        .setPriority(NotificationCompat.PRIORITY_MIN) // 최소 우선순위로 설정
+        .build()                                       // 알림 생성
 
     // onBind 함수: 서비스가 바인딩되지 않도록 null 반환
     override fun onBind(intent: Intent?): IBinder? = null

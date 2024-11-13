@@ -18,7 +18,10 @@ class TokenInterceptor(
     override fun intercept(chain: Interceptor.Chain): Response {
         // 원본 요청에 액세스 토큰 추가
         val originalRequest = chain.request()
+
         val request = addAuthHeader(originalRequest, tokenManager.getAccessToken())
+        Log.d("리퀘스트 찍기", "401일때 내가 보낸 리퀘스트: $request")
+
 
         // 요청 실행
         var response = chain.proceed(request)

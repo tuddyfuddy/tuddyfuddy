@@ -74,16 +74,16 @@ fun ChatDetailPage(
     val currentSearchIndex by viewModel.currentSearchIndex.collectAsState()
     val searchMatches by viewModel.searchMatches.collectAsState()
     val context = LocalContext.current
-    // 배경색 결정을 위한 조건부 로직
-
+    
+    // 배경색 결정을 위한 변수조건 설정
     val backgroundColor = when (chatId) {
-        2, 4 -> Color(0x54E0B88A) // 연갈색 0x54E0B88A
+        2, 4 -> Color(0x54E0B88A) // 연갈색
         else -> Color(0x54E3F2FD) // 하늘색
     }
 
     val topBarBackgroundColor = when (chatId) {
         2, 4 -> Color(0x54E0B88A) // 연갈색
-        else -> Color(0xFFE5F4FF) // 조금 더 진한 하늘색 0xFFD9EFFF
+        else -> Color(0xFFE5F4FF) // 조금 더 진한 하늘색
     }
 
     // 이미지 선택 launcher
@@ -140,7 +140,6 @@ fun ChatDetailPage(
     DisposableEffect(Unit) {
         ChatService.setActiveChatRoom(chatId)
         viewModel.markAsRead()
-
         onDispose {
             ChatService.setActiveChatRoom(null)
         }
@@ -323,6 +322,7 @@ fun ChatDetailPage(
                         imageUrl = message.imageUrl,
                         showTimestamp = showTimestamp,
                         isLoading = message.isLoading,
+                        chatId = chatId,
                     )
                 }
 

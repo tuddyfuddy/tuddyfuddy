@@ -31,8 +31,8 @@ object ChatDatabaseMigrations {
                 SELECT DISTINCT 
                     roomId as id,
                     CASE 
-                        WHEN roomId = 1 THEN ${R.drawable.cha}
-                        ELSE ${R.drawable.back}
+                        WHEN roomId = 1 THEN ${R.drawable.tuddy}
+                        ELSE ${R.drawable.fuddy}
                     END as profileImage,
                     CASE 
                         WHEN roomId = 1 THEN '활명수'
