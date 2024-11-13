@@ -141,7 +141,9 @@ class ChatService:
         logging.info(f">>>>>>> (수정 후) {final_answer}")
 
         # Kafka에 채팅 데이터 전송
-        ChatService.send_to_kafka(user_id, type, message)
+        array_anwer = [s.strip() for s in final_answer.split("<br>")]
+        for aa in array_anwer:
+            ChatService.send_to_kafka(user_id, type, aa)
 
         return {"response": [s.strip() for s in final_answer.split("<br>")]}
 
