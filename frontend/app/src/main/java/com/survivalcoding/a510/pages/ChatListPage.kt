@@ -77,37 +77,36 @@ fun ChatListPage(
                 }
 
                 // 채팅방 목록
-                LazyColumn(
+                Box(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 16.dp),
+                        .weight(1f)  // 남은 공간 모두 차지
+                        .fillMaxWidth()
                 ) {
-                    items(chatList) { chat ->
-                        ChatListItem(
-                            profileImage = chat.profileImage,
-                            name = chat.name,
-                            message = chat.lastMessage,
-                            timestamp = TimeUtils.formatChatTime(chat.lastMessageTime),
-                            unreadCount = chat.unreadCount,
-                            onClick = {
-                                navController.navigate(Routes.chatDetail(chat.id))
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        )
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 16.dp),
+                    ) {
+                        items(chatList) { chat ->
+                            ChatListItem(
+                                profileImage = chat.profileImage,
+                                name = chat.name,
+                                message = chat.lastMessage,
+                                timestamp = TimeUtils.formatChatTime(chat.lastMessageTime),
+                                unreadCount = chat.unreadCount,
+                                onClick = {
+                                    navController.navigate(Routes.chatDetail(chat.id))
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
                     }
                 }
+
             }
 
-            // 하단 캐릭터 사진 및 설명
-//            ChatListBottom(
-//                name = "Tuddy",
-//                description = "말투는 조금 차갑고 무뚝뚝해도\n속마음은 따뜻한 나만의 친구",
-//                characterImageRes = R.drawable.big_boy2,
-//                modifier = Modifier.align(Alignment.BottomStart)
-//            )
-
             AnimatedChatListBottom(
-                modifier = Modifier.align(Alignment.BottomStart)
+                modifier = Modifier.align(Alignment.BottomEnd)
             )
 
 

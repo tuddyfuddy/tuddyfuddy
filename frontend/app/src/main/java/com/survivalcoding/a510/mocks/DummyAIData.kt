@@ -45,6 +45,22 @@ object DummyAIData {
             timestamp = "방금 전",
             unreadCount = 1
         ),
+//        ChatData(
+//            id = 6,
+//            profileImage = R.drawable.tuddy,
+//            name = "Test1111",
+//            message = "Test1111",
+//            timestamp = "방금 전",
+//            unreadCount = 1
+//        ),
+//        ChatData(
+//            id = 7,
+//            profileImage = R.drawable.tuddy,
+//            name = "Test2222",
+//            message = "Test2222",
+//            timestamp = "방금 전",
+//            unreadCount = 1
+//        ),
     )
 
     fun getChatById(id: Int): ChatData? = chatList.find { it.id == id }

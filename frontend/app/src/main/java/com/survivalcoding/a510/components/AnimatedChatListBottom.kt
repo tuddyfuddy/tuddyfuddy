@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.painterResource
@@ -60,7 +61,7 @@ fun AnimatedChatListBottom(
 
     LaunchedEffect(key1 = true) {
         // 페이드인아웃 애니메이션 효과 추가하기
-        while (true) {
+        while (true) {  // 무한루프 뱅뺑이 돌아라
             delay(3000) // 3초마다 컾모넌트 내용 바꾸기
             isVisible = false
             delay(500) // 애니메이션으로 컴포넌트 없어지는 시간
@@ -109,7 +110,7 @@ fun AnimatedChatListBottom(
 
             Box(
                 modifier = Modifier
-                    .offset(y = 50.dp, x = (10).dp)
+                    .offset(y = 53.dp, x = (10).dp)
                     .alpha(alpha)
             ) {
                 Image(
