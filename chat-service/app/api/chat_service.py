@@ -11,6 +11,7 @@ from langchain.chains import LLMChain
 from langchain.schema.runnable import RunnablePassthrough
 
 from app.models.templates import (
+    ai_name,
     SYSTEM_MESSAGE_1,
     SYSTEM_MESSAGE_2,
     SYSTEM_MESSAGE_3,
@@ -41,7 +42,7 @@ class ChatService:
     llm = ChatOpenAI(
         api_key=settings.GPT_KEY,
         model_name="gpt-4o-mini",
-        temperature=0.7,
+        temperature=0.4,
     )
 
     @staticmethod
@@ -148,9 +149,9 @@ class ChatService:
     def send_to_kafka(user_id: str, room_id: int, message: str):
         try:
             chat_data = {
-                "userId": user_id,
+                "userId": str(user_id),
                 "roomId": room_id,
-                "aiName": "카리나",
+                "aiName": ai_name[room_id],
                 "message": message,
             }
 

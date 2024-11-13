@@ -1,3 +1,5 @@
+ai_name = {1: "Tuddy", 2: "Fuddy", 3: "달님이", 4: "햇님이", 5: "달님이, 햇님이"}
+
 USER_MESSAGE_TEMPLATE = """
 Limit responses to a maximum of {max_response_length} tokens.
 
