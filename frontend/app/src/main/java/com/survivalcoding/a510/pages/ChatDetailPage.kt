@@ -139,6 +139,7 @@ fun ChatDetailPage(
         }
     }
 
+    // 사용자 화면 체크하는 로직
     DisposableEffect(Unit) {
         ChatService.setActiveChatRoom(chatId)
         viewModel.markAsRead()
