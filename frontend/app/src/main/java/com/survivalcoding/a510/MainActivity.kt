@@ -55,7 +55,7 @@ class MainActivity : ComponentActivity() {
                                 activity = this@MainActivity,
                                 onSuccess = {
                                     navController.navigate(Routes.TERMS_AGREEMENT) {
-                                        popUpTo(Routes.WELCOME_SCREEN) { inclusive = true }
+                                        popUpTo(Routes.WELCOME_PAGE) { inclusive = true }
                                     }
                                 },
                                 onError = { error ->
