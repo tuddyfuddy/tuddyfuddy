@@ -78,6 +78,12 @@ class ChatService : Service() {
                         Pair(listOf(3), false),       // 3번만 호출하기
                         Pair(listOf(4), false),       // 4번만 호출하기
                         Pair(listOf(3, 4), true),     // 3번 호출하고 3번 응답으로 4번 호출하기 (AI끼리 대답시키기)
+                        Pair(listOf(4, 3), true),      // 4번 호출하고 4번 응답으로 3번 호출하기(AI끼리 대답시키기)
+
+                        // 아래 내용은
+                        Pair(listOf(3, 4), false),    // 3번 - 4번 순으로 호출하기 (둘다 사용자 메시지에 응답)
+                        Pair(listOf(4, 3), false),    // 4번 - 3번 순으로 호출하기 (둘다 사용자 메시지에 응답)
+                        Pair(listOf(3, 4), true),     // 3번 호출하고 3번 응답으로 4번 호출하기 (AI끼리 대답시키기)
                         Pair(listOf(4, 3), true)      // 4번 호출하고 4번 응답으로 3번 호출하기(AI끼리 대답시키기)
                     )
 
@@ -303,10 +309,14 @@ class ChatService : Service() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 CHANNEL_ID,
-                "Chat Service",
-                NotificationManager.IMPORTANCE_LOW
+                "Silent Channel",
+                NotificationManager.IMPORTANCE_MIN
             ).apply {
-                description = "Keeps chat active in background"
+                description = ""
+                setShowBadge(false)
+                enableLights(false) // LED 끄기
+                enableVibration(false) // 진동 끄기
+                setSound(null, null) // 알림음 없애기
             }
 
             val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -316,10 +326,10 @@ class ChatService : Service() {
 
     // 알림을 생성하는 함수
     private fun createNotification() = NotificationCompat.Builder(this, CHANNEL_ID)
-        .setContentTitle("채팅 서비스 실행 중")
-        .setContentText("백그라운드에서 AI 답변을 받고 있습니다.")
+        .setContentTitle("")
+        .setContentText("")
         .setSmallIcon(android.R.drawable.ic_dialog_info)
-        .setPriority(NotificationCompat.PRIORITY_LOW)
+        .setPriority(NotificationCompat.PRIORITY_MIN)
         .build()
 
     // Started Service로 사용할거라서 onBind는 필요없기 때문에 null

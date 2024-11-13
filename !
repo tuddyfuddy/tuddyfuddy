@@ -1,0 +1,22 @@
+:recycle: Refactor: AIData 수정
+################
+# Feat(sparkles) : 새로운 기능 추가
+# Fix(bug) : 버그 수정
+# Docs(memo) : 문서 수정
+# Style(art): 코드 포맷팅, 세미콜론 누락, 주석 변경, 코드 변경이 없는 경우, 
+# Refactor(recycle) : 코드 리팩토링
+# Test(white_check_mark): 테스트 코드, 리팩토링 테스트 코드 추가
+# Chore(wrench) : 빌드 부분 혹은 패키지 매니저 수정사항
+################
+# Please enter the commit message for your changes. Lines starting
+# with '#' will be ignored, and an empty message aborts the commit.
+#
+# On branch front/chatroom
+# Your branch is up to date with 'origin/front/chatroom'.
+#
+# Changes to be committed:
+#	modified:   frontend/app/src/main/java/com/survivalcoding/a510/mocks/DummyAIData.kt
+#
+# Changes not staged for commit:
+#	modified:   frontend/app/src/main/java/com/survivalcoding/a510/components/AnimatedChatListBottom.kt
+#

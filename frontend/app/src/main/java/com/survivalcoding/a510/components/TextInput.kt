@@ -39,14 +39,21 @@ fun TextInput(
         else -> Color(0xFFE5F4FF) // 조금 더 진한 하늘색 0xFFD9EFFF
     }
 
+    val SendIconColor = when (chatId) {
+        2, 4 -> Color(0xFFF2A64E) // 연갈색
+        else -> Color(0xFF1428A0) // 조금 더 진한 하늘색
+    }
+
     Row(
         modifier = modifier
             .fillMaxWidth()
             .background(color = topBarBackgroundColor)
-            .padding(horizontal = 8.dp, vertical = 8.dp),
+            .padding(horizontal = 4.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
+        Spacer(modifier = Modifier.width(10.dp))
+
         IconButtonWithIcon(
             icon = Icons.Default.CameraAlt,
             contentDescription = "Camera Icon",
@@ -54,12 +61,6 @@ fun TextInput(
         )
 
         Spacer(modifier = Modifier.width(10.dp))
-
-        IconButtonWithIcon(
-            icon = Icons.Default.KeyboardVoice,
-            contentDescription = "Voice Icon",
-            onClick = onVoiceClick
-        )
 
         OutlinedTextField(
             value = value,
@@ -78,12 +79,17 @@ fun TextInput(
             placeholder = { Text("메시지를 입력하세요") }
         )
 
+
+
         IconButtonWithIcon(
             icon = Icons.AutoMirrored.Filled.Send,
             contentDescription = "Send Icon",
-            tint = Color.Blue,
+            tint = SendIconColor,
             onClick = onSendClick
         )
+
+        Spacer(modifier = Modifier.width(5.dp))
+
     }
 }
 

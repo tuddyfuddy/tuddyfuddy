@@ -17,7 +17,6 @@ import java.util.concurrent.TimeUnit
 // Retrofit 인스턴스를 관리하는 싱글톤 객체
 object RetrofitClient {
     private const val CHAT_BASE_URL = "http://k11a510.p.ssafy.io:8080/chat-service/"
-    private const val IMAGE_BASE_URL = "http://k11a510.p.ssafy.io:8080/"
     private const val BASE_URL = "http://k11a510.p.ssafy.io:8080/"
     private lateinit var tokenManager: TokenManager
 
@@ -73,7 +72,7 @@ object RetrofitClient {
     // 공통 OkHttpClient를 생성하는 private 함수
     private fun createClient(): OkHttpClient {
         return OkHttpClient.Builder()
-//            .addInterceptor(TokenInterceptor(tokenManager))
+            .addInterceptor(TokenInterceptor(tokenManager))
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
             .writeTimeout(30, TimeUnit.SECONDS)
@@ -92,7 +91,7 @@ object RetrofitClient {
     // 이미지 분석용 Retrofit 인스턴스
     private val imageRetrofit by lazy {
         Retrofit.Builder()
-            .baseUrl(IMAGE_BASE_URL)
+            .baseUrl(BASE_URL)
             .addConverterFactory(GsonConverterFactory.create())
             .client(createClient())
             .build()

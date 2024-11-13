@@ -57,8 +57,8 @@ fun ChatListItem(
 
                 Text(
                     text = timestamp,
-                    fontSize = 14.sp,
-                    color = androidx.compose.ui.graphics.Color.Gray
+                    fontSize = 12.sp,
+                    color = Color.Gray
                 )
             }
 
@@ -70,8 +70,8 @@ fun ChatListItem(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = if (message.length > 20) {
-                        message.take(20) + "..."
+                    text = if (message.length > 18) {
+                        message.take(18) + "..."
                     } else {
                         message
                     },
