@@ -322,6 +322,7 @@ fun ChatDetailPage(
                         imageUrl = message.imageUrl,
                         showTimestamp = showTimestamp,
                         isLoading = message.isLoading,
+                        chatId = chatId,
                     )
                 }
 
