@@ -73,7 +73,7 @@ object RetrofitClient {
     // 공통 OkHttpClient를 생성하는 private 함수
     private fun createClient(): OkHttpClient {
         return OkHttpClient.Builder()
-//            .addInterceptor(TokenInterceptor(tokenManager))
+            .addInterceptor(TokenInterceptor(tokenManager))
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
             .writeTimeout(30, TimeUnit.SECONDS)
