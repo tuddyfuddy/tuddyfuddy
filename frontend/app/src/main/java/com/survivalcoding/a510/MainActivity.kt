@@ -14,6 +14,8 @@ import androidx.navigation.compose.rememberNavController
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.core.view.WindowCompat
+import com.google.firebase.messaging.FirebaseMessaging
+import com.survivalcoding.a510.data.TokenManager
 import com.survivalcoding.a510.routers.AppRouter
 import com.survivalcoding.a510.routers.Routes
 import com.survivalcoding.a510.services.RetrofitClient
@@ -27,6 +29,15 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // FCM 토큰 초기화
+        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                val token = task.result
+                TokenManager(this).saveFCMToken(token)
+            }
+        }
+
         // 시스템 윈도우 설정
         WindowCompat.setDecorFitsSystemWindows(window, true)
 
