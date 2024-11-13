@@ -44,7 +44,13 @@ fun ChatBubble(
     imageUrl: String? = null,
     showTimestamp: Boolean = true,
     isLoading: Boolean = false,
+    chatId: Int,
 ) {
+    val userMessageColor = when (chatId) {
+        2, 4 -> Color(0xFFF2A64E)
+        else -> Color.Yellow
+    }
+
     if (!isLoading && text.isBlank() && !isImage && imageUrl == null) {
         return
     }
@@ -108,7 +114,8 @@ fun ChatBubble(
                         searchQuery = searchQuery,
                         isImage = isImage,
                         imageUrl = imageUrl,
-                        showTimestamp = showTimestamp
+                        showTimestamp = showTimestamp,
+                        chatId = chatId // chatId 전달,
                     )
                 }
             }
@@ -122,7 +129,8 @@ fun ChatBubble(
                 searchQuery = searchQuery,
                 isImage = isImage,
                 imageUrl = imageUrl,
-                showTimestamp = showTimestamp
+                showTimestamp = showTimestamp,
+                chatId = chatId // chatId 전달
             )
         }
     }
@@ -138,10 +146,17 @@ fun MessageBubble(
     searchQuery: String = "",
     isImage: Boolean = false,
     imageUrl: String? = null,
-    showTimestamp: Boolean = true
+    showTimestamp: Boolean = true,
+    chatId: Int,
 ) {
     if (text.isBlank() && !isImage && imageUrl == null) {
         return
+    }
+
+    // chatId에 따른 사용자 메시지 색상 설정
+    val userMessageColor = when (chatId) {
+        2, 4 -> Color(0xFFF6BD7B)
+        else -> Color(0xFF8CBAF1)   // 1428A0 이게 삼성 블루 헥사코드
     }
 
     Row(
@@ -166,7 +181,7 @@ fun MessageBubble(
                 .widthIn(max = if (isImage) 200.dp else 220.dp)
                 .border(
                     width = 0.05.dp,
-                    color = if (!isAiMessage) Color.Yellow else Color.White,
+                    color = if (!isAiMessage) userMessageColor else Color.White,
                     shape = RoundedCornerShape(
                         topStart = if (!isFirstInSequence) 10.dp else if (isAiMessage) 0.dp else 10.dp,
                         topEnd = if (!isFirstInSequence) 10.dp else if (isAiMessage) 10.dp else 0.dp,
@@ -175,7 +190,7 @@ fun MessageBubble(
                     )
                 )
                 .background(
-                    color = if (!isAiMessage) Color.Yellow else Color.White,
+                    color = if (!isAiMessage) userMessageColor else Color.White,
                     shape = RoundedCornerShape(
                         topStart = if (!isFirstInSequence) 10.dp else if (isAiMessage) 0.dp else 10.dp,
                         topEnd = if (!isFirstInSequence) 10.dp else if (isAiMessage) 10.dp else 0.dp,
