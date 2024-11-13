@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from app.core.uilts import log_api_time
@@ -21,9 +21,10 @@ class TextRequest(BaseModel):
 async def chat(
     room_id: int,
     request: TextRequest,
+    user_id: str = Query(...),
 ):
     try:
-        result = await ChatService.process_chat(room_id, 1, request.text)
+        result = await ChatService.process_chat(room_id, user_id, request.text)
         if isinstance(result, JSONResponse):
             return ["응?"]
         return result
@@ -51,7 +52,7 @@ async def chat(
         return ["응?"]
 
 
-@router.post("/group/{room_id}")
+@router.post("/group/{type}")
 @log_api_time
 async def chat(
     room_id: int,
