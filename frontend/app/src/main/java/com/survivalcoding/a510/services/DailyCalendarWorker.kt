@@ -34,29 +34,27 @@ class DailyCalendarWorker(
         }
 
         return try {
-            val titles = getTodayCalendarTitles()
+            val titles = getCurrentDayCalendarTitles()
             if (titles.isEmpty()) {
-                Log.d(TAG, "No calendar events found for today")
+                Log.d(TAG, "No calendar events found for current day")
                 schedule(applicationContext)
                 return Result.success()
             }
 
-            Log.d(TAG, "Found ${titles.size} calendar events for today")
+            Log.d(TAG, "Found ${titles.size} calendar events for current day")
+            Log.d(TAG, "Sending first calendar event: '${titles.first()}'")  // 로그 추가
 
-            // 각 일정 제목을 서버로 전송
-            titles.forEach { title ->
-                val response = RetrofitClient.calendarService.sendCalendarTitle(
-                    title = title
-                ).execute()
+            // 첫 번째 일정만 전송
+            val response = RetrofitClient.calendarService.sendCalendarTitle(
+                title = titles.first()
+            ).execute()
 
-                if (response.isSuccessful && response.body() != null) {
-                    val responseBody = response.body()!!.string()
-                    Log.d(TAG, "Server response for title '$title': $responseBody")
-                } else {
-                    Log.e(TAG, "Server returned error for title '$title': ${response.code()}")
-                }
+            if (response.isSuccessful && response.body() != null) {
+                val responseBody = response.body()!!.string()
+                Log.d(TAG, "Server response for title '${titles.first()}': $responseBody")
+            } else {
+                Log.e(TAG, "Server returned error for title '${titles.first()}': ${response.code()}")
             }
-
             schedule(applicationContext)
             Result.success()
         } catch (e: Exception) {
@@ -70,17 +68,17 @@ class DailyCalendarWorker(
                 applicationContext.checkSelfPermission(Manifest.permission.READ_CALENDAR)
     }
 
-    private fun getTodayCalendarTitles(): List<String> {
+    private fun getCurrentDayCalendarTitles(): List<String> {  // 함수 이름 변경
         val titles = mutableListOf<String>()
 
-        // 오늘 날짜의 시작과 끝 시간 계산
-        val today = Calendar.getInstance().apply {
+        // 실행 당일의 시작과 끝 시간 계산
+        val currentDay = Calendar.getInstance().apply {
             set(Calendar.HOUR_OF_DAY, 0)
             set(Calendar.MINUTE, 0)
             set(Calendar.SECOND, 0)
             set(Calendar.MILLISECOND, 0)
         }
-        val tomorrow = Calendar.getInstance().apply {
+        val nextDay = Calendar.getInstance().apply {
             add(Calendar.DAY_OF_YEAR, 1)
             set(Calendar.HOUR_OF_DAY, 0)
             set(Calendar.MINUTE, 0)
@@ -89,7 +87,10 @@ class DailyCalendarWorker(
         }
 
         val selection = "${CalendarContract.Events.DTSTART} >= ? AND ${CalendarContract.Events.DTSTART} < ?"
-        val selectionArgs = arrayOf(today.timeInMillis.toString(), tomorrow.timeInMillis.toString())
+        val selectionArgs = arrayOf(
+            currentDay.timeInMillis.toString(),
+            nextDay.timeInMillis.toString()
+        )
 
         try {
             applicationContext.contentResolver.query(
@@ -118,19 +119,20 @@ class DailyCalendarWorker(
 
         fun schedule(context: Context) {
             val now = Calendar.getInstance()
+
+            // 무조건 다음날 오전 7시로 설정
             val nextRun = Calendar.getInstance().apply {
-                add(Calendar.DAY_OF_YEAR, 1)
-                set(Calendar.HOUR_OF_DAY, 7)
+                add(Calendar.DAY_OF_YEAR, 1)  // 무조건 다음날
+                set(Calendar.HOUR_OF_DAY, 7)  // 오전 7시
                 set(Calendar.MINUTE, 0)
                 set(Calendar.SECOND, 0)
             }
 
-            // 7-9시 사이의 랜덤한 지연 시간 (분 단위)
-            val randomDelayMinutes = Random.nextInt(0, 120) // 0-120분
+            val randomDelayMinutes = Random.nextInt(0, 120) // 7-9시 사이 랜덤 (0-120분)
             val initialDelay = (nextRun.timeInMillis - now.timeInMillis) +
                     (randomDelayMinutes * 60 * 1000)
 
-            Log.d(TAG, "Scheduling next run in ${initialDelay/1000/60} minutes")
+            Log.d(TAG, "Scheduling for next day, delay: ${initialDelay/1000/60} minutes")
 
             val constraints = Constraints.Builder()
                 .setRequiredNetworkType(NetworkType.CONNECTED)
@@ -148,7 +150,7 @@ class DailyCalendarWorker(
                     dailyWorkRequest
                 )
 
-            Log.d(TAG, "Calendar Worker scheduled successfully")
+            Log.d(TAG, "Calendar Worker scheduled for next day between 7-9 AM")
         }
     }
 }
