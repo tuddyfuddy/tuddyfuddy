@@ -48,7 +48,6 @@ public class HealthController {
         @RequestParam(value = "end", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end
     ) {
         String userId = HeaderUtil.getUserHeaderInfo(headers);
-        log.info("userId = " + userId);
         LocalDateTime now = LocalDateTime.now();
 
         // 기본 시작시간: 어제 00:00:00
