@@ -14,6 +14,7 @@ import com.google.firebase.messaging.RemoteMessage
 import com.survivalcoding.a510.MainActivity
 import com.survivalcoding.a510.R
 import com.survivalcoding.a510.data.TokenManager
+import com.survivalcoding.a510.services.chat.ChatService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -51,7 +52,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         // 수신된 메시지에 알림 페이로드가 포함되어 있는 경우
         remoteMessage.notification?.let {
             Log.d(TAG, "Message notification payload: ${it.title} - ${it.body}")
-            sendNotification(it.title, it.body)
+            sendNotification(it.title, it.body, remoteMessage.data)
         }
     }
 
@@ -62,7 +63,17 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
     }
 
     // 5. 알림 생성 및 표시
-    private fun sendNotification(title: String?, messageBody: String?) {
+    private fun sendNotification(title: String?, messageBody: String?, data: Map<String, String>) {
+        // 푸시 알림 데이터에서 채팅방 ID 찾기
+        val chatRoomId = data["roomId"]?.toIntOrNull()
+        // 현재 사용자 화면에 떠있는 채팅방 ID 찾기
+        val currentChatRoomId = ChatService.getActiveChatRoom()
+
+        // 현재 사용자 화면과 같은 roomId라면 푸시알림 안보내기
+        if (chatRoomId != null && chatRoomId == currentChatRoomId) {
+            return
+        }
+        
         val channelId = "default_channel"
 
         // 알림 클릭시 실행될 액티비티 설정
