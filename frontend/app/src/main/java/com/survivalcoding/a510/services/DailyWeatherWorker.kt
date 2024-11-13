@@ -98,10 +98,7 @@ class DailyWeatherWorker(
 
             val now = Calendar.getInstance()
             val nextRun = Calendar.getInstance().apply {
-                // 현재 시간이 오전 9시 이전이면 오늘, 이후면 다음 날로 설정
-                if (now.get(Calendar.HOUR_OF_DAY) >= 9) {
-                    add(Calendar.DAY_OF_YEAR, 1)
-                }
+                add(Calendar.DAY_OF_YEAR, 1)
                 set(Calendar.HOUR_OF_DAY, 7)  // 오전 7시
                 set(Calendar.MINUTE, 0)
                 set(Calendar.SECOND, 0)

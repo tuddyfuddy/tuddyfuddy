@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.survivalcoding.a510.components.NextButton
 import com.survivalcoding.a510.components.PermissionItem
+import com.survivalcoding.a510.services.DailyCalendarWorker
 import com.survivalcoding.a510.services.DailyWeatherWorker
 
 @Composable
@@ -89,6 +90,17 @@ fun PermissionPage(
             context.applicationContext?.let { appContext ->
                 DailyWeatherWorker.schedule(appContext)
                 Log.d("PermissionPage", "Weather Worker scheduled after location permission granted")
+            }
+        }
+
+        // 캘린더 권한이 승인되었는지 확인
+        val isCalendarPermissionGranted = permissionsResult[Manifest.permission.READ_CALENDAR] == true
+
+        // 캘린더 권한이 방금 승인되었다면 Calendar Worker 스케줄링
+        if (isCalendarPermissionGranted) {
+            context.applicationContext?.let { appContext ->
+                DailyCalendarWorker.schedule(appContext)
+                Log.d("PermissionPage", "Calendar Worker scheduled after calendar permission granted")
             }
         }
 
