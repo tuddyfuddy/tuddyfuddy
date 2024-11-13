@@ -6,9 +6,9 @@ spring:
     name: auth-service
   data:
     redis:
-      host:  ${REDIS_HOST:localhost}
+      host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
-#      password: ${REDIS_PASSWORD:1234}
+  #      password: ${REDIS_PASSWORD:1234}
   message:
     kafka:
       host: ${KAFKA_HOST}
@@ -40,6 +40,20 @@ management:
     export:
       prometheus:
         enabled: true
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      kakao-api:
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+      user-service:
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
 
 logging:
   level:
