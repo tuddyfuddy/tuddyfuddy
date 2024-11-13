@@ -51,6 +51,11 @@ fun ChatBubble(
         else -> Color.Yellow
     }
 
+    val dotsColor = when (chatId) {
+        2, 4 -> Color(0xFFF2A64E)
+        else -> Color(0xFF1428A0)
+    }
+
     if (!isLoading && text.isBlank() && !isImage && imageUrl == null) {
         return
     }
@@ -98,11 +103,19 @@ fun ChatBubble(
                             )
                             .padding(8.dp)
                     ) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(24.dp),
-                            color = MaterialTheme.colorScheme.primary,
-                            strokeWidth = 2.dp
+                        // 점점점 표시로 변경
+                        ThreeDotsIcon(
+                            modifier = Modifier.padding(6.dp),
+                            dotSize = 4.dp,
+                            dotColor = dotsColor
                         )
+
+                        // 동글동글 표시는 삭제
+//                        CircularProgressIndicator(
+//                            modifier = Modifier.size(24.dp),
+//                            color = MaterialTheme.colorScheme.primary,
+//                            strokeWidth = 2.dp
+//                        )
                     }
                 } else {
                     // 기존 MessageBubble 표시
