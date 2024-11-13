@@ -66,13 +66,12 @@ public class NotificationService {
                 .setNotification(Notification.builder()
                     .setTitle(aiInfo.getAiName() + "의 메시지")
                     .setBody(request.message())
-                    .setImage(aiInfo.getImageUrl())
                     .build())
                 .setAndroidConfig(AndroidConfig.builder()
                     .setPriority(AndroidConfig.Priority.HIGH)
-                    .setTtl(86400 * 1000)  // 24시간
+                    .setTtl(86400 * 1000)
                     .setNotification(AndroidNotification.builder()
-                        .setIcon(aiInfo.getImageUrl())
+                        .setIcon(getIconNameFromUrl(aiInfo.getImageUrl()))
                         .setColor("#7E57C2")
                         .setChannelId("chat_notifications")
                         .setClickAction("CHAT_ACTIVITY")
@@ -100,6 +99,12 @@ public class NotificationService {
             log.error("알림 전송 실패 - userId: {}, error: {}", request.userId(), e.getMessage(), e);
             throw new NotificationException(ErrorCode.INTERNAL_SERVER_ERROR, e.getMessage());
         }
+    }
+
+    private String getIconNameFromUrl(String imageUrl) {
+        String fileName = imageUrl.substring(imageUrl.lastIndexOf('/') + 1);  // 파일명 추출
+        String iconName = fileName.substring(0, fileName.lastIndexOf('.'));   // 확장자 제거
+        return "@drawable/" + iconName;  // drawable 리소스 형식으로 변환
     }
 
     private void validateFcmToken(String token, String userId) {
