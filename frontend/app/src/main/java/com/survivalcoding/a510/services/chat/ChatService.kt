@@ -309,10 +309,14 @@ class ChatService : Service() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 CHANNEL_ID,
-                "Chat Service",
-                NotificationManager.IMPORTANCE_LOW
+                "Silent Channel",
+                NotificationManager.IMPORTANCE_MIN
             ).apply {
-                description = "Keeps chat active in background"
+                description = ""
+                setShowBadge(false)
+                enableLights(false) // LED 끄기
+                enableVibration(false) // 진동 끄기
+                setSound(null, null) // 알림음 없애기
             }
 
             val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -322,10 +326,10 @@ class ChatService : Service() {
 
     // 알림을 생성하는 함수
     private fun createNotification() = NotificationCompat.Builder(this, CHANNEL_ID)
-        .setContentTitle("채팅 서비스 실행 중")
-        .setContentText("백그라운드에서 AI 답변을 받고 있습니다.")
+        .setContentTitle("")
+        .setContentText("")
         .setSmallIcon(android.R.drawable.ic_dialog_info)
-        .setPriority(NotificationCompat.PRIORITY_LOW)
+        .setPriority(NotificationCompat.PRIORITY_MIN)
         .build()
 
     // Started Service로 사용할거라서 onBind는 필요없기 때문에 null
