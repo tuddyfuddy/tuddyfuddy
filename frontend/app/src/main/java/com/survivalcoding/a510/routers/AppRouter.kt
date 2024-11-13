@@ -1,7 +1,5 @@
 package com.survivalcoding.a510.routers
 
-import androidx.activity.viewModels
-import androidx.compose.foundation.Image
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -10,30 +8,19 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.survivalcoding.a510.components.NextButton
-import com.survivalcoding.a510.components.KakaoLoginButton
 import com.survivalcoding.a510.pages.ChatDetailPage
 import com.survivalcoding.a510.pages.ChatListPage
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Text
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.survivalcoding.a510.R
 import com.survivalcoding.a510.pages.PermissionPage
 import com.survivalcoding.a510.pages.SettingPage
 import com.survivalcoding.a510.pages.SignUpCompletePage
 import com.survivalcoding.a510.pages.TermsAgreementPage
+import com.survivalcoding.a510.pages.WelcomePage
 import kotlinx.coroutines.delay
 
 
 object Routes {
-    const val WELCOME_SCREEN = "welcomeScreen"
+    const val WELCOME_PAGE = "welcomeScreen"
     const val TERMS_AGREEMENT = "termsAgreement"
     const val PERMISSION_PAGE = "permissionPage"
     const val SIGNUP_COMPLETE = "signupComplete"
@@ -55,23 +42,23 @@ fun AppRouter(
 
     NavHost(
         navController = navController,
-        startDestination = Routes.WELCOME_SCREEN,
+        startDestination = Routes.WELCOME_PAGE,
         modifier = modifier
     ) {
         // 환영 화면 라우트
-        composable(Routes.WELCOME_SCREEN) {
-            WelcomeScreen(
+        composable(Routes.WELCOME_PAGE) {
+            WelcomePage(
                 navController = navController,
                 isLoggedIn = isLoggedIn,
                 onKakaoLoginClick = {
                     onKakaoLoginClick.invoke()
                     if (isLoggedIn) {
                         navController.navigate(Routes.CHAT_LIST) {
-                            popUpTo(Routes.WELCOME_SCREEN) { inclusive = true }
+                            popUpTo(Routes.WELCOME_PAGE) { inclusive = true }
                         }
                     } else {
                         navController.navigate(Routes.TERMS_AGREEMENT) {
-                            popUpTo(Routes.WELCOME_SCREEN) { inclusive = true }
+                            popUpTo(Routes.WELCOME_PAGE) { inclusive = true }
                         }
                     }
                 }
@@ -102,7 +89,7 @@ fun AppRouter(
             LaunchedEffect(Unit) {
                 delay(2000)
                 navController.navigate(Routes.CHAT_LIST) {
-                    popUpTo(Routes.WELCOME_SCREEN) { inclusive = true }
+                    popUpTo(Routes.WELCOME_PAGE) { inclusive = true }
                 }
             }
         }
@@ -132,42 +119,3 @@ fun AppRouter(
     }
 }
 
-@Composable
-fun WelcomeScreen(
-    navController: NavHostController,
-    isLoggedIn: Boolean,
-    onKakaoLoginClick: () -> Unit
-) {
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.SpaceBetween,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Spacer(modifier = Modifier.weight(1f))
-        Image(
-            painter = painterResource(id = R.drawable.circlecha),
-            contentDescription = "Circle Character",
-            modifier = Modifier.size(350.dp)
-        )
-        Text(
-            text = "만나서 반가워!",
-            modifier = Modifier.padding(24.dp),
-            style = TextStyle(
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold
-            )
-        )
-        Spacer(modifier = Modifier.weight(1f))
-        if (isLoggedIn) {
-            NextButton(
-                onClick = { navController.navigate(Routes.CHAT_LIST) },
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
-        } else {
-            KakaoLoginButton(
-                onClick = onKakaoLoginClick,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
-        }
-    }
-}
