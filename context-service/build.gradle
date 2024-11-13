@@ -85,6 +85,10 @@ dependencies {
     // JAX-RS API
     implementation 'jakarta.ws.rs:jakarta.ws.rs-api:3.1.0'
     implementation 'org.glassfish.jersey.core:jersey-common:3.1.1'
+    
+    //kafka
+    implementation 'org.springframework.kafka:spring-kafka'
+    testImplementation 'org.springframework.kafka:spring-kafka-test'
 }
 
 dependencyManagement {
