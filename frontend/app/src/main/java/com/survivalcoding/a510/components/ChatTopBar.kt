@@ -2,10 +2,6 @@ package com.survivalcoding.a510.components
 
 import androidx.compose.material3.*
 import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.MoreVert

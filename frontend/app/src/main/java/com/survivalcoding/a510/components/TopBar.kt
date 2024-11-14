@@ -17,13 +17,11 @@ import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.survivalcoding.a510.R
-import com.survivalcoding.a510.utils.TransparentSystemBars
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

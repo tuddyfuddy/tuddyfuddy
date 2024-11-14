@@ -12,8 +12,6 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.survivalcoding.a510.repositories.chat.ChatDatabase
 import com.survivalcoding.a510.repositories.chat.ChatMessage
-import com.survivalcoding.a510.services.chat.ChatService.Companion.EXTRA_ROOM_ID
-import com.survivalcoding.a510.services.chat.ImageService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
