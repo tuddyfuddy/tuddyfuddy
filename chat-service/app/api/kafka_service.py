@@ -87,7 +87,7 @@ class KafkaService:
     llm = ChatOpenAI(
         api_key=settings.GPT_KEY,
         model_name="gpt-4o-mini",
-        temperature=0.8,
+        temperature=1,
     )
 
     ########################################################################################
@@ -108,13 +108,15 @@ class KafkaService:
                     logging.error(f"Failed to send message: {err}") if err else None
                 ),
             )
+
+            logging.info(f"Sending message to Kafka: {chat_data}")
         except Exception as e:
             logging.error(f"Failed to send chat data to Kafka (non-critical): {e}")
 
     ########################################################################################
 
     @staticmethod
-    async def process_calendar_chat(type: int, user_id: str, calendar_data: dict):
+    def process_calendar_chat(type: int, user_id: str, calendar_data: dict):
         calendar_response = KafkaService.llm.invoke(
             [
                 HumanMessage(
@@ -132,12 +134,12 @@ class KafkaService:
             KafkaService.send_to_kafka(user_id, type, answer)
 
     @staticmethod
-    async def process_weather_chat(type: int, user_id: str, calendar_data: dict):
+    def process_weather_chat(type: int, user_id: str, weather_data: dict):
         weather_response = KafkaService.llm.invoke(
             [
                 HumanMessage(
                     content=WEATHER_RESPONSE_TEMPLATE.format(
-                        calendar_data=json.dumps(calendar_data, ensure_ascii=False)
+                        weather_data=json.dumps(weather_data, ensure_ascii=False)
                     )
                 )
             ]
