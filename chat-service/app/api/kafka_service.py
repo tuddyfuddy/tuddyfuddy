@@ -3,7 +3,6 @@ import json
 
 from langchain_core.messages import HumanMessage
 
-from app.api.kafka_service import KafkaService
 from app.core.config import settings
 from langchain_openai import ChatOpenAI
 
@@ -44,7 +43,6 @@ weather_consumer = Consumer(
 weather_consumer.subscribe(["chat-weather-topic"])
 
 
-# 스키마 정의
 class WeatherData(BaseModel):
     x: int
     y: int
@@ -74,7 +72,6 @@ class CalendarMessage(BaseModel):
 
 class KafkaService:
 
-    # Kafka Producer 초기화
     producer_config = {
         "bootstrap.servers": KAFKA_SERVERS,
         "socket.timeout.ms": 1000,
@@ -183,7 +180,8 @@ class KafkaService:
             except Exception as e:
                 logging.error(f"Error processing weather message: {e}")
 
-    #################################################################################
+
+#################################################################################
 
 
 def start_consumers():
