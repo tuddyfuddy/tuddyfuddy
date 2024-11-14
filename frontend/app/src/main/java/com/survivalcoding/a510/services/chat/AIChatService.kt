@@ -4,7 +4,6 @@ import retrofit2.Response
 import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.Body
-import retrofit2.http.Query
 
 /**
  * 채팅 요청을 위한 데이터 클래스

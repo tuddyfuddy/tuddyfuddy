@@ -1,6 +1,5 @@
 package com.survivalcoding.a510.viewmodels
 
-import android.content.Context
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.ViewModel
