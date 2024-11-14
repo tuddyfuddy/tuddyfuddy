@@ -9,7 +9,7 @@ import com.heejuk.tuddyfuddy.contextservice.util.HeaderUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -24,7 +24,7 @@ public class CalendarController {
     private final KafkaProducerService kafkaProducerService;
     private final ChatService chatService;
 
-    @GetMapping
+    @PostMapping
     public CommonResponse<String> getCalendar(
         @RequestHeader HttpHeaders headers,
         @RequestParam("title") String title

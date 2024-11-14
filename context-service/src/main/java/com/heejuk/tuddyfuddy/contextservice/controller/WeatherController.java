@@ -14,7 +14,6 @@ import io.swagger.v3.oas.annotations.Hidden;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -32,7 +31,7 @@ public class WeatherController {
     private final LocationService locationService;
     private final ChatService chatService;
 
-    @GetMapping
+    @PostMapping
     public CommonResponse<String> getWeatherContextData(
         @RequestHeader HttpHeaders headers,
         @RequestParam("latitude") String latitude,
