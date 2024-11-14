@@ -34,6 +34,7 @@ fun TermsAgreementPage(
 
     Column(
         modifier = modifier
+            .background(color = Color.White)
             .fillMaxSize()
             .padding(16.dp)
     ) {

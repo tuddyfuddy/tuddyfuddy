@@ -46,11 +46,6 @@ fun ChatBubble(
     isLoading: Boolean = false,
     chatId: Int,
 ) {
-    val userMessageColor = when (chatId) {
-        2, 4 -> Color(0xFFF2A64E)
-        else -> Color.Yellow
-    }
-
     val dotsColor = when (chatId) {
         2, 4 -> Color(0xFFF2A64E)
         else -> Color(0xFF1428A0)

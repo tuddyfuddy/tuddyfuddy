@@ -46,6 +46,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import android.content.pm.PackageManager
 import androidx.core.content.ContextCompat
 import android.os.Build
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import com.survivalcoding.a510.R
 
 
@@ -77,13 +79,15 @@ fun ChatDetailPage(
     
     // 배경색 결정을 위한 변수조건 설정
     val backgroundColor = when (chatId) {
-        2, 4 -> Color(0x54E0B88A) // 연갈색
-        else -> Color(0x54E3F2FD) // 하늘색
+        2, 4 -> Color(0x54E0B88A) // 연갈색, F 친구들
+        5 -> Color(0x54E3F2FD)    // 하늘색, 단톡방 배경
+        else -> Color(0x54E3F2FD) // 하늘색, T 친구들
     }
 
     val topBarBackgroundColor = when (chatId) {
-        2, 4 -> Color(0x54E0B88A) // 연갈색
-        else -> Color(0xFFE5F4FF) // 조금 더 진한 하늘색
+        2, 4 -> Color(0x54E0B88A) // 연갈색, F 친구들
+        5 -> Color(0xFFE5F4FF)    // 조금 더 진한 하늘색, 단톡방
+        else -> Color(0xFFE5F4FF) // 조금 더 진한 하늘색, T 친구들
     }
 
     // 이미지 선택 launcher
@@ -137,6 +141,7 @@ fun ChatDetailPage(
         }
     }
 
+    // 사용자 화면 체크하는 로직
     DisposableEffect(Unit) {
         ChatService.setActiveChatRoom(chatId)
         viewModel.markAsRead()
@@ -242,11 +247,20 @@ fun ChatDetailPage(
                         onDismissRequest = { showMenu = false }
                     ) {
                         DropdownMenuItem(
+                            modifier = Modifier
+                                .height(20.dp),
                             onClick = {
                                 viewModel.clearChat()
                                 showMenu = false
                             },
-                            text = { Text("채팅기록 삭제") }
+                            text = { Text(
+                                modifier = Modifier
+                                    .offset(x = 5.dp),
+                                text = "채팅기록 삭제",
+                                fontSize = 13.sp,
+                                fontFamily = FontFamily(Font(R.font.eland_choice))
+                            ) }
+
                         )
                     }
                 }
