@@ -14,10 +14,20 @@ private val notoSansKr = FontFamily(
     Font(R.font.notosanskr_regular, FontWeight.Normal),
     Font(R.font.notosanskr_medium, FontWeight.Medium),
     Font(R.font.notosanskr_bold, FontWeight.Bold),
-    Font(R.font.notosanskr_black, FontWeight.Black)
+    Font(R.font.notosanskr_black, FontWeight.Black),
+    Font(R.font.incheon_jaram, FontWeight.Black),
+    Font(R.font.eland_choice, FontWeight.Black),
+    Font(R.font.eland_nice, FontWeight.Black),
 )
 
 val Typography = Typography(
+    titleSmall = TextStyle(
+        fontFamily = FontFamily(Font(R.font.eland_nice)),
+        fontWeight = FontWeight.Normal,
+        fontSize = 16.sp,
+        lineHeight = 24.sp,
+        letterSpacing = 0.5.sp
+    ),
     bodyLarge = TextStyle(
         fontFamily = notoSansKr,
         fontWeight = FontWeight.Normal,
@@ -89,13 +99,13 @@ val Typography = Typography(
         lineHeight = 24.sp,
         letterSpacing = 0.15.sp
     ),
-    titleSmall = TextStyle(
-        fontFamily = notoSansKr,
-        fontWeight = FontWeight.Medium,
-        fontSize = 14.sp,
-        lineHeight = 20.sp,
-        letterSpacing = 0.1.sp
-    ),
+//    titleSmall = TextStyle(
+//        fontFamily = notoSansKr,
+//        fontWeight = FontWeight.Medium,
+//        fontSize = 14.sp,
+//        lineHeight = 20.sp,
+//        letterSpacing = 0.1.sp
+//    ),
     bodyMedium = TextStyle(
         fontFamily = notoSansKr,
         fontWeight = FontWeight.Normal,
