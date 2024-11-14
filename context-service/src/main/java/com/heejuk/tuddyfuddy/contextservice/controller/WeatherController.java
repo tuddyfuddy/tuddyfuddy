@@ -1,9 +1,11 @@
 package com.heejuk.tuddyfuddy.contextservice.controller;
 
 import com.heejuk.tuddyfuddy.contextservice.dto.CommonResponse;
+import com.heejuk.tuddyfuddy.contextservice.dto.kafka.ChatMessageRequest;
 import com.heejuk.tuddyfuddy.contextservice.dto.kafka.KafkaWeatherDto;
 import com.heejuk.tuddyfuddy.contextservice.dto.response.WeatherListResponse;
 import com.heejuk.tuddyfuddy.contextservice.dto.response.WeatherLocationResponse;
+import com.heejuk.tuddyfuddy.contextservice.service.ChatService;
 import com.heejuk.tuddyfuddy.contextservice.service.LocationService;
 import com.heejuk.tuddyfuddy.contextservice.service.WeatherService;
 import com.heejuk.tuddyfuddy.contextservice.service.kafka.KafkaProducerService;
@@ -28,9 +30,10 @@ public class WeatherController {
     private final KafkaProducerService kafkaProducerService;
     private final WeatherService weatherService;
     private final LocationService locationService;
+    private final ChatService chatService;
 
     @GetMapping
-    public CommonResponse<WeatherLocationResponse> getWeatherContextData(
+    public CommonResponse<String> getWeatherContextData(
         @RequestHeader HttpHeaders headers,
         @RequestParam("latitude") String latitude,
         @RequestParam("longitude") String longitude
@@ -48,14 +51,21 @@ public class WeatherController {
                                                                  weathersByLocation.yesterdayWeather())
                                                              .location(location)
                                                              .build();
+        KafkaWeatherDto weatherDto = KafkaWeatherDto.builder()
+                                                    .userId(userId)
+                                                    .data(res)
+                                                    .build();
+        String response = chatService.sendWeatherChat(weatherDto);
 
-        kafkaProducerService.sendWeatherMessage(KafkaWeatherDto.builder()
+        kafkaProducerService.sendChatMessage(ChatMessageRequest.builder()
                                                                .userId(userId)
-                                                               .data(res)
+                                                               .roomId(2)
+                                                               .aiName("Fuddy")
+                                                               .message(response)
                                                                .build());
 
         return CommonResponse.ok("Weather data fetched successfully",
-                                 res
+                                 response
         );
     }
 

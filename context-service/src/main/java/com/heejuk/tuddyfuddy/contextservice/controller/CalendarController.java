@@ -1,7 +1,9 @@
 package com.heejuk.tuddyfuddy.contextservice.controller;
 
 import com.heejuk.tuddyfuddy.contextservice.dto.CommonResponse;
+import com.heejuk.tuddyfuddy.contextservice.dto.kafka.ChatMessageRequest;
 import com.heejuk.tuddyfuddy.contextservice.dto.kafka.KafkaCalendarDto;
+import com.heejuk.tuddyfuddy.contextservice.service.ChatService;
 import com.heejuk.tuddyfuddy.contextservice.service.kafka.KafkaProducerService;
 import com.heejuk.tuddyfuddy.contextservice.util.HeaderUtil;
 import lombok.RequiredArgsConstructor;
@@ -20,18 +22,27 @@ import org.springframework.web.bind.annotation.RestController;
 public class CalendarController {
 
     private final KafkaProducerService kafkaProducerService;
+    private final ChatService chatService;
 
     @GetMapping
-    public CommonResponse<?> getCalendar(
+    public CommonResponse<String> getCalendar(
         @RequestHeader HttpHeaders headers,
         @RequestParam("title") String title
     ) {
         String userId = HeaderUtil.getUserHeaderInfo(headers);
 
-        kafkaProducerService.sendCalendarMessage(KafkaCalendarDto.builder()
-                                                                 .userId(userId)
-                                                                 .todo(title)
-                                                                 .build());
-        return CommonResponse.ok("캘린더 정보 GET");
+        KafkaCalendarDto calendarDto = KafkaCalendarDto.builder()
+                                                       .userId(userId)
+                                                       .todo(title)
+                                                       .build();
+
+        String response = chatService.sendCalendarChat(calendarDto);
+        kafkaProducerService.sendChatMessage(ChatMessageRequest.builder()
+                                                               .userId(userId)
+                                                               .roomId(2)
+                                                               .aiName("Fuddy")
+                                                               .message(response)
+                                                               .build());
+        return CommonResponse.ok("캘린더 정보 GET", response);
     }
 }
