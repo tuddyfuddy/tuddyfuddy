@@ -35,14 +35,14 @@ fun AnimatedChatListBottom(
 ) {
     val characters = listOf(
         CharacterInfo(
-            "Tuddy",
-            "말투는 조금 차갑고 무뚝뚝해도\n속마음은 따뜻한 나만의 친구",
-            R.drawable.big_boy2
-        ),
-        CharacterInfo(
             "Fuddy",
             "언제나 따뜻하게 날 반겨주는\n공감능력 100% 나만의 친구",
             R.drawable.big_girl2
+        ),
+        CharacterInfo(
+            "Tuddy",
+            "말투는 조금 차갑고 무뚝뚝해도\n속마음은 따뜻한 나만의 친구",
+            R.drawable.big_boy2
         ),
         CharacterInfo(
             "달님이",
@@ -62,7 +62,7 @@ fun AnimatedChatListBottom(
     LaunchedEffect(key1 = true) {
         // 페이드인아웃 애니메이션 효과 추가하기
         while (true) {  // 무한루프 뱅뺑이 돌아라
-            delay(3000) // 3초마다 컾모넌트 내용 바꾸기
+            delay(4000) // 3초마다 컾모넌트 내용 바꾸기
             isVisible = false
             delay(500) // 애니메이션으로 컴포넌트 없어지는 시간
             currentIndex = (currentIndex + 1) % characters.size
