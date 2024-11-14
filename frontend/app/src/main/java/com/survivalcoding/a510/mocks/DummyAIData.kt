@@ -9,7 +9,7 @@ object DummyAIData {
             id = 3,
             profileImage = R.drawable.otter,
             name = "달님이",
-            message = "만나서 반가워, 너는 이름이 뭐야?",
+            message = "만나서 반가워, 나는 달님이야.",
             timestamp = "방금 전",
             unreadCount = 1
         ),
@@ -17,7 +17,7 @@ object DummyAIData {
             id = 4,
             profileImage = R.drawable.rabbit,
             name = "햇님이",
-            message = "방가방가!! 나는 햇님이야! 너는 이름이 뭐야~?",
+            message = "방가방가!! 나는 햇님이야!",
             timestamp = "방금 전",
             unreadCount = 1
         ),
@@ -33,7 +33,7 @@ object DummyAIData {
             id = 2,
             profileImage = R.drawable.fuddy,
             name = "Fuddy",
-            message = "하이하이!! 너는 이름이 뭐야?",
+            message = "하이하이!! 나는 fuddy야!!",
             timestamp = "방금 전",
             unreadCount = 1
         ),
@@ -41,7 +41,7 @@ object DummyAIData {
             id = 1,
             profileImage = R.drawable.tuddy,
             name = "Tuddy",
-            message = "반갑다. 내 이름은 Tuddy야 너는?",
+            message = "반갑다. 나는 Tuddy라고 해",
             timestamp = "방금 전",
             unreadCount = 1
         ),
