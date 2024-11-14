@@ -1,8 +1,7 @@
-import json
-
 import httpx
-from confluent_kafka import Producer
 from langchain_core.messages import SystemMessage, HumanMessage
+
+from app.api.kafka_service import KafkaService
 from app.core.logger import setup_logger
 from app.core.config import settings
 from langchain_openai import ChatOpenAI
@@ -11,7 +10,6 @@ from langchain.chains import LLMChain
 from langchain.schema.runnable import RunnablePassthrough
 
 from app.models.templates import (
-    ai_name,
     SYSTEM_MESSAGE_1,
     SYSTEM_MESSAGE_2,
     SYSTEM_MESSAGE_3,
@@ -25,18 +23,6 @@ logging = setup_logger("app")
 
 
 class ChatService:
-
-    # Kafka Producer 초기화
-    producer_config = {
-        "bootstrap.servers": "kafka:9092",
-        "socket.timeout.ms": 1000,
-        "message.timeout.ms": 1000,
-        "retries": 2,
-        "retry.backoff.ms": 100,
-        "request.required.acks": 0,
-        "queue.buffering.max.ms": 0,
-    }
-    producer = Producer(producer_config)
 
     # LLM  초기화
     llm = ChatOpenAI(
@@ -143,26 +129,6 @@ class ChatService:
         # Kafka에 채팅 데이터 전송
         array_anwer = [s.strip() for s in final_answer.split("<br>")]
         for aa in array_anwer:
-            ChatService.send_to_kafka(user_id, type, aa)
+            KafkaService.send_to_kafka(user_id, type, aa)
 
         return {"response": [s.strip() for s in final_answer.split("<br>")]}
-
-    @staticmethod
-    def send_to_kafka(user_id: str, room_id: int, message: str):
-        try:
-            chat_data = {
-                "userId": str(user_id),
-                "roomId": room_id,
-                "aiName": ai_name[room_id],
-                "message": message,
-            }
-
-            ChatService.producer.produce(
-                "chat-notification-topic",
-                value=json.dumps(chat_data).encode("utf-8"),
-                callback=lambda err, msg: (
-                    logging.error(f"Failed to send message: {err}") if err else None
-                ),
-            )
-        except Exception as e:
-            logging.error(f"Failed to send chat data to Kafka (non-critical): {e}")
