@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from py_eureka_client import eureka_client
 from .core.config import settings
 from .api import chat_controller
+from app.api.kafka_service import start_consumers, close_consumers
 from prometheus_fastapi_instrumentator import Instrumentator
 
 import uvicorn
@@ -15,6 +16,7 @@ app = FastAPI(
 app.include_router(chat_controller.router)
 
 Instrumentator().instrument(app).expose(app)
+
 
 async def register_to_eureka():
     # Docker 환경에서는 hostname이 container name이 되어야 함
@@ -47,6 +49,7 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 @app.on_event("startup")
 async def startup_event():
+    start_consumers()
     if not app.openapi_schema:
         openapi_schema = app.openapi()
         openapi_schema["components"]["securitySchemes"] = {
@@ -60,12 +63,12 @@ async def startup_event():
         openapi_schema["security"] = [{"API Header": []}]
         app.openapi_schema = openapi_schema
 
-
     await register_to_eureka()
 
 
 @app.on_event("shutdown")
 async def shutdown_event():
+    close_consumers()
     await eureka_client.stop()
 
 
