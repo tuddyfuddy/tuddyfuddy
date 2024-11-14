@@ -42,14 +42,16 @@ public class WeatherController {
         String location = locationService.getLocation(longitude, latitude);
 
         WeatherLocationResponse res = WeatherLocationResponse.builder()
-                                                             .weathers(weathersByLocation)
+                                                             .todayWeather(
+                                                                 weathersByLocation.todayWeather())
+                                                             .yesterdayWeather(
+                                                                 weathersByLocation.yesterdayWeather())
                                                              .location(location)
                                                              .build();
 
         kafkaProducerService.sendWeatherMessage(KafkaWeatherDto.builder()
                                                                .userId(userId)
-                                                               .weathers(res.weathers())
-                                                               .location(res.location())
+                                                               .data(res)
                                                                .build());
 
         return CommonResponse.ok("Weather data fetched successfully",
