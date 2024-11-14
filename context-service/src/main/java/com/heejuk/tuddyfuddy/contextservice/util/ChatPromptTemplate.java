@@ -31,19 +31,19 @@ public class ChatPromptTemplate {
            - Make sure to add '<br>' between every sentence or phrase, but do not add it at the end of the last sentence
             
         Optional emoji usage (only 50% of responses should include emojis):
-        - 🌧️ (비) - "우산 챙겼어?"
-        - ☀️ (맑음) - "날씨 좋다!"
-        - 🌡️ (기온) - "춥지 않아?"
-        - ⛈️ (악천후) - "조심해서 다녀!"
+        - 🌧️ (비) - 우산 챙겼어?
+        - ☀️ (맑음) - 날씨 좋다!
+        - 🌡️ (기온) - 춥지 않아?
+        - ⛈️ (악천후) - 조심해서 다녀!
             
         Example responses:
         With emoji:
-        - "어! 오늘 양천구에 비 온대! 🌧️ 우산 챙겼어?"
-        - "오늘 날씨 완전 좋다! ☀️ 점심에 같이 산책할래?"
+        - 어! 오늘 양천구에 비 온대! 🌧️ 우산 챙겼어?
+        - 오늘 날씨 완전 좋다! ☀️ 점심에 같이 산책할래?
             
         Without emoji:
-        - "어제보다 기온 많이 떨어졌네... 겉옷 챙겨 입어야겠다"
-        - "오늘 양천구 날씨 진짜 좋다! 밖에 나가서 산책이라도 할래?"
+        - 어제보다 기온 많이 떨어졌네... 겉옷 챙겨 입어야겠다
+        - 오늘 양천구 날씨 진짜 좋다! 밖에 나가서 산책이라도 할래?
             
         Weather data:
         {weather_data}
@@ -80,19 +80,19 @@ public class ChatPromptTemplate {
            - Make sure to add '<br>' between every sentence or phrase, but do not add it at the end of the last sentence
             
         Optional emoji usage (only 50% of responses should include emojis):
-        - 📊 (발표) - "발표 준비 잘 됐어?"
-        - 📝 (시험/과제) - "시험 파이팅!"
-        - 🤝 (미팅) - "미팅 잘 다녀와!"
-        - 📚 (공부) - "열심히 하는 네가 멋져"
+        - 📊 (발표) - 발표 준비 잘 됐어?
+        - 📝 (시험/과제) - 시험 파이팅!
+        - 🤝 (미팅) - 미팅 잘 다녀와!
+        - 📚 (공부) - 열심히 하는 네가 멋져
             
         Example responses:
         With emoji:
-        - "오늘 발표 있다며? 📊 긴장되겠지만 넌 잘 할 수 있어!"
-        - "시험 준비하느라 힘들지? 📝 파이팅하자!"
+        - 오늘 발표 있다며? 📊 긴장되겠지만 넌 잘 할 수 있어!
+        - 시험 준비하느라 힘들지? 📝 파이팅하자!
             
         Without emoji:
-        - "오늘 발표 있는 날이구나! 평소처럼만 해도 충분해"
-        - "시험 준비하느라 바쁘지? 잘 할 수 있을 거야"
+        - 오늘 발표 있는 날이구나! 평소처럼만 해도 충분해
+        - 시험 준비하느라 바쁘지? 잘 할 수 있을 거야
             
         Calendar data:
         {calendar_data}
