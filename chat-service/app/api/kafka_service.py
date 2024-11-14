@@ -1,5 +1,17 @@
-import json
 import threading
+import json
+
+from langchain_core.messages import HumanMessage
+
+from app.api.kafka_service import KafkaService
+from app.core.config import settings
+from langchain_openai import ChatOpenAI
+
+from app.models.templates import (
+    WEATHER_RESPONSE_TEMPLATE,
+    CALENDAR_RESPONSE_TEMPLATE,
+)
+
 
 from confluent_kafka import Producer, Consumer
 from app.core.logger import setup_logger
@@ -45,14 +57,14 @@ class WeatherData(BaseModel):
 
 
 class Weathers(BaseModel):
+    location: str
     todayWeather: WeatherData
     yesterdayWeather: WeatherData
 
 
 class WeatherMessage(BaseModel):
     userId: str
-    location: str
-    weathers: Weathers
+    data: Weathers
 
 
 class CalendarMessage(BaseModel):
@@ -74,6 +86,14 @@ class KafkaService:
     }
     producer = Producer(producer_config)
 
+    # LLM  초기화
+    llm = ChatOpenAI(
+        api_key=settings.GPT_KEY,
+        model_name="gpt-4o-mini",
+        temperature=0.8,
+    )
+
+    ########################################################################################
     @staticmethod
     def send_to_kafka(user_id: str, room_id: int, message: str):
         try:
@@ -97,6 +117,44 @@ class KafkaService:
     ########################################################################################
 
     @staticmethod
+    async def process_calendar_chat(type: int, user_id: str, calendar_data: dict):
+        calendar_response = KafkaService.llm.invoke(
+            [
+                HumanMessage(
+                    content=CALENDAR_RESPONSE_TEMPLATE.format(
+                        calendar_data=json.dumps(calendar_data, ensure_ascii=False)
+                    )
+                )
+            ]
+        ).content
+
+        logging.info(f">>>>>>> (일정 응답) {calendar_response}")
+
+        array_answer = [s.strip() for s in calendar_response.split("<br>")]
+        for answer in array_answer:
+            KafkaService.send_to_kafka(user_id, type, answer)
+
+    @staticmethod
+    async def process_weather_chat(type: int, user_id: str, calendar_data: dict):
+        weather_response = KafkaService.llm.invoke(
+            [
+                HumanMessage(
+                    content=WEATHER_RESPONSE_TEMPLATE.format(
+                        calendar_data=json.dumps(calendar_data, ensure_ascii=False)
+                    )
+                )
+            ]
+        ).content
+
+        logging.info(f">>>>>>> (날씨 응답) {weather_response}")
+
+        array_answer = [s.strip() for s in weather_response.split("<br>")]
+        for answer in array_answer:
+            KafkaService.send_to_kafka(user_id, type, answer)
+
+    ########################################################################################
+
+    @staticmethod
     def consume_calendar_messages():
         """캘린더 메시지 소비"""
         while True:
@@ -105,7 +163,9 @@ class KafkaService:
                 if msg and not msg.error():
                     value = json.loads(msg.value().decode("utf-8"))
                     logging.info(f"캘린더 메시지 도착: {value}")
-                    # TODO 캘린더 메시지 발송 로직 구현
+                    KafkaService.process_calendar_chat(
+                        2, value["userId"], value["data"]
+                    )
             except Exception as e:
                 logging.error(f"Error processing calendar message: {e}")
 
@@ -118,7 +178,8 @@ class KafkaService:
                 if msg and not msg.error():
                     value = json.loads(msg.value().decode("utf-8"))
                     logging.info(f"날씨 메시지 도착: {value}")
-                    # TODO 날씨 메시지 발송 로직 구현
+                    KafkaService.process_weather_chat(2, value["userId"], value["todo"])
+
             except Exception as e:
                 logging.error(f"Error processing weather message: {e}")
 
