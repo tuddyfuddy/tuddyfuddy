@@ -2,6 +2,7 @@ package com.heejuk.tuddyfuddy.contextservice.service.kafka;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.heejuk.tuddyfuddy.contextservice.dto.kafka.ChatMessageRequest;
 import com.heejuk.tuddyfuddy.contextservice.dto.kafka.KafkaCalendarDto;
 import com.heejuk.tuddyfuddy.contextservice.dto.kafka.KafkaWeatherDto;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +36,12 @@ public class KafkaProducerService {
             log.error("Failed to serialize message", e);
             throw new RuntimeException("Message serialization failed", e);
         }
+    }
+
+    public void sendChatMessage(ChatMessageRequest request) {
+        String topic = "chat-notification-topic";
+
+        sendMessage(topic, request);
     }
 
     public void sendWeatherMessage(
