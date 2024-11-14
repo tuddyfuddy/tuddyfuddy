@@ -1,7 +1,6 @@
 package com.survivalcoding.a510.pages
 
 import android.app.Application
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -16,21 +15,15 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.survivalcoding.a510.components.ChatListItem
-import com.survivalcoding.a510.components.TopBar
-import com.survivalcoding.a510.components.CircleCharacter
-import com.survivalcoding.a510.components.SpeechBubble
 import com.survivalcoding.a510.routers.Routes
 import com.survivalcoding.a510.utils.TimeUtils
 import com.survivalcoding.a510.viewmodels.ChatListViewModel
 import com.survivalcoding.a510.viewmodels.ChatListViewModelFactory
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import com.survivalcoding.a510.R
 import com.survivalcoding.a510.components.AnimatedChatListBottom
-import com.survivalcoding.a510.components.ChatListBottom
 
 @Composable
 fun ChatListPage(

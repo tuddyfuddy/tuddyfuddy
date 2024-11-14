@@ -29,12 +29,8 @@ import com.survivalcoding.a510.mocks.DummyAIData
 import androidx.compose.foundation.layout.imePadding
 import com.survivalcoding.a510.services.chat.ChatService
 import androidx.compose.animation.*
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.ui.text.input.ImeAction
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.ui.platform.LocalConfiguration
