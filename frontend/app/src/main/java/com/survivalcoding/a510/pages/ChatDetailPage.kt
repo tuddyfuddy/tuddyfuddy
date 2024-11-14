@@ -46,6 +46,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import android.content.pm.PackageManager
 import androidx.core.content.ContextCompat
 import android.os.Build
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import com.survivalcoding.a510.R
 
 
@@ -245,11 +247,20 @@ fun ChatDetailPage(
                         onDismissRequest = { showMenu = false }
                     ) {
                         DropdownMenuItem(
+                            modifier = Modifier
+                                .height(20.dp),
                             onClick = {
                                 viewModel.clearChat()
                                 showMenu = false
                             },
-                            text = { Text("채팅기록 삭제") }
+                            text = { Text(
+                                modifier = Modifier
+                                    .offset(x = 5.dp),
+                                text = "채팅기록 삭제",
+                                fontSize = 13.sp,
+                                fontFamily = FontFamily(Font(R.font.eland_choice))
+                            ) }
+
                         )
                     }
                 }
