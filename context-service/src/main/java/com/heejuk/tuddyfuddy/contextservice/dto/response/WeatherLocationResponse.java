@@ -5,7 +5,8 @@ import lombok.Builder;
 @Builder
 public record WeatherLocationResponse(
     String location,
-    WeatherListResponse weathers
+    WeatherResponse todayWeather,
+    WeatherResponse yesterdayWeather
 ) {
 
 }
