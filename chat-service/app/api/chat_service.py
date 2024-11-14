@@ -110,7 +110,7 @@ class ChatService:
             ),
         ]
         answer = ChatService.llm.invoke(messages).content
-        logging.info(f">>>>>>> (수정 전) {answer}")
+        # logging.info(f">>>>>>> (수정 전) {answer}")
 
         # 두 번째 응답 생성
         validation_input = {
@@ -124,7 +124,7 @@ class ChatService:
         validation_result = await validation_chain.ainvoke(validation_input)
 
         final_answer = validation_result["validation"].content
-        logging.info(f">>>>>>> (수정 후) {final_answer}")
+        # logging.info(f">>>>>>> (수정 후) {final_answer}")
 
         # Kafka에 채팅 데이터 전송
         array_anwer = [s.strip() for s in final_answer.split("<br>")]
