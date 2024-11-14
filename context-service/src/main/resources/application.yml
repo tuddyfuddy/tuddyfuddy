@@ -17,6 +17,14 @@ spring:
           max-wait: -1ms
           max-idle: 8
           min-idle: 0
+  ai:
+    openai:
+      api-key: ${SPRING_AI_OPENAI_API_KEY}
+      chat:
+        options:
+          model: gpt-4o-mini
+          temperature: 0.7
+
   jackson:
     time-zone: Asia/Seoul
   kafka:
