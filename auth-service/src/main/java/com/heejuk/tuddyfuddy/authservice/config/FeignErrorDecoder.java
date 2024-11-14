@@ -16,45 +16,44 @@ public class FeignErrorDecoder implements ErrorDecoder {
 
     @Override
     public Exception decode(String methodKey, Response response) {
-        log.error("Error occurred during feign client call: {} {}",
+        log.error("Feign 클라이언트 호출 중 에러 발생: {} {}",
             methodKey, response.status());
 
         try {
+            // 에러 응답 본문 읽기
             String errorBody = getErrorMessage(response);
-            log.error("Error body: {}", errorBody);
+            log.error("에러 응답 본문: {}", errorBody);
 
+            // HTTP 상태 코드별 처리
             if (response.status() >= 400 && response.status() <= 499) {
                 return new FeignClientException(
-                    "Client error occurred during external service call: " + errorBody,
+                    String.format("클라이언트 에러 발생 (%d): %s",
+                        response.status(), errorBody),
                     response.status()
                 );
             }
 
             if (response.status() >= 500 && response.status() <= 599) {
                 return new FeignServerException(
-                    "Server error occurred during external service call: " + errorBody,
+                    String.format("서버 에러 발생 (%d): %s",
+                        response.status(), errorBody),
                     response.status()
                 );
             }
 
-            return new Exception("Unknown error occurred: " + errorBody);
+            return new Exception("알 수 없는 에러: " + errorBody);
 
         } catch (Exception e) {
-            log.error("Error decoding response", e);
-            return new Exception("Error processing error response");
+            log.error("에러 응답 처리 중 예외 발생", e);
+            return new Exception("에러 응답 처리 실패");
         }
     }
 
-    private String getErrorMessage(Response response) {
-        try {
-            if (response.body() == null) {
-                return "No error body";
-            }
-            return new String(response.body().asInputStream().readAllBytes(),
-                StandardCharsets.UTF_8);
-        } catch (IOException e) {
-            log.error("Error reading error message", e);
-            return "Error reading error message";
+    private String getErrorMessage(Response response) throws IOException {
+        if (response.body() == null) {
+            return "응답 본문 없음";
         }
+        return new String(response.body().asInputStream().readAllBytes(),
+            StandardCharsets.UTF_8);
     }
 }
