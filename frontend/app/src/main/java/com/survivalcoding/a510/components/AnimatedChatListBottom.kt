@@ -41,7 +41,7 @@ fun AnimatedChatListBottom(
         ),
         CharacterInfo(
             "햇님이",
-            "햇살처럼 날 따뜻하게 만들어주는\n복실복실한 나만의 토끼 친구",
+            "햇살처럼 날 따뜻하게 만들어주는\n나만의 복실복실 토끼 친구",
             R.drawable.rabbit2
         ),
     )
