@@ -1,11 +1,8 @@
 package com.heejuk.tuddyfuddy.notificationservice.service;
 
-import com.google.firebase.messaging.AndroidConfig;
-import com.google.firebase.messaging.AndroidNotification;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.FirebaseMessagingException;
 import com.google.firebase.messaging.Message;
-import com.google.firebase.messaging.Notification;
 import com.heejuk.tuddyfuddy.notificationservice.dto.request.ChatMessageRequest;
 import com.heejuk.tuddyfuddy.notificationservice.entity.AiInfo;
 import com.heejuk.tuddyfuddy.notificationservice.exception.ErrorCode;
@@ -57,27 +54,15 @@ public class NotificationService {
             Map<String, String> data = new HashMap<>();
             data.put("aiName", aiInfo.getAiName());
             data.put("roomId", String.valueOf(request.roomId()));
-            data.put("imageUrl", aiInfo.getImageUrl());
+            data.put("icon", getIconNameFromUrl(aiInfo.getImageUrl()));
             data.put("messageType", "CHAT");
+            data.put("message", request.message());
+            data.put("color", "#7E57C2");
             log.debug("알림 데이터 설정 완료 - data: {}", data);
 
             Message message = Message.builder()
                 .setToken(fcmToken)
-                .setNotification(Notification.builder()
-                    .setTitle(aiInfo.getAiName() + "의 메시지")
-                    .setBody(request.message())
-                    .build())
-                .setAndroidConfig(AndroidConfig.builder()
-                    .setPriority(AndroidConfig.Priority.HIGH)
-                    .setTtl(86400 * 1000)
-                    .setNotification(AndroidNotification.builder()
-                        .setIcon(getIconNameFromUrl(aiInfo.getImageUrl()))
-                        .setColor("#7E57C2")
-                        .setChannelId("chat_notifications")
-                        .setClickAction("CHAT_ACTIVITY")
-                        .build())
-                    .build())
-                .putAllData(data)
+                .putAllData(data)  // data만 전송
                 .build();
             log.debug("FCM 메시지 생성 완료");
 
