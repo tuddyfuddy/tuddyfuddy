@@ -161,7 +161,7 @@ class KafkaService:
                     value = json.loads(msg.value().decode("utf-8"))
                     logging.info(f"캘린더 메시지 도착: {value}")
                     KafkaService.process_calendar_chat(
-                        2, value["userId"], value["data"]
+                        2, value["userId"], value["todo"]
                     )
             except Exception as e:
                 logging.error(f"Error processing calendar message: {e}")
@@ -175,7 +175,7 @@ class KafkaService:
                 if msg and not msg.error():
                     value = json.loads(msg.value().decode("utf-8"))
                     logging.info(f"날씨 메시지 도착: {value}")
-                    KafkaService.process_weather_chat(2, value["userId"], value["todo"])
+                    KafkaService.process_weather_chat(2, value["userId"], value["data"])
 
             except Exception as e:
                 logging.error(f"Error processing weather message: {e}")
