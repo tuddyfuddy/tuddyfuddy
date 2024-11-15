@@ -56,7 +56,6 @@ class ChatService:
         formatted_user_template = USER_MESSAGE_TEMPLATE.format(
             max_response_length=max_response_length,
             history="{history}",
-            relevant_info="no",
             emotion="{emotion}",
             message="{message}",
         )
@@ -74,7 +73,7 @@ class ChatService:
             return_messages=True,
             output_key="answer",
             input_key="message",
-            k=100,
+            k=50,
         )
 
         # 첫 번째 프롬프트
@@ -87,7 +86,6 @@ class ChatService:
             input_variables=[
                 "max_response_length",
                 "history",
-                "relevant_info",
                 "emotion",
                 "message",
                 "answer",
@@ -125,7 +123,6 @@ class ChatService:
         chain_input = {
             "max_response_length": max_response_length,
             "history": formatted_history,
-            "relevant_info": "no",
             "emotion": emotion,
             "message": message,
         }
