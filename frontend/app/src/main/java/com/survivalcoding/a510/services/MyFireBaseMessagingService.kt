@@ -109,7 +109,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
                             timestamp = System.currentTimeMillis()
                         )
 
-                        // 현재 활성화된 채팅방 ID 가져오기
+                        // 현재 사용자가 보고 있는 화면의 채팅방 ID 가져오기
                         val currentActiveChatRoom = ChatService.getActiveChatRoom()
 
                         // 현재 사용자가 해당 채팅방을 보고있지 않다면 읽지 않은 메시지 수 증가
