@@ -53,7 +53,7 @@ class KafkaService:
                 ),
             )
 
-            logging.info(f"Sending message to Kafka: {chat_data}")
+            # logging.info(f"Sending message to Kafka: {chat_data}")
         except Exception as e:
             logging.error(f"Failed to send chat data to Kafka (non-critical): {e}")
 

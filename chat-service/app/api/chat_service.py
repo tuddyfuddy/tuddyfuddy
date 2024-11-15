@@ -11,6 +11,7 @@ from langchain.prompts import PromptTemplate
 from langchain.schema.runnable import RunnablePassthrough
 
 from app.models.templates import (
+    ai_name,
     SYSTEM_MESSAGE_1,
     SYSTEM_MESSAGE_2,
     SYSTEM_MESSAGE_3,
@@ -31,13 +32,37 @@ class ChatService:
     )
 
     @staticmethod
-    def create_chat_chain(system_message: str, user_id: str, room_id: int):
-        """전체 프로세스를 하나의 체인으로 결합"""
-        llm = ChatService.llm
+    async def process_chat(room_id: int, user_id: str, message: str):
+        # 감정 분석
+        emotion = await MessageProcessor.get_emotion(message)
+        logging.info(f">>>>>>> ({emotion}) {message}")
 
-        # Redis 메모리 설정 - user_id와 room_id로 session 구분
+        # LLM 설정
+        message_length = len(message)
+        max_response_length = MessageProcessor.calculate_response_length(message_length)
+
+        # room_id에 따른 system_message 선택
+        system_message = {
+            1: SYSTEM_MESSAGE_1,
+            2: SYSTEM_MESSAGE_2,
+            3: SYSTEM_MESSAGE_3,
+            4: SYSTEM_MESSAGE_4,
+        }.get(room_id, SYSTEM_MESSAGE_1)
+
+        # format을 사용하여 값 치환
+        formatted_system_message = system_message.format(
+            max_response_length=max_response_length
+        )
+        formatted_user_template = USER_MESSAGE_TEMPLATE.format(
+            max_response_length=max_response_length,
+            history="{history}",
+            emotion="{emotion}",
+            message="{message}",
+        )
+
+        # Redis 메모리 설정
         message_history = RedisChatMessageHistory(
-            session_id=f"chat:{user_id}:{room_id}",  # 채팅방별로 구분
+            session_id=f"chat:{user_id}:{room_id}",
             url=settings.REDIS_URL,
             ttl=604800,
         )
@@ -48,12 +73,12 @@ class ChatService:
             return_messages=True,
             output_key="answer",
             input_key="message",
-            k=100,
+            k=50,
         )
 
         # 첫 번째 프롬프트
         first_prompt = ChatPromptTemplate.from_messages(
-            [("system", system_message), ("human", USER_MESSAGE_TEMPLATE)]
+            [("system", formatted_system_message), ("human", formatted_user_template)]
         )
 
         # 두 번째 프롬프트
@@ -61,7 +86,6 @@ class ChatService:
             input_variables=[
                 "max_response_length",
                 "history",
-                "relevant_info",
                 "emotion",
                 "message",
                 "answer",
@@ -74,7 +98,7 @@ class ChatService:
             RunnablePassthrough()
             | {
                 "original_input": RunnablePassthrough(),
-                "first_response": first_prompt | llm,
+                "first_response": first_prompt | ChatService.llm,
             }
             | (
                 lambda x: {
@@ -83,11 +107,43 @@ class ChatService:
                 }
             )
             | validation_prompt
-            | llm
+            | ChatService.llm
             | (lambda x: x.content)
         )
 
-        return chain, memory
+        # 대화 기록 불러오기
+        history = memory.load_memory_variables({})["history"]
+        if history:
+            formatted_history = "\n".join([msg.content for msg in history])
+        else:
+            formatted_history = "no"
+        logging.info(f">>>>>>> Current History: {formatted_history}")
+
+        # 응답 생성
+        chain_input = {
+            "max_response_length": max_response_length,
+            "history": formatted_history,
+            "emotion": emotion,
+            "message": message,
+        }
+        logging.info(f">>>>>>> Chain Input: {chain_input}")
+
+        answer = await chain.ainvoke(chain_input)
+        memory.save_context(
+            {"message": f"user: {message}"}, {"answer": f"{ai_name[room_id]}: {answer}"}
+        )
+
+        logging.info(f">>>>>>> {answer}")
+
+        # Kafka에 채팅 데이터 전송
+        array_anwer = [s.strip() for s in answer.split("<br>")]
+        for aa in array_anwer:
+            KafkaService.send_to_kafka(user_id, room_id, aa)
+
+        return {"response": array_anwer}
+
+
+class MessageProcessor:
 
     @staticmethod
     def calculate_response_length(message_length: int) -> int:
@@ -117,49 +173,3 @@ class ChatService:
             except Exception as e:
                 logging.error(f"Error calling emotion API: {e}")
                 return "기타"
-
-    @staticmethod
-    async def process_chat(room_id: int, user_id: str, message: str):
-        # 감정 분석
-        emotion = await ChatService.get_emotion(message)
-        logging.info(f">>>>>>> ({emotion}) {message}")
-
-        # LLM 설정
-        message_length = len(message)
-        max_response_length = ChatService.calculate_response_length(message_length)
-
-        # 체인 생성
-        system_message = {
-            1: SYSTEM_MESSAGE_1,
-            2: SYSTEM_MESSAGE_2,
-            3: SYSTEM_MESSAGE_3,
-            4: SYSTEM_MESSAGE_4,
-        }.get(room_id, SYSTEM_MESSAGE_1)
-
-        chain, memory = ChatService.create_chat_chain(system_message, user_id, room_id)
-
-        history = memory.load_memory_variables({})["history"]
-        logging.info(f">>>>>>> Current History: {history}")
-        if not history:
-            history = "no"
-
-        # 응답 생성
-        chain_input = {
-            "max_response_length": max_response_length,
-            "history": history,
-            "relevant_info": "no",
-            "emotion": emotion,
-            "message": message,
-        }
-
-        answer = await chain.ainvoke(chain_input)
-        memory.save_context({"message": message}, {"answer": answer})
-
-        logging.info(f">>>>>>> {answer}")
-
-        # Kafka에 채팅 데이터 전송
-        array_anwer = [s.strip() for s in answer.split("<br>")]
-        for aa in array_anwer:
-            KafkaService.send_to_kafka(user_id, room_id, aa)
-
-        return {"response": array_anwer}
