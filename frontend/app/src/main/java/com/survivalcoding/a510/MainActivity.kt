@@ -8,6 +8,7 @@ import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import com.survivalcoding.a510.ui.theme.A510Theme
 import androidx.navigation.compose.rememberNavController
@@ -51,6 +52,24 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
                 // 인증 상태 관찰
                 val authState by viewModel.authState.collectAsState()
+
+                // 알림으로부터의 시작 처리
+                LaunchedEffect(Unit) {
+                    if (intent?.getBooleanExtra("fromNotification", false) == true) {
+                        val chatRoomId = intent.getIntExtra("chatRoomId", -1)
+                        if (chatRoomId != -1) {
+                            if (authState is AuthState.Success) {
+                                // 먼저 채팅 리스트로 이동하고, 그 다음 채팅방으로 이동
+                                navController.navigate(Routes.CHAT_LIST) {
+                                    // 시작 화면까지 모두 제거
+                                    popUpTo(Routes.WELCOME_PAGE) { inclusive = true }
+                                }
+                                // 채팅방으로 이동
+                                navController.navigate(Routes.chatDetail(chatRoomId))
+                            }
+                        }
+                    }
+                }
 
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     // 로그인 상태 확인
