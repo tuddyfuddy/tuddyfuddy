@@ -25,6 +25,8 @@ import com.survivalcoding.a510.utils.TimeUtils
 import java.io.File
 import androidx.compose.runtime.remember
 import com.survivalcoding.a510.utils.ImageUtils
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 
 @Composable
 fun ChatBubble(
@@ -141,6 +143,8 @@ fun ChatBubble(
 }
 
 
+
+
 @Composable
 fun MessageBubble(
     text: String,
@@ -208,33 +212,48 @@ fun MessageBubble(
                 )
         ) {
             if (isImage && imageUrl != null) {
-
-                Log.d("ChatBubble", "저장한 이미지 파일 이름: $imageUrl")
-
+                // 사용자가 보낸 이미지는 로컬 저장소에서 파일가져와서 보여주
+                if (!isAiMessage) {
+                    Log.d("ChatBubble", "저장한 이미지 파일 이름: $imageUrl")
                     val context = LocalContext.current
                     val directory = context.getDir("images", Context.MODE_PRIVATE)
-                    val imageFile = File(directory, imageUrl)  // 파일 이름으로 전체 경로 생성
+                    val imageFile = File(directory, imageUrl)
 
                     Log.d("ChatBubble", "이미지 절대 경로: ${imageFile.absolutePath}")
                     Log.d("ChatBubble", "이미지 파일 있는지 체크하는거: ${imageFile.exists()}")
 
+                    if (imageFile.exists()) {
+                        val bitmap = remember(imageUrl) {
+                            ImageUtils.loadAndRotateImage(imageFile)
+                        }
 
-                if (imageFile.exists()) {
-                    val bitmap = remember(imageUrl) {
-                        ImageUtils.loadAndRotateImage(imageFile)
+                        bitmap?.let {
+                            Image(
+                                bitmap = it,
+                                contentDescription = "Shared image",
+                                modifier = Modifier
+                                    .widthIn(max = 800.dp)
+                                    .heightIn(max = 800.dp)
+                                    .clip(RoundedCornerShape(10.dp)),
+                                contentScale = ContentScale.Inside
+                            )
+                        }
                     }
-
-                    bitmap?.let {
-                        Image(
-                            bitmap = it,
-                            contentDescription = "Shared image",
-                            modifier = Modifier
-                                .widthIn(max = 800.dp)
-                                .heightIn(max = 800.dp)
-                                .clip(RoundedCornerShape(10.dp)),
-                            contentScale = ContentScale.Inside
-                        )
-                    }
+                } else {
+                    // AI가 생성한 이미지는 URL에서 가져와서 보여주기
+                    Log.d("ChatBubble", "AI 생성 이미지 URL로 로드: $imageUrl")
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(imageUrl)
+                            .crossfade(true)
+                            .build(),
+                        contentDescription = "Generated image",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .aspectRatio(1f)
+                            .clip(RoundedCornerShape(10.dp)),
+                        contentScale = ContentScale.Crop
+                    )
                 }
             } else {
                 HighlightedText(
