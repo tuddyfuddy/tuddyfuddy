@@ -3,6 +3,7 @@ package com.survivalcoding.a510.services.chat
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
+import android.content.ContentValues.TAG
 import android.content.Context
 import android.content.Intent
 import android.os.Build
@@ -58,7 +59,49 @@ class ChatService : Service() {
     private fun handleChatRequest(roomId: Int, content: String, loadingMessageId: Long?) {
         serviceScope.launch {
             try {
-                // TODO roomId가 5(단톡방)이 아니면 그대로 type에 roomId 보내고, roomId가 5이면 3,4에 보내기
+                // 이미지 생성 요청 확인
+                val imageRegex = Regex("(사진|이미지).*(보여|보내|생성)줘$")
+                if (imageRegex.find(content) != null) {
+                    val imagePrompt = content.replace(imageRegex, "").trim()
+                    Log.d(TAG, "이미지 생성 요청 감지: $imagePrompt")
+
+                    try {
+                        // 이미지 생성 요청
+                        val imageResponse = ImageMakerService.generateImage(imagePrompt)
+                        Log.d(TAG, "이미지 생성 응답: ${imageResponse.isSuccessful}")
+
+                        if (imageResponse.isSuccessful && imageResponse.body() != null) {
+                            // 로딩 메시지 삭제
+                            loadingMessageId?.let { id ->
+                                messageDao.deleteMessageById(id)
+                            }
+
+                            val imageUrl = imageResponse.body()!!.result
+                            Log.d(TAG, "생성된 이미지 URL: $imageUrl")
+
+                            // 이미지 URL을 포함한 AI 메시지 저장
+                            messageDao.insertMessage(
+                                ChatMessage(
+                                    roomId = roomId,
+                                    content = "",  // 이미지일 때는 빈 문자열
+                                    isAiMessage = true,
+                                    isImage = true,  // 이미지임을 표시
+                                    imageUrl = imageUrl  // 이미지 URL 저장
+                                )
+                            )
+
+                            // ChatInfo 업데이트
+                            chatInfoDao.updateLastMessage(
+                                chatId = roomId,
+                                message = "친구가 사진을 보냈습니다.",
+                                timestamp = System.currentTimeMillis()
+                            )
+                        }
+                    } catch (e: Exception) {
+                        Log.e(TAG, "이미지 생성 실패", e)
+                        handleError(roomId, "이미지 생성에 실패했습니다. 다시 시도해주세요.")
+                    }
+                }
 
                 // 디버그용 로그
                 Log.d("ChatService", "받은 loadingMessageId: $loadingMessageId")
