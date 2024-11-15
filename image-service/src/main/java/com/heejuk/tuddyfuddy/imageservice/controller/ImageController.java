@@ -4,6 +4,7 @@ import com.heejuk.tuddyfuddy.imageservice.dto.CommonResponse;
 import com.heejuk.tuddyfuddy.imageservice.dto.request.ImageCreateRequest;
 import com.heejuk.tuddyfuddy.imageservice.dto.response.ImageAnalysisResponse;
 import com.heejuk.tuddyfuddy.imageservice.service.ImageService;
+import com.heejuk.tuddyfuddy.imageservice.service.TranslationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.concurrent.CompletableFuture;
@@ -26,6 +27,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class ImageController {
 
     private final ImageService imageService;
+    private final TranslationService translationService;
 
     @Operation(
         summary = "이미지 분석",
@@ -110,6 +112,29 @@ public class ImageController {
         long startTime = System.currentTimeMillis();
 
         String imageUrl = imageService.generateImage(request);
+
+        long endTime = System.currentTimeMillis();
+        log.info("전체 처리 소요시간: {}초", (endTime - startTime) / 1000.0);
+
+        return CommonResponse.ok("이미지 생성 완료", imageUrl);
+    }
+
+    @Operation(
+        summary = "이미지 생성 (번역 + 갈덕이형꺼 API)",
+        description = "GPT 번역 후, ???에게 프롬프트를 넣어서 이미지를 생성해 S3에 넣고 해당 이미지 URL 을 반환합니다."
+    )
+    @PostMapping("/ai/mix")
+    public CommonResponse<String> generateImageWithTranslation(
+        @RequestBody ImageCreateRequest request
+    ) {
+        log.info("[이미지 생성 - 번역 전략]");
+        long startTime = System.currentTimeMillis();
+        log.info("번역 전 : {}", request.text());
+        String translated = translationService.translateKoreanToEnglish(request.text());
+        log.info("번역 후 : {}", translated);
+        String imageUrl = imageService.generateImage(ImageCreateRequest.builder()
+                                                                       .text(translated)
+                                                                       .build());
 
         long endTime = System.currentTimeMillis();
         log.info("전체 처리 소요시간: {}초", (endTime - startTime) / 1000.0);
