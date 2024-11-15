@@ -40,3 +40,4 @@ faiss-cpu
 prometheus-fastapi-instrumentator
 six
 confluent-kafka
+redis
