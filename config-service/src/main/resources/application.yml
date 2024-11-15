@@ -6,26 +6,25 @@ spring:
     name: config-service
 
   profiles:
-    active: native
-
+    active: awss3
   cloud:
     config:
       server:
-        native:
-          search-locations: s3://${AWS_BUCKET_NAME}/config  # S3 버킷 내 구성 파일의 경로
-
-    aws:
-      region:
-        static: ${AWS_REGION}
-      credentials:
-        access-key: ${AWS_ACCESS_KEY}
-        secret-key: ${AWS_SECRET_KEY}
+        awss3:
+          region: ${AWS_REGION}
+          bucket: ${AWS_BUCKET_NAME}
+    bus:
+      enabled: true
+      refresh:
+        enabled: true
+      kafka:
+        bootstrap-servers: ${KAFKA_HOST}:${KAFKA_PORT}
 
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,prometheus
+        include: health,info,prometheus,busrefresh
   metrics:
     export:
       prometheus:
@@ -35,5 +34,8 @@ logging:
   level:
     org.springframework.web: "info"
     org.hibernate: "info"
+    org.springframework.cloud.config: DEBUG
+    org.springframework.cloud.aws: DEBUG
+    com.amazonaws: DEBUG
   file:
     name: logs/config-service/application.log
