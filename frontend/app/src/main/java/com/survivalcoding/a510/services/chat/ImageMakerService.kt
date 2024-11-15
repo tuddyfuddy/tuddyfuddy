@@ -17,7 +17,7 @@ data class ImageGenerationResponse(
 )
 
 interface ImageGenerationService {
-    @POST("images/ai/gpt")
+    @POST("images/ai/mix")
     suspend fun generateImage(
         @Body request: ImageGenerationRequest
     ): Response<ImageGenerationResponse>
