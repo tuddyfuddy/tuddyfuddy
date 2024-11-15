@@ -27,7 +27,7 @@ class ChatService:
     llm = ChatOpenAI(
         api_key=settings.GPT_KEY,
         model_name="gpt-4o-mini",
-        temperature=0.4,
+        temperature=0.8,
     )
 
     @staticmethod
@@ -162,4 +162,4 @@ class ChatService:
         for aa in array_anwer:
             KafkaService.send_to_kafka(user_id, room_id, aa)
 
-        return array_anwer
+        return {"response": array_anwer}
