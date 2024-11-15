@@ -1,10 +1,14 @@
 package com.heejuk.tuddyfuddy.imageservice.service;
 
+import com.heejuk.tuddyfuddy.imageservice.client.ImageCreateAiClient;
 import com.heejuk.tuddyfuddy.imageservice.client.ImageDownloadClient;
 import com.heejuk.tuddyfuddy.imageservice.config.CustomMultipartFile;
+import com.heejuk.tuddyfuddy.imageservice.dto.request.ImageCreateRequest;
 import com.heejuk.tuddyfuddy.imageservice.util.S3Service;
 import java.io.IOException;
 import java.net.URI;
+import java.util.Base64;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
@@ -25,6 +29,8 @@ public class ImageService {
 
     private final ChatClient chatClient;
     private final ImageDownloadClient imageDownloadClient;
+    private final ImageCreateAiClient aiClient;
+
     private final S3Service s3Service;
     private final OpenAiImageModel imageModel;
 
@@ -89,6 +95,39 @@ public class ImageService {
             log.error("이미지 생성 중 오류 발생", e);
             throw new RuntimeException("이미지 생성 실패", e);
         }
+    }
+
+    public String generateImage(ImageCreateRequest request) {
+        try {
+            // 1. AI 서버에서 base64 문자열 받기
+            Object response = aiClient.createImage(request);
+            log.info("이미지 생성 GPU 서버에서 받기 완료");
+            // 1.1 내부에서 image 값만 추출해오기
+            String base64Image = extractBase64FromResponse(response);
+            log.info("이미지 값 추출 완료");
+            // 2. base64 디코딩하여 byte array 로 변환
+            byte[] imageByteArray = Base64.getDecoder()
+                                          .decode(base64Image);
+            log.info("byte array 변환 완료");
+            // 3. multipart 로 변환
+            MultipartFile multipartFile = new CustomMultipartFile(imageByteArray, "generated.png",
+                                                                  "image/png");
+            log.info("Multipart 로 변환 완료");
+            // 4. s3에 업로드
+            return s3Service.uploadImage(multipartFile);
+        } catch (Exception e) {
+            log.error("이미지 생성 중 오류 발생", e);
+            throw new RuntimeException("이미지 생성 실패", e);
+        }
+    }
+
+    private String extractBase64FromResponse(Object response) {
+        // response가 Map 형태라고 가정
+        if (response instanceof Map) {
+            Map<String, Object> responseMap = (Map<String, Object>) response;
+            return (String) responseMap.get("image");
+        }
+        throw new RuntimeException("Invalid response format");
     }
 
     /**

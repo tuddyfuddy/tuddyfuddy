@@ -1,6 +1,5 @@
 package com.heejuk.tuddyfuddy.imageservice.controller;
 
-import com.heejuk.tuddyfuddy.imageservice.client.ImageCreateAiClient;
 import com.heejuk.tuddyfuddy.imageservice.dto.CommonResponse;
 import com.heejuk.tuddyfuddy.imageservice.dto.request.ImageCreateRequest;
 import com.heejuk.tuddyfuddy.imageservice.dto.response.ImageAnalysisResponse;
@@ -27,7 +26,6 @@ import org.springframework.web.multipart.MultipartFile;
 public class ImageController {
 
     private final ImageService imageService;
-    private final ImageCreateAiClient aiClient;
 
     @Operation(
         summary = "이미지 분석",
@@ -87,7 +85,7 @@ public class ImageController {
         summary = "이미지 생성",
         description = "GPT-4 에게 프롬프트를 넣어서 이미지를 생성해 S3에 넣고 해당 이미지 URL 을 반환합니다."
     )
-    @PostMapping
+    @PostMapping("/ai/gpt")
     public CommonResponse<String> createImage(
         @RequestBody ImageCreateRequest request
     ) {
@@ -105,17 +103,17 @@ public class ImageController {
         summary = "이미지 생성 (갈덕이형꺼 API)",
         description = "???에게 프롬프트를 넣어서 이미지를 생성해 S3에 넣고 해당 이미지 URL 을 반환합니다."
     )
-    @PostMapping("/test")
+    @PostMapping("/ai/duck")
     public CommonResponse<String> createImage2(
         @RequestBody ImageCreateRequest request
     ) {
         long startTime = System.currentTimeMillis();
 
-        Object imageUrl = aiClient.createImage(request);
+        String imageUrl = imageService.generateImage(request);
 
         long endTime = System.currentTimeMillis();
         log.info("전체 처리 소요시간: {}초", (endTime - startTime) / 1000.0);
-        log.info("결과값 : {}", imageUrl.toString());
-        return CommonResponse.ok("이미지 생성 완료");
+
+        return CommonResponse.ok("이미지 생성 완료", imageUrl);
     }
 }
