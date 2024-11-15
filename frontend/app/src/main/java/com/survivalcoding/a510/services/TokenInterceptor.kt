@@ -20,7 +20,7 @@ class TokenInterceptor(
         val originalRequest = chain.request()
 
         val request = addAuthHeader(originalRequest, tokenManager.getAccessToken())
-        Log.d("리퀘스트 찍기", "401일때 내가 보낸 리퀘스트: $request")
+        Log.d("리퀘스트 찍기", "내가 보낸 리퀘스트: $request")
 
 
         // 요청 실행
