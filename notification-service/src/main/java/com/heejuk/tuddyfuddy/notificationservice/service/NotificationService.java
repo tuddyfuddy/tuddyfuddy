@@ -55,7 +55,7 @@ public class NotificationService {
             data.put("aiName", aiInfo.getAiName());
             data.put("roomId", String.valueOf(request.roomId()));
             data.put("icon", getIconNameFromUrl(aiInfo.getImageUrl()));
-            data.put("messageType", "CHAT");
+            data.put("messageType", request.messageType());
             data.put("message", request.message());
             data.put("color", "#7E57C2");
             log.debug("알림 데이터 설정 완료 - data: {}", data);
