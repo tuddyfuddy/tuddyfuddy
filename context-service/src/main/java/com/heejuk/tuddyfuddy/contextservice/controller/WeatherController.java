@@ -26,6 +26,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/context/weather")
 public class WeatherController {
 
+    private final String MESSAGE_TYPE = "WEATHER";
+
     private final KafkaProducerService kafkaProducerService;
     private final WeatherService weatherService;
     private final LocationService locationService;
@@ -61,6 +63,7 @@ public class WeatherController {
                                                                .roomId(2)
                                                                .aiName("Fuddy")
                                                                .message(response)
+                                                               .messageType(MESSAGE_TYPE)
                                                                .build());
 
         return CommonResponse.ok("Weather data fetched successfully",
