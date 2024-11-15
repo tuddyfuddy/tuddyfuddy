@@ -127,7 +127,6 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
                 }
             }
         }
-        // CHAT 타입은 무시 (이미 ChatService에서 처리됨)
     }
 
     // 5. 알림 생성 및 표시
