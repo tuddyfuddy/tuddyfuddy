@@ -18,7 +18,10 @@ public record ChatMessageRequest(
     String aiName,
 
     @Schema(description = "Chat message content")
-    String message
+    String message,
+
+    @Schema(description = "Chat Type")
+    String messageType
 
 ) {
 
@@ -27,11 +30,13 @@ public record ChatMessageRequest(
         @JsonProperty("userId") String userId,
         @JsonProperty("roomId") Integer roomId,
         @JsonProperty("aiName") String aiName,
-        @JsonProperty("message") String message
+        @JsonProperty("message") String message,
+        @JsonProperty("messageType") String messageType
     ) {
         this.userId = userId;
         this.roomId = roomId;
         this.aiName = aiName;
         this.message = message;
+        this.messageType = messageType;
     }
 }

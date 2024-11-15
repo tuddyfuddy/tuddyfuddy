@@ -21,6 +21,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/context/calendar")
 public class CalendarController {
 
+    private final String MESSAGE_TYPE = "CALENDAR";
+
     private final KafkaProducerService kafkaProducerService;
     private final ChatService chatService;
 
@@ -42,6 +44,7 @@ public class CalendarController {
                                                                .roomId(2)
                                                                .aiName("Fuddy")
                                                                .message(response)
+                                                               .messageType(MESSAGE_TYPE)
                                                                .build());
         return CommonResponse.ok("캘린더 정보 GET", response);
     }
