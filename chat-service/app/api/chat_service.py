@@ -1,12 +1,12 @@
 import httpx
 from langchain_core.messages import SystemMessage, HumanMessage
+from langchain.prompts import ChatPromptTemplate
 
 from app.api.kafka_service import KafkaService
 from app.core.logger import setup_logger
 from app.core.config import settings
 from langchain_openai import ChatOpenAI
 from langchain.prompts import PromptTemplate
-from langchain.chains import LLMChain
 from langchain.schema.runnable import RunnablePassthrough
 
 from app.models.templates import (
@@ -23,13 +23,54 @@ logging = setup_logger("app")
 
 
 class ChatService:
-
-    # LLM  초기화
     llm = ChatOpenAI(
         api_key=settings.GPT_KEY,
         model_name="gpt-4o-mini",
         temperature=0.4,
     )
+
+    @staticmethod
+    def create_chat_chain(system_message: str):
+        """전체 프로세스를 하나의 체인으로 결합"""
+        llm = ChatService.llm
+
+        # 첫 번째 프롬프트
+        first_prompt = ChatPromptTemplate.from_messages(
+            [("system", system_message), ("human", USER_MESSAGE_TEMPLATE)]
+        )
+
+        # 두 번째 프롬프트
+        validation_prompt = PromptTemplate(
+            input_variables=[
+                "max_response_length",
+                "history",
+                "relevant_info",
+                "emotion",
+                "message",
+                "answer",
+            ],
+            template=NATURAL_RESPONSE_TEMPLATE,
+        )
+
+        # 체인 구성
+        chain = (
+            RunnablePassthrough()
+            | {
+                "original_input": RunnablePassthrough(),
+                "first_response": first_prompt | llm,
+            }
+            | (
+                lambda x: {
+                    **x["original_input"],
+                    "answer": x["first_response"].content,
+                }
+            )
+            | validation_prompt
+            | llm
+            | (lambda x: x.content)
+        )
+
+        return chain
 
     @staticmethod
     def calculate_response_length(message_length: int) -> int:
@@ -61,22 +102,6 @@ class ChatService:
                 return "기타"
 
     @staticmethod
-    def create_validation_chain(llm) -> LLMChain:
-        """Creates the validation chain"""
-        validation_prompt = PromptTemplate(
-            input_variables=[
-                "max_length",
-                "history",
-                "relevant_info",
-                "emotion",
-                "message",
-                "answer",
-            ],
-            template=NATURAL_RESPONSE_TEMPLATE,
-        )
-        return validation_prompt | llm | {"validation": RunnablePassthrough()}
-
-    @staticmethod
     async def process_chat(type: int, user_id: str, message: str):
         # 감정 분석
         emotion = await ChatService.get_emotion(message)
@@ -94,41 +119,24 @@ class ChatService:
             4: SYSTEM_MESSAGE_4,
         }.get(type, SYSTEM_MESSAGE_1)
 
-        validation_chain = ChatService.create_validation_chain(ChatService.llm)
+        chain = ChatService.create_chat_chain(system_message)
 
         # 첫 번째 응답 생성
-        messages = [
-            SystemMessage(content=system_message),
-            HumanMessage(
-                content=USER_MESSAGE_TEMPLATE.format(
-                    emotion=emotion,
-                    message=message,
-                    history="no",
-                    relevant_info="no",
-                    max_response_length=max_response_length,
-                )
-            ),
-        ]
-        answer = ChatService.llm.invoke(messages).content
-        # logging.info(f">>>>>>> (수정 전) {answer}")
-
-        # 두 번째 응답 생성
-        validation_input = {
-            "max_length": max_response_length,
+        chain_input = {
+            "max_response_length": max_response_length,
             "history": "no",
             "relevant_info": "no",
             "emotion": emotion,
             "message": message,
-            "answer": answer,
         }
-        validation_result = await validation_chain.ainvoke(validation_input)
 
-        final_answer = validation_result["validation"].content
-        # logging.info(f">>>>>>> (수정 후) {final_answer}")
+        answer = await chain.ainvoke(chain_input)
+
+        logging.info(f">>>>>>> {answer}")
 
         # Kafka에 채팅 데이터 전송
-        array_anwer = [s.strip() for s in final_answer.split("<br>")]
+        array_anwer = [s.strip() for s in answer.split("<br>")]
         for aa in array_anwer:
             KafkaService.send_to_kafka(user_id, type, aa)
 
-        return {"response": [s.strip() for s in final_answer.split("<br>")]}
+        return array_anwer

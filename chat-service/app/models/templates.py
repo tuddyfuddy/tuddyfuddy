@@ -50,7 +50,7 @@ Topic: conversation
 Style: Casual
 Tone: Friendly, relaxed, and not overly formal
 Audience: 20-year old
-Response Length: Up to {max_length} characters
+Response Length: Up to {max_response_length} characters
 Format: Text
 
 User emotions are given one of 분노/놀람/행복/공포/슬픔/기타.
@@ -127,7 +127,7 @@ Response Rules:
 - Do not use periods (.)
 - Do not add or remove exclamation marks (!), or question marks (?). maintain them as they appear in the original message
 - Make sure to add '<br>' between every sentences or phrases, but do not add it at the end of the last sentence
-- Limit responses to a maximum of {max_length} tokens.
+- Limit responses to a maximum of {max_response_length} tokens.
 
 Message: {message}
 Answer: {answer}
