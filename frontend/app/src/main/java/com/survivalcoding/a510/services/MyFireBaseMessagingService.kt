@@ -13,7 +13,13 @@ import com.google.firebase.messaging.RemoteMessage
 import com.survivalcoding.a510.MainActivity
 import com.survivalcoding.a510.R
 import com.survivalcoding.a510.data.TokenManager
+import com.survivalcoding.a510.repositories.chat.ChatDatabase
+import com.survivalcoding.a510.repositories.chat.ChatMessage
 import com.survivalcoding.a510.services.chat.ChatService
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 
 class MyFirebaseMessagingService : FirebaseMessagingService() {
 
@@ -36,7 +42,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
     // 2. 푸시 메시지를 수신했을 때 호출
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         super.onMessageReceived(remoteMessage)
-        Log.d(TAG, "FCM message received: ${remoteMessage.data}")
+        Log.d(TAG, "FCMcccc message received: ${remoteMessage.data}")
 
         // data 메시지만 처리
         if (remoteMessage.data.isNotEmpty()) {
@@ -54,6 +60,73 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
     private fun handleDataMessage(data: Map<String, String>) {
         Log.d(TAG, "💬 Data Message: $data")
         Log.d(TAG, "\n=== Data Message ===\n${data.entries.joinToString("\n")}\n==================")
+
+        // 메시지 타입 뭔지 확인하고
+        val messageType = data["messageType"]
+
+        // 메세지 타입이 웨더이거나 캘린더일때만 RoomDB에 저장하
+        if (messageType == "WEATHER" || messageType == "CALENDAR") {
+            val roomId = data["roomId"]?.toIntOrNull()
+            val message = data["message"]
+            val aiName = data["aiName"]
+
+            if (roomId != null && message != null) {
+                // RoomDB 초기화
+                val database = ChatDatabase.getDatabase(applicationContext)
+                val messageDao = database.chatMessageDao()
+                val chatInfoDao = database.chatInfoDao()
+
+                CoroutineScope(Dispatchers.IO).launch {
+                    try {
+                        // <br> 기준으로 메시지 분리시키기
+                        val messages = message.split("<br>")
+
+                        // 각 메시지를 개별적으로 저장
+                        messages.forEach { splitMessage ->
+                            if (splitMessage.isNotBlank()) {
+                                messageDao.insertMessage(
+                                    ChatMessage(
+                                        roomId = roomId,
+                                        content = splitMessage.trim(),
+                                        isAiMessage = true,
+                                        aiType = when(aiName) {
+                                            "Fuddy" -> 2
+                                            "Buddy" -> 3
+                                            "Study" -> 4
+                                            else -> null
+                                        }
+                                    )
+                                )
+                                delay(100)
+                            }
+                        }
+
+                        // 채팅방 목록 정보 업데이트
+                        chatInfoDao.updateLastMessage(
+                            chatId = roomId,
+                            message = message.replace("<br>", " "),
+                            timestamp = System.currentTimeMillis()
+                        )
+
+                        // 현재 사용자가 보고 있는 화면의 채팅방 ID 가져오기
+                        val currentActiveChatRoom = ChatService.getActiveChatRoom()
+
+                        // 현재 사용자가 해당 채팅방을 보고있지 않다면 읽지 않은 메시지 수 증가
+                        if (currentActiveChatRoom != roomId) {
+                            val currentChat = chatInfoDao.getChatById(roomId)
+                            currentChat?.let {
+                                chatInfoDao.updateUnreadCount(
+                                    chatId = roomId,
+                                    count = it.unreadCount + 1
+                                )
+                            }
+                        }
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Error saving message to database", e)
+                    }
+                }
+            }
+        }
     }
 
     // 5. 알림 생성 및 표시
