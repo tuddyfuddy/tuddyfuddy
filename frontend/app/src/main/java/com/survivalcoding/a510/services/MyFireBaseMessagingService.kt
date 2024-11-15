@@ -44,16 +44,15 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         super.onMessageReceived(remoteMessage)
         Log.d(TAG, "FCMcccc message received: ${remoteMessage.data}")
 
-        // 수신된 메시지에 데이터 페이로드가 포함되어 있는 경우
-        remoteMessage.data.isNotEmpty().let {
-            Log.d(TAG, "Message data payload: ${remoteMessage.data}")
+        // data 메시지만 처리
+        if (remoteMessage.data.isNotEmpty()) {
             handleDataMessage(remoteMessage.data)
-        }
 
-        // 수신된 메시지에 알림 페이로드가 포함되어 있는 경우
-        remoteMessage.notification?.let {
-            Log.d(TAG, "Message notification payload: ${it.title} - ${it.body}")
-            sendNotification(it.title, it.body, remoteMessage.data)
+            val messageContent = remoteMessage.data["message"] ?: return
+            val aiName = remoteMessage.data["aiName"] ?: return
+            val title = aiName
+
+            sendNotification(title, messageContent, remoteMessage.data)
         }
     }
 
@@ -143,20 +142,29 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         if (chatRoomId != null && chatRoomId == currentChatRoomId) {
             return
         }
-        
+
         val channelId = "default_channel"
 
-        // 알림 클릭시 실행될 액티비티 설정
-        val intent = Intent(this, MainActivity::class.java)
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        // 인텐트에 채팅방 ID 추가
+        val intent = Intent(this, MainActivity::class.java).apply {
+            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            // 알림에서 시작되었다는 플래그 추가
+            putExtra("fromNotification", true)
+            // 채팅방 ID 추가
+            putExtra("chatRoomId", chatRoomId)
+        }
+
+        // PendingIntent의 requestCode를 chatRoomId로 설정하여 각 채팅방마다 고유한 PendingIntent 생성
         val pendingIntent = PendingIntent.getActivity(
-            this, 0, intent,
+            this,
+            chatRoomId ?: 0,
+            intent,
             PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE
         )
 
         // 알림 스타일 설정
         val notificationBuilder = NotificationCompat.Builder(this, channelId)
-            .setSmallIcon(R.drawable.notification_logo)
+            .setSmallIcon(R.drawable.test_logo2)
             .setContentTitle(title)
             .setContentText(messageBody)
             .setAutoCancel(true)
@@ -174,8 +182,8 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             notificationManager.createNotificationChannel(channel)
         }
 
-        // 알림 표시
-        notificationManager.notify(0, notificationBuilder.build())
+        // 알림 ID를 채팅방 ID로 설정하여 각 채팅방마다 개별 알림 표시
+        notificationManager.notify(chatRoomId ?: 0, notificationBuilder.build())
     }
 
     companion object {

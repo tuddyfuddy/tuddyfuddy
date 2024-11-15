@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.messaging.FirebaseMessaging
 import com.kakao.sdk.auth.model.OAuthToken
 import com.kakao.sdk.user.UserApiClient
 import com.survivalcoding.a510.data.TokenManager
@@ -14,6 +15,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 
 // 메인 화면의 인증 관련 로직을 처리하는 ViewModel
 class MainViewModel : ViewModel() {
@@ -99,7 +101,20 @@ class MainViewModel : ViewModel() {
                 try {
                     _authState.value = AuthState.Loading
 
-                    val fcmToken = tokenManager?.getFCMToken()
+                    // FCM 토큰을 비동기로 가져오기
+                    val fcmToken = suspendCancellableCoroutine<String?> { continuation ->
+                        FirebaseMessaging.getInstance().token
+                            .addOnCompleteListener { task ->
+                                if (task.isSuccessful) {
+                                    val token = task.result
+                                    tokenManager?.saveFCMToken(token)
+                                    continuation.resume(token, null)
+                                } else {
+                                    continuation.resume(null, null)
+                                }
+                            }
+                    }
+
                     Log.d("MainViewModel", "Sending FCM token with login: $fcmToken")
 
                     // 서버에 카카오 토큰으로 인증 요청
@@ -114,11 +129,6 @@ class MainViewModel : ViewModel() {
                         // 서버 응답에서 Authorization 헤더 추출
                         val accessToken = response.headers()["Authorization"]
                             ?.removePrefix("Bearer ")
-
-//                        // Access Token 로그 출력
-//                        Log.d("MainViewModel", "Access Token: $accessToken")
-//                        // 전체 헤더 로그 출력
-//                        Log.d("MainViewModel", "All Headers: ${response.headers()}")
 
                         if (accessToken != null) {
                             // TokenManager에 저장 (refresh token은 자동으로 저장됨)
@@ -140,6 +150,7 @@ class MainViewModel : ViewModel() {
             }
         }
     }
+
 
     /**
      * 로그아웃 처리

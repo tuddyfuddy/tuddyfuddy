@@ -12,7 +12,7 @@ interface AuthService {
     ): Response<Unit>
 
     // 토큰 갱신을 위한 엔드포인트
-    @POST("auth-service/auth/refresh")
+    @POST("auth-service/auth/reissue")
     suspend fun refreshToken(): Response<Unit>
 }
 
