@@ -55,6 +55,7 @@ android {
 }
 
 dependencies {
+    implementation(libs.coil.compose)
     implementation (libs.androidx.work.runtime.ktx)
     implementation (libs.retrofit)
     implementation (libs.converter.gson)

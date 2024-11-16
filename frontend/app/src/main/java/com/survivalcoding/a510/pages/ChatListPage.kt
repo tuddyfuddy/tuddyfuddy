@@ -24,6 +24,9 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.sp
 import com.survivalcoding.a510.R
 import com.survivalcoding.a510.components.AnimatedChatListBottom
+import androidx.compose.foundation.Image
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 
 @Composable
 fun ChatListPage(
@@ -53,22 +56,36 @@ fun ChatListPage(
                         .padding(top = 25.dp, start = 16.dp, bottom = 16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Column {
-                        Text(
-                            text = "Tuddy Fuddy",
-                            fontSize = 35.sp
+                    Row {
+//                        Text(
+//                            text = "Tuddy Fuddy",
+//                            fontSize = 35.sp
+//                        )
+
+                        Image(
+                            painter = painterResource(id = R.drawable.logo_white),
+                            contentDescription = "Tuddy Fuddy Logo",
+                            modifier = Modifier.height(72.dp),
+                            contentScale = ContentScale.Fit
                         )
 
-                        Spacer(modifier = Modifier.height(4.dp))
-
                         Row {
-                            Spacer(modifier = Modifier.width(4.dp))
+                            Spacer(modifier = Modifier.width(14.dp))
 
-                            Text(
-                                text = "나만을 위한 다양한 AI 친구들",
-                                fontSize = 14.sp,
-                                fontFamily = FontFamily(Font(R.font.eland_choice))
-                            )
+                            Column {
+                                Spacer(modifier = Modifier.height(10.dp))
+
+                                Text(
+                                    text = "나만을 위한",
+                                    fontSize = 20.sp,
+                                    fontFamily = FontFamily(Font(R.font.eland_choice))
+                                )
+                                Text(
+                                    text = "다양한 AI 친구들",
+                                    fontSize = 24.sp,
+                                    fontFamily = FontFamily(Font(R.font.eland_choice))
+                                )
+                            }
                         }
                     }
 //                        Text(

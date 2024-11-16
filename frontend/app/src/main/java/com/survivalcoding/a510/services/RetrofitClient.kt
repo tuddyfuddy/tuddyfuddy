@@ -4,6 +4,7 @@ import android.content.Context
 import com.survivalcoding.a510.data.TokenManager
 import com.survivalcoding.a510.services.chat.AIChatService
 import com.survivalcoding.a510.services.chat.ImageAnalysisService
+import com.survivalcoding.a510.services.chat.ImageGenerationService
 import okhttp3.Cookie
 import okhttp3.CookieJar
 import okhttp3.HttpUrl
@@ -96,6 +97,16 @@ object RetrofitClient {
             .build()
     }
 
+    // 이미지 생성용 Retrofit 인스턴스
+    private val imageGenerationRetrofit by lazy {
+        Retrofit.Builder()
+            .baseUrl(BASE_URL)
+            .addConverterFactory(GsonConverterFactory.create())
+            .client(createClient())
+            .build()
+    }
+
+
     // Weather 서비스용 Retrofit 인스턴스
     private val weatherRetrofit by lazy {
         Retrofit.Builder()
@@ -139,6 +150,12 @@ object RetrofitClient {
     val imageAnalysisService: ImageAnalysisService by lazy {
         imageRetrofit.create(ImageAnalysisService::class.java)
     }
+
+    // 이미지 생성 서비스
+    val imageGenerationService: ImageGenerationService by lazy {
+        imageGenerationRetrofit.create(ImageGenerationService::class.java)
+    }
+
 
     // Weather 서비스
     val weatherService: WeatherService by lazy {
