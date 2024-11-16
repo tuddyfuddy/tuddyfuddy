@@ -98,12 +98,12 @@ fun ChatListPage(
 
                                 Text(
                                     text = "나만을 위한",
-                                    fontSize = 20.sp,
+                                    fontSize = 16.sp,
                                     fontFamily = FontFamily(Font(R.font.eland_choice))
                                 )
                                 Text(
                                     text = "다양한 AI 친구들",
-                                    fontSize = 24.sp,
+                                    fontSize = 20.sp,
                                     fontFamily = FontFamily(Font(R.font.eland_choice))
                                 )
                             }
