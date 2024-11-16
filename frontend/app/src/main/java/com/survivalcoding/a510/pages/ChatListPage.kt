@@ -1,6 +1,10 @@
 package com.survivalcoding.a510.pages
 
 import android.app.Application
+import android.os.Handler
+import android.os.Looper
+import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -27,6 +31,8 @@ import com.survivalcoding.a510.components.AnimatedChatListBottom
 import androidx.compose.foundation.Image
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import kotlin.system.exitProcess
+import androidx.compose.runtime.mutableStateOf
 
 @Composable
 fun ChatListPage(
@@ -37,11 +43,26 @@ fun ChatListPage(
         )
     )
 ) {
+    val context = LocalContext.current
+    var doubleBackToExitPressedOnce = remember { mutableStateOf(false) }
+
+    // 핸드폰 기본 뒤로가기 버튼 눌렀을 때 웰컴 페이지 대신에 어플이 꺼지게 하기
+    BackHandler {
+        if (doubleBackToExitPressedOnce.value) {
+            exitProcess(0)
+        } else {
+            doubleBackToExitPressedOnce.value = true
+            Toast.makeText(context, "한 번 더 누르면 어플이 종료됩니다", Toast.LENGTH_SHORT).show()
+
+            Handler(Looper.getMainLooper()).postDelayed({
+                doubleBackToExitPressedOnce.value = false
+            }, 2000) // 2초 안에 2번 눌러야 꺼지게
+        }
+    }
 
     val chatList by viewModel.chatList.collectAsState()
 
     Scaffold(
-        // topBar = { TopBar() }
     ) { paddingValues ->
         Box(
             modifier = Modifier
@@ -77,12 +98,12 @@ fun ChatListPage(
 
                                 Text(
                                     text = "나만을 위한",
-                                    fontSize = 20.sp,
+                                    fontSize = 16.sp,
                                     fontFamily = FontFamily(Font(R.font.eland_choice))
                                 )
                                 Text(
                                     text = "다양한 AI 친구들",
-                                    fontSize = 24.sp,
+                                    fontSize = 20.sp,
                                     fontFamily = FontFamily(Font(R.font.eland_choice))
                                 )
                             }

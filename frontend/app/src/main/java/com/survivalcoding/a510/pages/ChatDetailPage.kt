@@ -173,8 +173,8 @@ fun ChatDetailPage(
                             fontSize = 14.sp  // 입력 텍스트 크기 줄임
                         ),
                         colors = TextFieldDefaults.colors(
-                            focusedContainerColor = Color(0xFFE3F2FD),
-                            unfocusedContainerColor = Color(0xFFE3F2FD),
+                            focusedContainerColor = topBarBackgroundColor,
+                            unfocusedContainerColor = topBarBackgroundColor,
                             focusedIndicatorColor = Color.Transparent,
                             unfocusedIndicatorColor = Color.Transparent,
                             disabledIndicatorColor = Color.Transparent
@@ -240,11 +240,14 @@ fun ChatDetailPage(
 
                     DropdownMenu(
                         expanded = showMenu,
-                        onDismissRequest = { showMenu = false }
+                        onDismissRequest = { showMenu = false },
+                        modifier = Modifier
+                            .background(Color.White)
                     ) {
                         DropdownMenuItem(
                             modifier = Modifier
-                                .height(20.dp),
+                                .height(20.dp)
+                                .background(Color.White),
                             onClick = {
                                 viewModel.clearChat()
                                 showMenu = false
