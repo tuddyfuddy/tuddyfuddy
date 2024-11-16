@@ -163,7 +163,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
 
         // 알림 스타일 설정
         val notificationBuilder = NotificationCompat.Builder(this, channelId)
-            .setSmallIcon(R.drawable.test_logo2)
+            .setSmallIcon(R.drawable.real_main_logo)
             .setContentTitle(title)
             .setContentText(messageBody)
             .setAutoCancel(true)
