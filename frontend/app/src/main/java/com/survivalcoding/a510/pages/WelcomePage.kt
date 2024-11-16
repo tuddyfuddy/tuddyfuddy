@@ -23,6 +23,9 @@ import com.survivalcoding.a510.R
 import com.survivalcoding.a510.components.KakaoLoginButton
 import com.survivalcoding.a510.components.NextButton
 import com.survivalcoding.a510.routers.Routes
+import androidx.compose.foundation.clickable
+import androidx.compose.runtime.LaunchedEffect
+import kotlinx.coroutines.delay
 
 data class Character(
     var name: String,
@@ -32,11 +35,8 @@ data class Character(
 val randomCharacters = arrayOf(
     Character("Fuddy", "만나서 반가워!", R.drawable.welcome_fuddy),
     Character("Tuddy", "만나서 반가워.", R.drawable.welcome_tuddy),
-//    Character("Sunny", "만나서 반가워!", R.drawable.rabbit2),
-//    Character("Luna", "만나서 반가워.", R.drawable.otter2),
 )
 
-// Get a random image from the array
 val selectedCharacter = randomCharacters.random()
 
 @Composable
@@ -45,10 +45,24 @@ fun WelcomePage(
     isLoggedIn: Boolean,
     onKakaoLoginClick: () -> Unit
 ) {
+    // 아무 화면이나 터치안해도 자동으로 3초있다가 챗리스트 페이지로 가도록 설정
+    if (isLoggedIn) {
+        LaunchedEffect(Unit) {
+            delay(3000) //
+            navController.navigate(Routes.CHAT_LIST)
+        }
+    }
     Column(
         modifier = Modifier
             .background(color = Color.White)
-            .fillMaxSize(),
+            .fillMaxSize()
+            .then(
+                if (isLoggedIn) {
+                    Modifier.clickable { navController.navigate(Routes.CHAT_LIST) }
+                } else {
+                    Modifier
+                }
+            ),
         verticalArrangement = Arrangement.SpaceBetween,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -67,12 +81,12 @@ fun WelcomePage(
             )
         )
         Spacer(modifier = Modifier.weight(1f))
-        if (isLoggedIn) {
-            NextButton(
-                onClick = { navController.navigate(Routes.CHAT_LIST) },
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
-        } else {
+        if (!isLoggedIn) {
+//            NextButton(
+//                onClick = { navController.navigate(Routes.CHAT_LIST) },
+//                modifier = Modifier.padding(bottom = 16.dp)
+//            )
+//        } else {
             KakaoLoginButton(
                 onClick = onKakaoLoginClick,
                 modifier = Modifier.padding(bottom = 16.dp)
