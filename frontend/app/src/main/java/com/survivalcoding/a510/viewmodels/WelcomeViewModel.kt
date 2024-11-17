@@ -9,6 +9,7 @@ import com.survivalcoding.a510.services.HealthRequest
 import com.survivalcoding.a510.services.RetrofitClient
 import com.survivalcoding.a510.services.chat.ChatService
 import com.survivalcoding.a510.services.sendHealthDataWithLogging
+import com.survivalcoding.a510.utils.DataIndexManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -18,7 +19,9 @@ class WelcomeViewModel : ViewModel() {
             delay(6000) // 1분 대기
 
             try {
-                val dummyHealthData = DummyHealthData.healthList.random()
+                val nextIndex = DataIndexManager.getNextIndex(DummyHealthData.healthList.size)
+                val dummyHealthData = DummyHealthData.healthList[nextIndex]
+
                 val response = RetrofitClient.healthService.sendHealthDataWithLogging(
                     HealthRequest(
                         heartRate = dummyHealthData.heartRate,

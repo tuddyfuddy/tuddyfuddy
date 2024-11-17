@@ -6,6 +6,7 @@ import com.kakao.sdk.common.util.Utility
 import android.util.Log
 import com.survivalcoding.a510.services.RetrofitClient
 import com.survivalcoding.a510.services.chat.ImageCleanupWorker
+import com.survivalcoding.a510.utils.DataIndexManager
 
 class GlobalApplication : Application() {
     override fun onCreate() {
@@ -16,5 +17,6 @@ class GlobalApplication : Application() {
 
         RetrofitClient.initialize(this)
         ImageCleanupWorker.schedule(this)
+        DataIndexManager.init(this)
     }
 }
