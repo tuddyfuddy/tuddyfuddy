@@ -26,6 +26,15 @@ import kotlinx.coroutines.flow.flowOf
 
 
 class ChatViewModel(application: Application, private val roomId: Int) : AndroidViewModel(application) {
+
+    private companion object {
+        const val MESSAGE_DEBOUNCE_TIME = 6000L   // 채팅 메시지 묶음 대기 시간
+        const val SEARCH_DEBOUNCE_TIME = 300L     // 검색 입력 대기 시간
+        const val GROUP_CHAT_ROOM_ID = 5          // 단톡방 ID
+        const val SEARCH_SCROLL_OFFSET = 0.8      // 검색 결과 스크롤 위치
+        const val STATE_TIMEOUT = 5000L           // StateFlow timeout 시간
+    }
+
     // Room 데이터베이스 인스턴스를 초기화
     private val database = ChatDatabase.getDatabase(application)
 
@@ -86,7 +95,7 @@ class ChatViewModel(application: Application, private val roomId: Int) : Android
                 // 메세지 모아서 처리하는 로직
                 @OptIn(kotlinx.coroutines.FlowPreview::class)
                 _pendingMessages
-                    .debounce(6000)
+                    .debounce(MESSAGE_DEBOUNCE_TIME)
                     .collect { messages ->
                         if (messages.isNotEmpty() && !isProcessingImage) {
 
@@ -121,7 +130,7 @@ class ChatViewModel(application: Application, private val roomId: Int) : Android
                                 }
 
                                 // 단톡방이 아닐 때만 로딩 메시지 생성
-                                if (roomId != 5) {
+                                if (roomId != GROUP_CHAT_ROOM_ID) {
                                     // 새로운 로딩 메시지 추가
                                     val loadingMessage = ChatMessage(
                                         roomId = roomId,
@@ -141,7 +150,7 @@ class ChatViewModel(application: Application, private val roomId: Int) : Android
                                 ImageProcessingService.clearPendingMessage()
 
                                 // 이미지 처리가 완료되면 6초 대기 후 메시지 전송
-                                delay(6000)
+                                delay(MESSAGE_DEBOUNCE_TIME)
                                 if (_pendingMessages.value.isNotEmpty()) {
                                     val combinedContent =
                                         _pendingMessages.value.joinToString("<br>")
@@ -168,7 +177,7 @@ class ChatViewModel(application: Application, private val roomId: Int) : Android
         messageDao.getMessagesByRoomId(roomId) // DB에서 해당 채팅방의 모든 메세지 가져오기
             .stateIn( // Flow를 State Flow로 변경
                 scope = viewModelScope,  // ViewModel과 생명주기 맞추기
-                started = SharingStarted.WhileSubscribed(5000),
+                started = SharingStarted.WhileSubscribed(STATE_TIMEOUT),
                 initialValue = emptyList()
             )
 
@@ -187,7 +196,7 @@ class ChatViewModel(application: Application, private val roomId: Int) : Android
     @OptIn(kotlinx.coroutines.FlowPreview::class, kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     val searchResults = searchQuery
         // 사용자가 검색할 때 검색 키워드 인식하는 속도 (0.3초마다 해당 키워드로 검색)
-        .debounce(300L)
+        .debounce(SEARCH_DEBOUNCE_TIME)
 
         // 새로운 검색어 인식되면 기존 검색 취소하고 새로운 검색만 실행하기
         .flatMapLatest { query ->
@@ -199,7 +208,7 @@ class ChatViewModel(application: Application, private val roomId: Int) : Android
         }
         .stateIn(
             viewModelScope,
-            SharingStarted.WhileSubscribed(5000),
+            SharingStarted.WhileSubscribed(STATE_TIMEOUT),
             emptyList()
         )
 
@@ -252,7 +261,7 @@ class ChatViewModel(application: Application, private val roomId: Int) : Android
         // 검색한 키워드가 포함된 메세지의 위치
         val targetIndex = _searchMatches.value[_currentSearchIndex.value]
         // 화면에서 검색 키워드가 포함된 메세지 말풍선이 어디에 위치할지 조정하는 변수
-        val targetOffset = (screenHeight * 0.8).toInt()
+        val targetOffset = (screenHeight * SEARCH_SCROLL_OFFSET).toInt()
 
         listState.scrollToItem(
             index = targetIndex,
@@ -278,7 +287,7 @@ class ChatViewModel(application: Application, private val roomId: Int) : Android
                 messageDao.deleteMessageById(id)
             }
             
-            if (roomId != 5) {
+            if (roomId != GROUP_CHAT_ROOM_ID) {
                 // 1대1 채팅인 경우에만 로딩 메시지 생성
                 // 단톡일 때는 랜덤으로 순서 정해진 다음에 ChatService에서 생성됨
                 val loadingMessage = ChatMessage(
