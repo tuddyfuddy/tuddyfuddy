@@ -17,6 +17,17 @@ class WelcomeViewModel : ViewModel() {
 
     private companion object {
         const val HEALTH_DATA_DELAY = 6000L
+        const val SLEEP_TIME = 300
+        const val HEART_UP_RATE = 100
+        const val HEART_DOWN_RATE = 60
+        const val STRESS_LEVEL = 50
+        const val STEP_RATE = 10000
+        const val SLEEP_TALK = "'오늘 잠 잘 못잤어? 안좋은 꿈 꿨어?' 라고 답장해줘, 다른 말은 절대로 하지말고 ''안에 있는 말만 해줘."
+        const val HEART_UP_TALK = "'무슨 일 있어?'라고 답장해줘, 다른 말은 절대로 하지말고."
+        const val HEART_DOWN_TALK = "'무슨 일 있어?'라고 답장해줘, 다른 말은 절대로 하지말고."
+        const val STRESS_TALK = "'기분 안 좋은 일 있어? 무슨 일 있으면 나한테 말해봐'라고 답장해줘, 다른 말은 절대로 하지말고."
+        const val STEP_TALK = "'오늘 엄청 많이 걸었네! 벌써 1만보 넘게 걸었어'라고 답장해줘, 다른 말은 절대로 하지말고."
+
     }
     fun sendHealthData(context: Context) {
         viewModelScope.launch {
@@ -39,11 +50,11 @@ class WelcomeViewModel : ViewModel() {
                     val responseHealthData = response.body()!!.result
 
                     val message = when {
-                        responseHealthData.sleepMinutes < 300 -> "'오늘 잠 잘 못잤어? 안좋은 꿈 꿨어?' 라고 답장해줘, 다른 말은 절대로 하지말고 ''안에 있는 말만 해줘."
-                        responseHealthData.heartRate > 100 -> "'무슨 일 있어? 좋은일이야 나쁜일이야?' 라고 답장해줘, 다른 말은 절대로 하지말고."
-                        responseHealthData.heartRate < 60 -> "'무슨 일 있어?'라고 답장해줘, 다른 말은 절대로 하지말고."
-                        responseHealthData.stressLevel > 50 -> "'기분 안 좋은 일 있어? 무슨 일 있으면 나한테 말해봐'라고 답장해줘, 다른 말은 절대로 하지말고."
-                        responseHealthData.steps > 10000 -> "'오늘 엄청 많이 걸었네! 벌써 1만보 넘게 걸었어'라고 답장해줘, 다른 말은 절대로 하지말고."
+                        responseHealthData.sleepMinutes < SLEEP_TIME -> SLEEP_TALK
+                        responseHealthData.heartRate > HEART_UP_RATE -> HEART_UP_TALK
+                        responseHealthData.heartRate < HEART_DOWN_RATE -> HEART_DOWN_TALK
+                        responseHealthData.stressLevel > STRESS_LEVEL -> STRESS_TALK
+                        responseHealthData.steps > STEP_RATE -> STEP_TALK
                         else -> null
                     }
 
