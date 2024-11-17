@@ -125,6 +125,15 @@ object RetrofitClient {
             .build()
     }
 
+    // Health 서비스용 Retrofit 인스턴스
+    private val healthRetrofit by lazy {
+        Retrofit.Builder()
+            .baseUrl(BASE_URL)
+            .addConverterFactory(GsonConverterFactory.create())
+            .client(createClient())
+            .build()
+    }
+
     // FCM 토큰 업데이트를 위한 서비스
     fun createFCMTokenService(): FCMTokenService {
         val client = OkHttpClient.Builder()
@@ -167,5 +176,9 @@ object RetrofitClient {
         calendarRetrofit.create(CalendarService::class.java)
     }
 
+    // Health 서비스
+    val healthService: HealthService by lazy {
+        healthRetrofit.create(HealthService::class.java)
+    }
 }
 
