@@ -14,9 +14,13 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class WelcomeViewModel : ViewModel() {
+
+    private companion object {
+        const val HEALTH_DATA_DELAY = 6000L
+    }
     fun sendHealthData(context: Context) {
         viewModelScope.launch {
-            delay(6000) // 1분 대기
+            delay(HEALTH_DATA_DELAY) // 1분 대기
 
             try {
                 val nextIndex = DataIndexManager.getNextIndex(DummyHealthData.healthList.size)
