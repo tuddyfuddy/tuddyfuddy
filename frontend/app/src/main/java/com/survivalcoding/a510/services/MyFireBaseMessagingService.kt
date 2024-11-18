@@ -79,7 +79,9 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
                 CoroutineScope(Dispatchers.IO).launch {
                     try {
                         // <br> 기준으로 메시지 분리시키기
-                        val messages = message.split("<br>")
+//                        val messages = message.split("<br>")
+                        val messages = message.replace(Regex("<br\\s*/*>"), "<br>") // 비표준 <br> 태그들을 표준화
+                            .split("<br>")
 
                         // 각 메시지를 개별적으로 저장
                         messages.forEach { splitMessage ->
@@ -92,7 +94,6 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
                                         aiType = when(aiName) {
                                             "Fuddy" -> 2
                                             "Buddy" -> 3
-                                            "Study" -> 4
                                             else -> null
                                         }
                                     )
@@ -104,7 +105,8 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
                         // 채팅방 목록 정보 업데이트
                         chatInfoDao.updateLastMessage(
                             chatId = roomId,
-                            message = message.replace("<br>", " "),
+//                            message = message.replace("<br>", " "),
+                            message = message.replace(Regex("<br\\s*/*>"), " "), // 비표준 <br> 태그들을 공백으로 변경
                             timestamp = System.currentTimeMillis()
                         )
 
