@@ -1,0 +1,161 @@
+server:
+  port: ${SERVER_PORT:8080}
+
+spring:
+  application:
+    name: gateway-service
+  cloud:
+    gateway:
+      globalcors:
+        cors-configurations:
+          "[/**]":
+            allowedOrigins:
+              - "http://localhost:3000"
+              - "http://localhost:80"
+              - "http://localhost:8080"
+              - "https://localhost:80"
+              - "http://localhost:5173"
+              - "https://localhost:5173"
+              - "https://k11a510.p.ssafy.io"
+              - "http://k11a510.p.ssafy.io"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - PATCH
+              - DELETE
+              - OPTIONS
+            allowedHeaders:
+              - "*"
+            exposedHeaders:
+              - "access"
+            allowCredentials: true
+
+      routes:
+        - id: auth-service
+          uri: lb://auth-service
+          predicates:
+            - Path=/auth-service/**
+          filters:
+            - RewritePath=/auth-service/(?<segment>.*), /$\{segment}
+
+        - id: chat-service
+          uri: lb://chat-service
+          predicates:
+            - Path=/chat-service/chats/direct/*, /chat-service/chats/group/*
+          filters:
+            - AuthorizationHeaderFilter
+            - RewritePath=/chat-service/(?<segment>.*), /$\{segment}
+
+        - id: chat-service
+          uri: lb://chat-service
+          predicates:
+            - Path=/chat-service/**
+          filters:
+            - RewritePath=/chat-service/(?<segment>.*), /$\{segment}
+
+        - id: context-service
+          uri: lb://context-service
+          predicates:
+            - Path=/context/*
+          filters:
+            - AuthorizationHeaderFilter
+
+        - id: context-service
+          uri: lb://context-service
+          predicates:
+            - Path=/context-service/**
+          filters:
+            - RewritePath=/context-service/(?<segment>.*), /$\{segment}
+
+        - id: notification-service
+          uri: lb://notification-service
+          predicates:
+            - Path=/notification-service/**, /notification/**
+          filters:
+            - RewritePath=/notification-service/(?<segment>.*), /$\{segment}
+
+        - id: log-service
+          uri: lb://log-service
+          predicates:
+            - Path=/log-service/**
+          filters:
+            - RewritePath=/log-service/(?<segment>.*), /$\{segment}
+
+        - id: image-service
+          uri: lb://image-service
+          predicates:
+            - Path=/image-service/**
+          filters:
+            - RewritePath=/image-service/(?<segment>.*), /$\{segment}
+
+        - id: image-service
+          uri: lb://image-service
+          predicates:
+            - Path=/images/**
+
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=/user-service/users
+            - Method=GET
+          filters:
+            - AuthorizationHeaderFilter
+            - RewritePath=/user-service/(?<segment>.*), /$\{segment}
+
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=/user-service/**
+          filters:
+            - RewritePath=/user-service/(?<segment>.*), /$\{segment}
+
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+    path: /docs
+    config-url: /v3/api-docs/swagger-config
+    urls:
+      - url: /v3/api-docs
+        name: API Gateway Service
+      - url: /auth-service/v3/api-docs
+        name: 인증 서비스
+      - url: /chat-service/v3/api-docs
+        name: 채팅 서비스
+      - url: /context-service/v3/api-docs
+        name: 상황 데이터 서비스
+      - url: /notification-service/v3/api-docs
+        name: 알림 서비스
+      - url: /log-service/v3/api-docs
+        name: 로그 서비스
+      - url: /image-service/v3/api-docs
+        name: 이미지 서비스
+      - url: /user-service/v3/api-docs
+        name: 사용자 서비스
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka/}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+logging:
+  level:
+    org.springframework.web: "info"
+    org.hibernate: "info"
+  file:
+    name: /var/log/applications/${spring.application.name}/application.log
