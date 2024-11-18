@@ -1,0 +1,63 @@
+server:
+  port: ${SERVER_PORT:8089}
+
+spring:
+  application:
+    name: log-service
+  elasticsearch:
+    uris: ${ELASTICSEARCH_URL:http://localhost:9200}
+    username: ${ELASTICSEARCH_USERNAME:elastic}  # 추가
+    password: ${ELASTICSEARCH_PASSWORD:elastic}  # 추가
+  data:
+    redis: # 실시간 메트릭을 위한 Redis 설정 추가
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:111}
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka/}
+  instance:
+    prefer-ip-address: true  # 추가: IP 주소 사용
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"  # 모든 액추에이터 엔드포인트 활성화
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags: # 메트릭 태그 추가
+      application: ${spring.application.name}
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true  # 히스토그램 메트릭 활성화
+  tracing: # 분산 추적 설정
+    sampling:
+      probability: 1.0
+
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] [%X{traceId:-},%X{spanId:-}] %-5level %logger{36} - %msg%n"  # 트레이스 ID 추가
+  level:
+    root: INFO
+  file:
+    name: /var/log/applications/${spring.application.name}/application.log
+
+# 로그 수집 설정 추가
+log:
+  retention:
+    days: 30  # 로그 보관 기간
+  batch:
+    size: 1000  # 배치 처리 시 한 번에 처리할 로그 수
+  alert:
+    threshold:
+      error: 100  # 에러 로그 임계값
+      warning: 1000  # 경고 로그 임계값
+  index:
+    prefix: "logs-"  # Elasticsearch 인덱스 prefix
