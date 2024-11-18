@@ -68,6 +68,10 @@ dependencies {
     // micrometer, actuator for prometheus metric
     implementation 'io.micrometer:micrometer-registry-prometheus'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+    // config client
+    implementation 'org.springframework.cloud:spring-cloud-bus'
+    implementation 'org.springframework.cloud:spring-cloud-starter-config'
 }
 
 dependencyManagement {
