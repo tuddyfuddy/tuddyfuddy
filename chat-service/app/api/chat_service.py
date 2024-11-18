@@ -30,6 +30,16 @@ class ChatService:
         model_name="gpt-4o-mini",
         temperature=0.8,
     )
+    llm_f = ChatOpenAI(
+        api_key=settings.FUDDY_KEY,
+        model_name="ft:gpt-4o-mini-2024-07-18:personal::AUnUqTo6",
+        temperature=0.8,
+    )
+    llm_t = ChatOpenAI(
+        api_key=settings.TUDDY_KEY,
+        model_name="ft:gpt-4o-mini-2024-07-18:personal::AUnCj1oX",
+        temperature=0.8,
+    )
 
     @staticmethod
     async def process_chat(room_id: int, user_id: str, message: str):
@@ -82,15 +92,16 @@ class ChatService:
         )
 
         # 두 번째 프롬프트
-        validation_prompt = PromptTemplate(
-            input_variables=[
-                "max_response_length",
-                "history",
-                "emotion",
-                "message",
-                "answer",
-            ],
-            template=NATURAL_RESPONSE_TEMPLATE,
+        validation_user_template = NATURAL_RESPONSE_TEMPLATE.format(
+            max_response_length=max_response_length,
+            history="{history}",
+            emotion="{emotion}",
+            message="{message}",
+            answer="{answer}",
+        )
+
+        validation_prompt = ChatPromptTemplate.from_messages(
+            [("system", formatted_system_message), ("human", validation_user_template)]
         )
 
         # 체인 구성
@@ -98,7 +109,8 @@ class ChatService:
             RunnablePassthrough()
             | {
                 "original_input": RunnablePassthrough(),
-                "first_response": first_prompt | ChatService.llm,
+                "first_response": first_prompt
+                | (ChatService.llm_t if room_id % 2 else ChatService.llm_f),
             }
             | (
                 lambda x: {
