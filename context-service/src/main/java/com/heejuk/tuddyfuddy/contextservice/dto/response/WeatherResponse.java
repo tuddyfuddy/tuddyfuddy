@@ -9,9 +9,10 @@ public record WeatherResponse(
     Integer x,
     Integer y,
     LocalDateTime timestamp,
-    Double temperature,
-    Double humidity,
+    Double minTemperature,
+    Double maxTemperature,
     String weather,
+    String note,
     LocalDateTime createdAt
 ) implements Serializable {
 

@@ -1,9 +1,39 @@
 server:
-  port: 8083
+  port: ${SERVER_PORT:8083}
 
 spring:
   application:
     name: notification-service
+
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+  data:
+    redis:
+      host:  ${REDIS_HOST}
+      port: ${REDIS_PORT}
+#      password: ${REDIS_PASSWORD:1234}
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  message:
+    kafka:
+      host: ${KAFKA_HOST}
+      port: ${KAFKA_PORT}
+      group-id: ${KAFKA_GROUP}
+
+fcm:
+  credentials-json: ${FCM_CREDENTIALS_JSON}
 
 eureka:
   client:
@@ -27,4 +57,4 @@ logging:
     org.springframework.web: "info"
     org.hibernate: "info"
   file:
-    name: logs/notification-service/application.log
+    name: /var/log/applications/${spring.application.name}/application.log

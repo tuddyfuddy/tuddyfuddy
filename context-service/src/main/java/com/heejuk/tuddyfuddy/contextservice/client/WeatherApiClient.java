@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 @FeignClient(name = "weather-api", url = "${weather.api.url}")
 public interface WeatherApiClient {
 
-    @GetMapping
+    @GetMapping("/VilageFcstInfoService_2.0/getVilageFcst")
     JsonNode fetchWeatherData(
         @RequestParam("serviceKey") String serviceKey,
         @RequestParam("pageNo") int pageNo,

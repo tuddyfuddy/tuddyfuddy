@@ -19,7 +19,7 @@ public class Health {
     @Id
     private String id;
     @Setter
-    private Long userId;
+    private String userId;
     private LocalDateTime timestamp;
 
     // 건강 데이터
@@ -35,7 +35,7 @@ public class Health {
 
     @Builder
     public Health(
-        Long userId,
+        String userId,
         LocalDateTime timestamp,
         Integer heartRate,
         Integer steps,

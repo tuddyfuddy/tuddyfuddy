@@ -21,9 +21,11 @@ configurations {
 
 repositories {
     mavenCentral()
+    maven { url 'https://repo.spring.io/milestone' }
 }
 
 ext {
+    set('springAiVersion', "1.0.0-M3")
     set('springCloudVersion', "2023.0.3")
 }
 
@@ -54,7 +56,7 @@ dependencies {
     // MongoDB
     implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
     implementation 'org.springframework.data:spring-data-mongodb'
-    
+
     // Auditing 지원을 위한 의존성
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 
@@ -71,13 +73,32 @@ dependencies {
     implementation 'com.fasterxml.jackson.core:jackson-databind'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
 
+    // open csv
+    implementation 'com.opencsv:opencsv:5.9'
+
     // MapStruct
     implementation 'org.mapstruct:mapstruct:1.4.2.Final'
     annotationProcessor 'org.mapstruct:mapstruct-processor:1.4.2.Final'
+
+    // circuitbreaker
+    implementation 'org.springframework.cloud:spring-cloud-starter-circuitbreaker-resilience4j'
+    implementation 'io.github.resilience4j:resilience4j-spring-boot3'
+
+    // JAX-RS API
+    implementation 'jakarta.ws.rs:jakarta.ws.rs-api:3.1.0'
+    implementation 'org.glassfish.jersey.core:jersey-common:3.1.1'
+
+    //kafka
+    implementation 'org.springframework.kafka:spring-kafka'
+    testImplementation 'org.springframework.kafka:spring-kafka-test'
+
+    // openai
+    implementation 'org.springframework.ai:spring-ai-openai-spring-boot-starter'
 }
 
 dependencyManagement {
     imports {
+        mavenBom "org.springframework.ai:spring-ai-bom:${springAiVersion}"
         mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
     }
 }

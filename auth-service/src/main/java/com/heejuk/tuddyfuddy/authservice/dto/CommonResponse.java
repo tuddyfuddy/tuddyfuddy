@@ -46,4 +46,12 @@ public record CommonResponse<T>(
         return new CommonResponse<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), message, null);
     }
 
+    public static <T> CommonResponse<T> error(int statusCode, String message) {
+        return new CommonResponse<>(statusCode, message, null);
+    }
+
+    public static <T> CommonResponse<T> error(int statusCode, String message, T result) {
+        return new CommonResponse<>(statusCode, message, result);
+    }
+
 }

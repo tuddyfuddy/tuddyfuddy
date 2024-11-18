@@ -470,3 +470,5 @@ docker-compose.yml
 logs/
 
 promtail/
+
+venvs/

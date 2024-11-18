@@ -1,5 +1,5 @@
 server:
-  port: 8082
+  port: ${SERVER_PORT:8082}
 
 spring:
   application:
@@ -17,8 +17,31 @@ spring:
           max-wait: -1ms
           max-idle: 8
           min-idle: 0
+  ai:
+    openai:
+      api-key: ${SPRING_AI_OPENAI_API_KEY}
+      chat:
+        options:
+          model: gpt-4o-mini
+          temperature: 0.7
+
   jackson:
     time-zone: Asia/Seoul
+  kafka:
+    bootstrap-servers: ${KAFKA_HOST:localhost}:${KAFKA_PORT:9092}
+    #    consumer:
+    #      group-id: ${KAFKA_GROUP:context-group}
+    #      auto-offset-reset: earliest
+    #      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    #      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
+kakao:
+  api:
+    url: ${KAKAO_API_URL}
+    key: ${KAKAO_API_KEY}
 
 health:
   threshold:
@@ -30,6 +53,23 @@ health:
     severe-stress-level: 19
     min-sleep-minutes: 180
     max-sleep-minutes: 600
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      weatherApi:
+        slidingWindowSize: 10 # 10개의 요청을 기준으로 실패율 계산
+        minimumNumberOfCalls: 5 # 최소 5개 요청이 있어야 실패율 계산
+        waitDurationInOpenState: 30s # Circuit 이 Open 상태일 때 30초 대기
+        failureRateThreshold: 50
+        permittedNumberOfCallsInHalfOpenState: 3
+  retry:
+    instances:
+      weatherApi:
+        maxAttempts: 3
+        waitDuration: 5s
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
 
 eureka:
   client:
@@ -53,9 +93,11 @@ logging:
     org.springframework.web: "info"
     org.hibernate: "info"
   file:
-    name: logs/context-service/application.log
+    name: /var/log/applications/${spring.application.name}/application.log
 
 weather:
   api:
     key: ${WEATHER_API_KEY}
     url: ${WEATHER_API_URL}
+  fetch:
+    cron: ${WEATHER_FETCH_CRON}

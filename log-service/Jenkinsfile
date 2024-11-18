@@ -1,15 +1,79 @@
 def DOCKER_REGISTRY = "inyub"  // 본인의 Docker Hub 사용자명
 def REPOSITORY_NAME = "tuddyfuddy"
 def SERVICE_NAME = "log-service"  // 서비스별로 변경
+def BUILD_NUMBER = env.BUILD_NUMBER
+def HOST_PORT = 8089
+def CONTAINER_PORT = 8080
+def NETWORK_NAME = "app-network"
 
 pipeline {
     agent any
     
     environment {
         DOCKER_CREDENTIALS = credentials('docker-hub-credential')
+        DOCKER_IMAGE_TAG = "${DOCKER_REGISTRY}/${REPOSITORY_NAME}:${SERVICE_NAME}-${BUILD_NUMBER}"
+        DOCKER_LATEST_TAG = "${DOCKER_REGISTRY}/${REPOSITORY_NAME}:${SERVICE_NAME}-latest"
+        SHOULD_RUN = false
+    }
+
+    options {
+        skipDefaultCheckout(true)
     }
     
     stages {
+        stage('Check Changes') {
+            steps {
+                script {
+                    // 저장소 체크아웃
+                    checkout scm
+                    
+                    // 수동 트리거 확인
+                    def isManualTrigger = currentBuild.getBuildCauses('hudson.model.Cause$UserIdCause').size() > 0
+                    
+                    // 변경된 파일 목록 확인 (병합 커밋 고려)
+                    def changes = sh(
+                        script: """
+                            # 병합 커밋인지 확인
+                            PARENTS=\$(git rev-list --parents -n 1 HEAD | wc -w)
+                            
+                            if [ "\$PARENTS" -gt "2" ]; then
+                                # 병합 커밋인 경우
+                                echo "Merge commit detected" >&2
+                                git diff --name-only HEAD^1 HEAD^2 | grep '^${SERVICE_NAME}/' || true
+                            else
+                                # 일반 커밋인 경우
+                                git diff --name-only HEAD^1 HEAD | grep '^${SERVICE_NAME}/' || true
+                            fi
+                        """,
+                        returnStdout: true
+                    ).trim()
+                    
+                    // 결과 로깅
+                    echo "Manual Trigger: ${isManualTrigger}"
+                    echo "Changes in ${SERVICE_NAME}: ${changes}"
+                    
+                    // 빌드 실행 여부 결정
+                    def shouldRun = isManualTrigger || changes != ''
+                    env.SHOULD_RUN = shouldRun.toString()
+                    
+                    // 변경된 파일 목록 출력
+                    if (changes) {
+                        echo "Changed files:"
+                        changes.split('\n').each { file ->
+                            echo "  - ${file}"
+                        }
+                    } else {
+                        echo "No changes detected in ${SERVICE_NAME} directory"
+                    }
+                    
+                    if (!shouldRun) {
+                        currentBuild.result = 'NOT_BUILT'
+                        error("No changes in ${SERVICE_NAME} directory and not manually triggered. Skipping build.")
+                    }
+                }
+            }
+        }
+
         stage('Prepare') {
             steps {
                 dir(SERVICE_NAME) {
@@ -26,16 +90,33 @@ pipeline {
                 }
             }
         }
+
+        stage('Prepare Environment') {
+            steps {
+                dir(SERVICE_NAME) {
+                    // 디렉토리 권한 설정
+                    sh 'chmod -R 777 .'
+
+                    // Secret file credential에서 .env 파일 가져오기
+                    withCredentials([file(credentialsId: "${SERVICE_NAME}-env", variable: 'ENV_FILE')]) {
+                        sh 'cp -f $ENV_FILE .env'
+                        // 복사된 파일 권한 설정
+                        sh 'chmod 644 .env'
+                    }
+                }
+            }
+        }
         
         stage('Docker Build & Push') {
             steps {
                 dir(SERVICE_NAME) {
                     sh """
-                        docker build -t ${DOCKER_REGISTRY}/${REPOSITORY_NAME}:${SERVICE_NAME} .
+                        docker build -t ${DOCKER_IMAGE_TAG} -t ${DOCKER_LATEST_TAG} .
                         
                         echo ${DOCKER_CREDENTIALS_PSW} | docker login -u ${DOCKER_CREDENTIALS_USR} --password-stdin
                         
-                        docker push ${DOCKER_REGISTRY}/${REPOSITORY_NAME}:${SERVICE_NAME}
+                        docker push ${DOCKER_IMAGE_TAG}
+                        docker push ${DOCKER_LATEST_TAG}
                     """
                 }
             }
@@ -44,20 +125,38 @@ pipeline {
         stage('Deploy') {
             steps {
                 script {
-                    // 기존 컨테이너 중지 및 제거
-                    sh """
-                        docker stop ${SERVICE_NAME} || true
-                        docker rm ${SERVICE_NAME} || true
-                    """
-                    
-                    // 새 컨테이너 실행
-                    sh """
-                        docker run -d \
-                            --name ${SERVICE_NAME} \
-                            --network app-network \
-                            -p 8089:8080 \
-                            ${DOCKER_REGISTRY}/${REPOSITORY_NAME}:${SERVICE_NAME}
-                    """
+                    try {
+                        // 배포 전 헬스체크
+                        sh "docker inspect ${SERVICE_NAME} >/dev/null 2>&1 && docker stop ${SERVICE_NAME} || true"
+                        sh "docker rm ${SERVICE_NAME} || true"
+                        
+                        // 새 컨테이너 실행
+                        sh """
+                            docker run -d \
+                                --name ${SERVICE_NAME} \
+                                --network ${NETWORK_NAME} \
+                                --restart unless-stopped \
+                                --env-file ${WORKSPACE}/${SERVICE_NAME}/.env \
+                                -v /var/log/applications:/var/log/applications \
+                                -p ${HOST_PORT}:${CONTAINER_PORT} \
+                                ${DOCKER_IMAGE_TAG}
+                        """
+                    } catch(Exception e) {
+                        // 배포 실패시 롤백
+                        sh """
+                            docker stop ${SERVICE_NAME}
+                            docker rm ${SERVICE_NAME}
+                            docker run -d \
+                                --name ${SERVICE_NAME} \
+                                --network ${NETWORK_NAME} \
+                                --restart unless-stopped \
+                                --env-file ${WORKSPACE}/${SERVICE_NAME}/.env \
+                                -v /var/log/applications:/var/log/applications \
+                                -p ${HOST_PORT}:${CONTAINER_PORT} \
+                                ${DOCKER_LATEST_TAG}
+                        """
+                        throw e
+                    }
                 }
             }
         }
@@ -65,7 +164,45 @@ pipeline {
     
     post {
         always {
-            sh 'docker logout'
+            // 로그아웃 및 사용하지 않는 리소스 제거
+            sh '''
+                docker logout
+                docker system prune -f
+            '''
+        }
+        success {
+            script {
+                def Author_ID = sh(script: "git show -s --pretty=%an", returnStdout: true).trim()
+                def Author_Name = sh(script: "git show -s --pretty=%ae", returnStdout: true).trim()
+                mattermostSend (
+                    color: 'good', 
+                    message: """빌드 성공 :white_check_mark:
+                    * Job: ${env.JOB_NAME} 
+                    * Build: #${env.BUILD_NUMBER}
+                    * Service: ${SERVICE_NAME}
+                    * Author: ${Author_ID}(${Author_Name})
+                    * (<${env.BUILD_URL}|상세 보기>)""", 
+                    endpoint: 'https://meeting.ssafy.com/hooks/1qqg8a6fkid57dsuhq7gob3ery', 
+                    channel: 'a510_build'
+                )
+            }
+        }
+        failure {
+            script {
+                def Author_ID = sh(script: "git show -s --pretty=%an", returnStdout: true).trim()
+                def Author_Name = sh(script: "git show -s --pretty=%ae", returnStdout: true).trim()
+                mattermostSend (
+                    color: 'danger', 
+                    message: """빌드 실패 :x:
+                    * Job: ${env.JOB_NAME} 
+                    * Build: #${env.BUILD_NUMBER}
+                    * Service: ${SERVICE_NAME}
+                    * Author: ${Author_ID}(${Author_Name})
+                    * (<${env.BUILD_URL}|상세 보기>)""", 
+                    endpoint: 'https://meeting.ssafy.com/hooks/1qqg8a6fkid57dsuhq7gob3ery', 
+                    channel: 'a510_build'
+                )
+            }
         }
     }
 }

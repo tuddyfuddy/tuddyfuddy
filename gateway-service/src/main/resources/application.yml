@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: ${SERVER_PORT:8080}
 
 spring:
   application:
@@ -16,6 +16,8 @@ spring:
               - "https://localhost:80"
               - "http://localhost:5173"
               - "https://localhost:5173"
+              - "https://k11a510.p.ssafy.io"
+              - "http://k11a510.p.ssafy.io"
             allowedMethods:
               - GET
               - POST
@@ -40,9 +42,24 @@ spring:
         - id: chat-service
           uri: lb://chat-service
           predicates:
+            - Path=/chat-service/chats/direct/*, /chat-service/chats/group/*
+          filters:
+            - AuthorizationHeaderFilter
+            - RewritePath=/chat-service/(?<segment>.*), /$\{segment}
+
+        - id: chat-service
+          uri: lb://chat-service
+          predicates:
             - Path=/chat-service/**
           filters:
             - RewritePath=/chat-service/(?<segment>.*), /$\{segment}
+
+        - id: context-service
+          uri: lb://context-service
+          predicates:
+            - Path=/context/*
+          filters:
+            - AuthorizationHeaderFilter
 
         - id: context-service
           uri: lb://context-service
@@ -51,15 +68,10 @@ spring:
           filters:
             - RewritePath=/context-service/(?<segment>.*), /$\{segment}
 
-        - id: context-service
-          uri: lb://context-service
-          predicates:
-            - Path=/context/**
-
         - id: notification-service
           uri: lb://notification-service
           predicates:
-            - Path=/notification-service/**
+            - Path=/notification-service/**, /notification/**
           filters:
             - RewritePath=/notification-service/(?<segment>.*), /$\{segment}
 
@@ -69,6 +81,27 @@ spring:
             - Path=/log-service/**
           filters:
             - RewritePath=/log-service/(?<segment>.*), /$\{segment}
+
+        - id: image-service
+          uri: lb://image-service
+          predicates:
+            - Path=/image-service/**
+          filters:
+            - RewritePath=/image-service/(?<segment>.*), /$\{segment}
+
+        - id: image-service
+          uri: lb://image-service
+          predicates:
+            - Path=/images/**
+
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=/user-service/users
+            - Method=GET
+          filters:
+            - AuthorizationHeaderFilter
+            - RewritePath=/user-service/(?<segment>.*), /$\{segment}
 
         - id: user-service
           uri: lb://user-service
@@ -89,7 +122,7 @@ springdoc:
       - url: /v3/api-docs
         name: API Gateway Service
       - url: /auth-service/v3/api-docs
-        name: 사용자 서비스
+        name: 인증 서비스
       - url: /chat-service/v3/api-docs
         name: 채팅 서비스
       - url: /context-service/v3/api-docs
@@ -98,6 +131,8 @@ springdoc:
         name: 알림 서비스
       - url: /log-service/v3/api-docs
         name: 로그 서비스
+      - url: /image-service/v3/api-docs
+        name: 이미지 서비스
       - url: /user-service/v3/api-docs
         name: 사용자 서비스
 
@@ -123,4 +158,4 @@ logging:
     org.springframework.web: "info"
     org.hibernate: "info"
   file:
-    name: /logs/gateway-service/application.log
+    name: /var/log/applications/${spring.application.name}/application.log

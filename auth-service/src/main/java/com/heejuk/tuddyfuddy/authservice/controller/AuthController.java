@@ -34,7 +34,7 @@ public class AuthController {
         HttpServletResponse response) {
 
         log.info("Kakao login request received with code: {}", request);
-        authService.processKakaoLogin(request.accessToken(), response);
+        authService.processKakaoLogin(request, response);
 
         return CommonResponse.ok("카카오 로그인 성공");
     }

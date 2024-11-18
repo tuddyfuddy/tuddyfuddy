@@ -2,11 +2,12 @@ package com.heejuk.tuddyfuddy.userservice.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -19,29 +20,46 @@ import lombok.NoArgsConstructor;
 public class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private UUID id;
 
     @Column(unique = true)
     private Long kakaoId;
 
-    private String email;
-
+    @Column(nullable = false)
     private String nickname;
 
     private String profileImage;
 
-    @Column(columnDefinition = "DATE")
-    private LocalDate birthDate;
+    @Column(updatable = false)
+    private LocalDateTime createdAt;
+
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        if (this.id == null) {
+            this.id = UUID.randomUUID();
+        }
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public void updateProfile(String nickname, String profileImage) {
+        if (nickname != null) {
+            this.nickname = nickname;
+        }
+        this.profileImage = profileImage;
+    }
 
     @Builder
-    public User(Long kakaoId, String email, String nickname, String profileImage,
-        LocalDate birthdate) {
-
+    public User(Long kakaoId, String nickname, String profileImage) {
         this.kakaoId = kakaoId;
-        this.email = email;
         this.nickname = nickname;
         this.profileImage = profileImage;
-        this.birthDate = birthdate;
     }
 }
