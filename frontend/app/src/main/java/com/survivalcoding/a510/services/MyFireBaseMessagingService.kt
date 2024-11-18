@@ -134,6 +134,10 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         // 푸시 알림 데이터에서 채팅방 ID 찾기
         val chatRoomId = data["roomId"]?.toIntOrNull()
 
+        if (chatRoomId == 3 || chatRoomId == 4) {
+            return
+        }
+
         // 현재 사용자 화면에 떠있는 채팅방 ID 찾기
         val currentChatRoomId = ChatService.getActiveChatRoom()
 
