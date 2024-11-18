@@ -7,7 +7,6 @@ from app.api.kafka_service import KafkaService
 from app.core.logger import setup_logger
 from app.core.config import settings
 from langchain_openai import ChatOpenAI
-from langchain.prompts import PromptTemplate
 from langchain.schema.runnable import RunnablePassthrough
 
 from app.models.templates import (
@@ -142,7 +141,8 @@ class ChatService:
 
         answer = await chain.ainvoke(chain_input)
         memory.save_context(
-            {"message": f"user: {message}"}, {"answer": f"{ai_name[room_id]}: {answer}"}
+            {"message": f"user: {message}"},
+            {"answer": f"ai({ai_name[room_id]}): {answer}"},
         )
 
         logging.info(f">>>>>>> {answer}")
@@ -153,6 +153,45 @@ class ChatService:
             KafkaService.send_to_kafka(user_id, room_id, aa)
 
         return {"response": array_anwer}
+
+    @staticmethod
+    def delete_chat_history(user_id: str, room_id: int):
+        message_history = RedisChatMessageHistory(
+            session_id=f"chat:{user_id}:{room_id}",
+            url=settings.REDIS_URL,
+            ttl=604800,
+        )
+        message_history.clear()
+        logging.info(
+            f">>>>>>> Deleted chat history for user {user_id} in room {room_id}"
+        )
+
+    # chat_service.py
+    @staticmethod
+    def get_chat_history(user_id: str, room_id: int):
+        message_history = RedisChatMessageHistory(
+            session_id=f"chat:{user_id}:{room_id}",
+            url=settings.REDIS_URL,
+            ttl=604800,
+        )
+
+        memory = ConversationBufferMemory(
+            chat_memory=message_history,
+            memory_key="history",
+            return_messages=True,
+            output_key="answer",
+            input_key="message",
+            k=50,
+        )
+
+        history = memory.load_memory_variables({})["history"]
+        if history:
+            formatted_history = [msg.content for msg in history]
+            logging.info(
+                f">>>>>>> Loaded chat history for user {user_id} in room {room_id}"
+            )
+            return formatted_history
+        return []
 
 
 class MessageProcessor:
