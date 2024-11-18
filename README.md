@@ -338,7 +338,7 @@
 
 ### ERD
 
-![ERD](./images/uhbooba_erd.png)
+![ERD](./images/tuddyfuddy_erd.png)
 
 ---
 
