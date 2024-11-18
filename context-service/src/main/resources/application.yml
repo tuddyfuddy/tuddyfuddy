@@ -6,10 +6,10 @@ spring:
     name: context-service
   data:
     mongodb:
-      uri: mongodb://${CONTEXT_DB_USERNAME:contextuser}:${CONTEXT_DB_PASSWORD:contextpass}@${MONGODB_HOST:localhost}:${MONGODB_PORT:27018}/${CONTEXT_DB_NAME:contextdb}?authSource=contextdb
+      uri: mongodb://${CONTEXT_DB_USERNAME}:${CONTEXT_DB_PASSWORD}@${MONGODB_HOST}:${MONGODB_PORT}/${CONTEXT_DB_NAME}?authSource=contextdb
     redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6383}
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
       timeout: 10000ms
       lettuce:
         pool:
@@ -28,7 +28,7 @@ spring:
   jackson:
     time-zone: Asia/Seoul
   kafka:
-    bootstrap-servers: ${KAFKA_HOST:localhost}:${KAFKA_PORT:9092}
+    bootstrap-servers: ${KAFKA_HOST}:${KAFKA_PORT}
     #    consumer:
     #      group-id: ${KAFKA_GROUP:context-group}
     #      auto-offset-reset: earliest
