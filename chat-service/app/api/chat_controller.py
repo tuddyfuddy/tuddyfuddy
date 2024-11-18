@@ -15,24 +15,6 @@ class TextRequest(BaseModel):
     text: str
 
 
-# 임시용
-@router.post("/test/{room_id}")
-@log_api_time
-async def chat(
-    room_id: int,
-    request: TextRequest,
-    user_id: str = Query(...),
-):
-    try:
-        result = await ChatService.process_chat(room_id, user_id, request.text)
-        if isinstance(result, JSONResponse):
-            return ["응?"]
-        return result
-    except Exception as e:
-        logging.error(f"Error in chat endpoint: {e}")
-        return ["응?"]
-
-
 @router.post("/direct/{room_id}")
 @log_api_time
 async def chat(
@@ -45,24 +27,27 @@ async def chat(
             room_id, user_info.user_id, request.text
         )
         if isinstance(result, JSONResponse):
-            return ["응?"]
+            return {"response": ["응?"]}
         return result
     except Exception as e:
         logging.error(f"Error in chat endpoint: {e}")
-        return ["응?"]
+        return {"response": ["응?"]}
 
 
-@router.post("/group/{type}")
+############################################################################
+
+
+@router.post("/test/{user_id}/{room_id}")
 @log_api_time
-async def chat(
-    type: int,
-    request: TextRequest,
-    user_info: UserHeaderInfo = Depends(get_user_header_info),
-):
+async def chat(user_id: str, room_id: int, request: TextRequest):
     try:
-        return ["응?"]
+        result = await ChatService.process_chat(room_id, user_id, request.text)
+        if isinstance(result, JSONResponse):
+            return {"response": ["응?"]}
+        return result
     except Exception as e:
-        return ["응?"]
+        logging.error(f"Error in chat endpoint: {e}")
+        return {"response": ["응?"]}
 
 
 @router.get("/history/{user_id}/{room_id}")

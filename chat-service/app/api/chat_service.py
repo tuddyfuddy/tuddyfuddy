@@ -40,6 +40,8 @@ class ChatService:
         temperature=0.8,
     )
 
+    ######################################
+
     @staticmethod
     async def process_chat(room_id: int, user_id: str, message: str):
         # 감정 분석
@@ -154,6 +156,8 @@ class ChatService:
 
         return {"response": array_anwer}
 
+    ######################################
+
     @staticmethod
     def delete_chat_history(user_id: str, room_id: int):
         message_history = RedisChatMessageHistory(
@@ -166,7 +170,6 @@ class ChatService:
             f">>>>>>> Deleted chat history for user {user_id} in room {room_id}"
         )
 
-    # chat_service.py
     @staticmethod
     def get_chat_history(user_id: str, room_id: int):
         message_history = RedisChatMessageHistory(
@@ -194,6 +197,7 @@ class ChatService:
         return []
 
 
+############################################################################
 class MessageProcessor:
 
     @staticmethod
