@@ -7,7 +7,6 @@ from app.api.kafka_service import KafkaService
 from app.core.logger import setup_logger
 from app.core.config import settings
 from langchain_openai import ChatOpenAI
-from langchain.prompts import PromptTemplate
 from langchain.schema.runnable import RunnablePassthrough
 
 from app.models.templates import (
@@ -28,6 +27,16 @@ class ChatService:
     llm = ChatOpenAI(
         api_key=settings.GPT_KEY,
         model_name="gpt-4o-mini",
+        temperature=0.8,
+    )
+    llm_f = ChatOpenAI(
+        api_key=settings.FUDDY_KEY,
+        model_name="ft:gpt-4o-mini-2024-07-18:personal::AUnUqTo6",
+        temperature=0.8,
+    )
+    llm_t = ChatOpenAI(
+        api_key=settings.TUDDY_KEY,
+        model_name="ft:gpt-4o-mini-2024-07-18:personal::AUo5uob6",
         temperature=0.8,
     )
 
@@ -82,15 +91,16 @@ class ChatService:
         )
 
         # 두 번째 프롬프트
-        validation_prompt = PromptTemplate(
-            input_variables=[
-                "max_response_length",
-                "history",
-                "emotion",
-                "message",
-                "answer",
-            ],
-            template=NATURAL_RESPONSE_TEMPLATE,
+        validation_user_template = NATURAL_RESPONSE_TEMPLATE.format(
+            max_response_length=max_response_length,
+            history="{history}",
+            emotion="{emotion}",
+            message="{message}",
+            answer="{answer}",
+        )
+
+        validation_prompt = ChatPromptTemplate.from_messages(
+            [("system", formatted_system_message), ("human", validation_user_template)]
         )
 
         # 체인 구성
@@ -98,7 +108,8 @@ class ChatService:
             RunnablePassthrough()
             | {
                 "original_input": RunnablePassthrough(),
-                "first_response": first_prompt | ChatService.llm,
+                "first_response": first_prompt
+                | (ChatService.llm_t if room_id % 2 else ChatService.llm_f),
             }
             | (
                 lambda x: {
@@ -130,7 +141,8 @@ class ChatService:
 
         answer = await chain.ainvoke(chain_input)
         memory.save_context(
-            {"message": f"user: {message}"}, {"answer": f"{ai_name[room_id]}: {answer}"}
+            {"message": f"user: {message}"},
+            {"answer": f"ai({ai_name[room_id]}): {answer}"},
         )
 
         logging.info(f">>>>>>> {answer}")
@@ -141,6 +153,45 @@ class ChatService:
             KafkaService.send_to_kafka(user_id, room_id, aa)
 
         return {"response": array_anwer}
+
+    @staticmethod
+    def delete_chat_history(user_id: str, room_id: int):
+        message_history = RedisChatMessageHistory(
+            session_id=f"chat:{user_id}:{room_id}",
+            url=settings.REDIS_URL,
+            ttl=604800,
+        )
+        message_history.clear()
+        logging.info(
+            f">>>>>>> Deleted chat history for user {user_id} in room {room_id}"
+        )
+
+    # chat_service.py
+    @staticmethod
+    def get_chat_history(user_id: str, room_id: int):
+        message_history = RedisChatMessageHistory(
+            session_id=f"chat:{user_id}:{room_id}",
+            url=settings.REDIS_URL,
+            ttl=604800,
+        )
+
+        memory = ConversationBufferMemory(
+            chat_memory=message_history,
+            memory_key="history",
+            return_messages=True,
+            output_key="answer",
+            input_key="message",
+            k=50,
+        )
+
+        history = memory.load_memory_variables({})["history"]
+        if history:
+            formatted_history = [msg.content for msg in history]
+            logging.info(
+                f">>>>>>> Loaded chat history for user {user_id} in room {room_id}"
+            )
+            return formatted_history
+        return []
 
 
 class MessageProcessor:
@@ -157,6 +208,9 @@ class MessageProcessor:
 
     @staticmethod
     async def get_emotion(text: str) -> str:
+        if len(text) < 5:
+            return "기타"
+
         async with httpx.AsyncClient() as client:
             try:
                 response = await client.post(

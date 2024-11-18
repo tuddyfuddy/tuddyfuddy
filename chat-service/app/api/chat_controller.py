@@ -55,7 +55,7 @@ async def chat(
 @router.post("/group/{type}")
 @log_api_time
 async def chat(
-    room_id: int,
+    type: int,
     request: TextRequest,
     user_info: UserHeaderInfo = Depends(get_user_header_info),
 ):
@@ -65,19 +65,13 @@ async def chat(
         return ["응?"]
 
 
-@router.get("/history/{room_id}")
-@log_api_time
-async def get_history(
-    room_id: int, user_info: UserHeaderInfo = Depends(get_user_header_info)
-):
-    try:
-        result = await ChatService.get_history(user_info.user_id)
-        if isinstance(result, JSONResponse):
-            return result
-        return result
-    except Exception as e:
-        logging.error(f"Error in history endpoint: {e}")
-        return JSONResponse(
-            status_code=500,
-            content={"error": "Failed to fetch chat history", "detail": str(e)},
-        )
+@router.get("/history/{user_id}/{room_id}")
+async def get_chat_history(user_id: str, room_id: int):
+    history = ChatService.get_chat_history(user_id, room_id)
+    return {"history": history}
+
+
+@router.delete("/history/{user_id}/{room_id}")
+async def delete_chat_history(user_id: str, room_id: int):
+    ChatService.delete_chat_history(user_id, room_id)
+    return {"message": "Chat history deleted successfully"}
