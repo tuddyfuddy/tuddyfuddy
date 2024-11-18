@@ -117,6 +117,14 @@
 5. **정서적 안정에 초점**
    - 대화의 목적이 단순 정보 제공이 아닌, 사용자의 정서적 안정과 고립감을 줄이는 데 있습니다.
 
+6. **이미지 기반 소통**
+   - 사용자가 전송한 이미지를 분석하여 대화 주제로 활용하거나, 이미지 기반 대화를 제공합니다.
+   - AI 이미지 생성 기능을 통해 유머, 재미 요소를 추가합니다.
+
+7. **단체 톡방**
+    - 사용자는 실제 단톡방처럼 여러 AI 친구들과 단체 톡방에서 대화할 수 있습니다.
+    - 한 대화에 대해 서로 다른 반응을 경험할 수 있습니다.
+
 ---
 
 ### **기대 효과**
@@ -163,12 +171,16 @@
    - AI 친구가 건강 관리 코치 역할을 하며 운동 계획, 수면 관리, 영양 추천 등의 기능을 추가.  
    - 심박수, 수면 패턴 등 건강 데이터를 기반으로 웰빙을 관리하는 AI.
 
+7. **음성 대화**
+   - STT와 TTS를 사용해 실제와 같은 음성 대화를 경험할 수 있습니다.
+   - 텍스트 뿐만 아니라 전화 통화하는 느낌을 받을 수 있습니다.
+
 ---
 
 
 
 ## 소개 영상
-[![Watch the video](https://img.youtube.com/vi/비디오ID/0.jpg)](https://s3.youm.me/uhbooba/UCC.mp4)
+[![Watch the video](https://img.youtube.com/vi/비디오ID/0.jpg)](https://s3.youm.me/tuddyfuddy/UCC.mp4)
 
 ---
 
@@ -240,8 +252,8 @@
 #### **1. AI 모델 통합 및 최적화**
 - **KOTE**(Korean Online That-gul Emotions) 모델을 활용한 정확한 감정 분석으로 사용자의 감정 상태를 실시간으로 파악합니다.
 - **Stable Diffusion**을 활용한 이미지 생성으로 AI 친구는 실제 사람처럼 사용자와 적절한 이미지를 주고받으며 자연스러운 대화를 진행합니다.
-- **LangChain**을 활용한 GPT 모델 파인튜닝으로 다양한 성격의 AI 페르소나를 구현했습니다.
-- 각 AI 친구별 특성에 맞는 프롬프트 체이닝으로 일관된 성격과 대화 스타일을 유지합니다.
+- **LangChain**을 활용한 프롬프트 체이닝으로 다양한 성격의 AI 페르소나를 구현했습니다.
+- **GPT 모델**을 별도로 `fine-tuning`하여 특정 상황에 최적화된 응답을 제공합니다.
 
 #### **2. MSA 기반 아키텍처**
 - Spring Cloud와 Eureka를 활용한 **마이크로서비스 아키텍처** 구현으로 서비스 간 독립적인 확장과 운영이 가능합니다.
@@ -312,10 +324,10 @@
    - **Firebase Cloud Messaging**: 모바일 푸시 알림 전송
 
 8. **AI 모델 통합**:
-   - **OpenAI API**: 자연스러운 대화 생성
+   - **OpenAI API**: GPT 모델 파인튜닝 및 자연스러운 대화 생성을 위한 기반 모델 제공
    - **Stable Diffusion**: AI 프로필 이미지 생성
    - **KOTE**: 한국어 감정 분석
-   - **LangChain**: GPT 모델 파인튜닝 및 프롬프트 체이닝
+   - **LangChain**: 프롬프트 체이닝을 활용하여 다양한 AI 페르소나 구현 및 일관된 대화 스타일 유지
 
 9. **모니터링**:
    - **Grafana & Prometheus**: 실시간 시스템 모니터링
@@ -435,8 +447,7 @@
 #### **채팅 API**
 | **Method** | **Endpoint**               | **Description**                  | **Request Body/Parameters**                                                                                                                                                                | **Response**                                    |
 |------------|----------------------------|----------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------|
-| POST       | `/chats/test/{room_id}`    | 테스트 채팅                      | Path: `room_id`<br>Query: `user_id`<br>JSON: `text`                                                                                                                                        | 200: OK<br>422: Validation 오류                |
-| POST       | `/chats/direct/{room_id}`  | 직접 채팅                        | Path: `room_id`<br>JSON: `text`                                                                                                                                                            | 200: OK<br>422: Validation 오류                |
+| POST       | `/chats/direct/{room_id}`  | 개인 채팅                        | Path: `room_id`<br>JSON: `text`                                                                                                                                                            | 200: OK<br>422: Validation 오류                |
 | POST       | `/chats/group/{type}`      | 그룹 채팅                        | Query: `room_id`<br>JSON: `text`                                                                                                                                                           | 200: OK<br>422: Validation 오류                |
 | GET        | `/chats/history/{room_id}` | 채팅 기록 조회                   | Path: `room_id`                                                                                                                                                                            | 200: 채팅 기록<br>422: Validation 오류         |
 
