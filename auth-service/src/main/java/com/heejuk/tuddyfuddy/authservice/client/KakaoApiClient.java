@@ -1,6 +1,6 @@
 package com.heejuk.tuddyfuddy.authservice.client;
 
-import com.heejuk.tuddyfuddy.authservice.circuit.KakaoApiClientFallback;
+import com.heejuk.tuddyfuddy.authservice.circuit.KakaoApiClientFallbackFactory;
 import com.heejuk.tuddyfuddy.authservice.config.FeignConfig;
 import com.heejuk.tuddyfuddy.authservice.dto.response.KakaoUserInfo;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 @FeignClient(
     name = "kakao-api",
     url = "https://kapi.kakao.com",
-    fallback = KakaoApiClientFallback.class,
+    fallback = KakaoApiClientFallbackFactory.class,
     configuration = FeignConfig.class
 )
 public interface KakaoApiClient {

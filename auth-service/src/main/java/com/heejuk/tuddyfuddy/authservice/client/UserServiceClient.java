@@ -1,6 +1,6 @@
 package com.heejuk.tuddyfuddy.authservice.client;
 
-import com.heejuk.tuddyfuddy.authservice.circuit.UserServiceClientFallback;
+import com.heejuk.tuddyfuddy.authservice.circuit.UserServiceClientFallbackFactory;
 import com.heejuk.tuddyfuddy.authservice.config.FeignConfig;
 import com.heejuk.tuddyfuddy.authservice.dto.CommonResponse;
 import com.heejuk.tuddyfuddy.authservice.dto.response.KakaoUserInfo;
@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 @FeignClient(
     name = "user-service",
-    fallback = UserServiceClientFallback.class,
+    fallback = UserServiceClientFallbackFactory.class,
     configuration = FeignConfig.class
 )
 public interface UserServiceClient {
