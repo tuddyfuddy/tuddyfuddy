@@ -256,12 +256,16 @@ fun MessageBubble(
                     )
                 }
             } else {
+                val displayText = remember(text) {
+                    text.replace(Regex("<br\\s*/*>|<br"), "\n")
+                }
+
                 HighlightedText(
-                    text = text,
+                    text = displayText,  // text 대신 displayText 사용
                     searchQuery = searchQuery,
                     color = Color.DarkGray,
                     textAlign = TextAlign.Start,
-                    modifier = Modifier.align(Alignment.CenterStart),
+                    modifier = Modifier, // .align() 제거
                     fontSize = 12.sp
                 )
             }
