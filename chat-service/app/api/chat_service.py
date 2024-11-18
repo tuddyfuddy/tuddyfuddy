@@ -157,6 +157,9 @@ class MessageProcessor:
 
     @staticmethod
     async def get_emotion(text: str) -> str:
+        if len(text) < 5:
+            return "기타"
+
         async with httpx.AsyncClient() as client:
             try:
                 response = await client.post(
