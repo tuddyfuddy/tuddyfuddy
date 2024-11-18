@@ -37,7 +37,7 @@ class ChatService:
     )
     llm_t = ChatOpenAI(
         api_key=settings.TUDDY_KEY,
-        model_name="ft:gpt-4o-mini-2024-07-18:personal::AUnCj1oX",
+        model_name="ft:gpt-4o-mini-2024-07-18:personal::AUo5uob6",
         temperature=0.8,
     )
 
