@@ -371,6 +371,49 @@ class ChatViewModel(application: Application, private val roomId: Int) : Android
         }
     }
 
+    // 예시 메시지를 추가하는 함수 ###### 나중에 지우기 #########
+    fun addExampleMessages() {
+        viewModelScope.launch {
+            // 사용자 메시지 예시
+            messageDao.insertMessage(
+                ChatMessage(
+                    roomId = roomId,
+                    content = "고마워 ㅋㅋㅋㅋ",
+                    isAiMessage = false,
+                    timestamp = System.currentTimeMillis()
+                )
+            )
+
+            // 사용자 메시지 예시2
+            messageDao.insertMessage(
+                ChatMessage(
+                    roomId = roomId,
+                    content = "난 다시 준비하러 갈게! 빠이!",
+                    isAiMessage = false,
+                    timestamp = System.currentTimeMillis()
+                )
+            )
+
+            // AI 응답 메시지 예시
+            messageDao.insertMessage(
+                ChatMessage(
+                    roomId = roomId,
+                    content = "빠이!! 준비 잘 하고 와!",
+                    isAiMessage = true,
+                    timestamp = System.currentTimeMillis() + 1000 // 1초 후
+                )
+            )
+
+
+            // 채팅 목록 페이지 업데이트
+            chatInfoDao.updateLastMessage(
+                chatId = roomId,
+                message = "빠이!! 준비 잘 하고 와!",
+                timestamp = System.currentTimeMillis() + 3000
+            )
+        }
+    }
+
 
 
     // 백그라운드에서도 작업이 가능하도록 하는 함
