@@ -8,7 +8,7 @@ class Settings(BaseSettings):
 
     # 데이터베이스 설정
     MONGODB_URL: str = "mongodb://chat-mongodb:27017/chatdb"
-    REDIS_URL: str = "redis://localhost:6379"
+    REDIS_URL: str = "redis://chat-redis:6379"
     ELASTICSEARCH_URL: str = "http://chat-elasticsearch:9200"
 
     GPT_KEY: str = ""
