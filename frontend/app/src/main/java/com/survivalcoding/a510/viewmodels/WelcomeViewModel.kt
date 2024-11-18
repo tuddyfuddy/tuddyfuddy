@@ -16,19 +16,25 @@ import kotlinx.coroutines.launch
 class WelcomeViewModel : ViewModel() {
 
     private companion object {
+
+        // 웰컴페이지 입장 후 헬스데이터 전송 및 응답 딜레이
         const val HEALTH_DATA_DELAY = 6000L
+
+        // 헬스데이터 답변 선택 기준 변수
         const val SLEEP_TIME = 300
         const val HEART_UP_RATE = 100
         const val HEART_DOWN_RATE = 60
         const val STRESS_LEVEL = 50
         const val STEP_RATE = 10000
+
+        // 헬스데이터에 따른 AI 답변 케이스
         const val SLEEP_TALK = "'오늘 잠 잘 못잤어? 안좋은 꿈 꿨어?' 라고 답장해줘, 다른 말은 절대로 하지말고 ''안에 있는 말만 해줘."
         const val HEART_UP_TALK = "'무슨 일 있어?'라고 답장해줘, 다른 말은 절대로 하지말고."
         const val HEART_DOWN_TALK = "'무슨 일 있어?'라고 답장해줘, 다른 말은 절대로 하지말고."
         const val STRESS_TALK = "'기분 안 좋은 일 있어? 무슨 일 있으면 나한테 말해봐'라고 답장해줘, 다른 말은 절대로 하지말고."
         const val STEP_TALK = "'오늘 엄청 많이 걸었네! 벌써 1만보 넘게 걸었어'라고 답장해줘, 다른 말은 절대로 하지말고."
-
     }
+
     fun sendHealthData(context: Context) {
         viewModelScope.launch {
             delay(HEALTH_DATA_DELAY) // 1분 대기
