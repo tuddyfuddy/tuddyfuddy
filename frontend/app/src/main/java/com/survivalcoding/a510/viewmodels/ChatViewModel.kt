@@ -302,9 +302,11 @@ class ChatViewModel(application: Application, private val roomId: Int) : Android
 
             // 채팅목록 페이지 업데이트
             // 채팅목록 페이지에서 마지막 메시지, 시간 표시해주는거
+            // 채팅목록 페이지 업데이트할 때 <br> 태그 제거
+            val displayContent = content.replace(Regex("<br\\s*/*>|<br"), " ")
             chatInfoDao.updateLastMessage(
                 chatId = roomId,
-                message = content,
+                message = displayContent,
                 timestamp = System.currentTimeMillis()
             )
 
