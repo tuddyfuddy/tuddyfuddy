@@ -1,3 +1,20 @@
+*.iml
+.gradle
+/local.properties
+/.idea
+/.idea/caches
+/.idea/libraries
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/navEditor.xml
+/.idea/assetWizardSettings.xml
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+
 # Created by https://www.toptal.com/developers/gitignore/api/windows,macos,intellij,kotlin,java,python,jetbrains
 # Edit at https://www.toptal.com/developers/gitignore?templates=windows,macos,intellij,kotlin,java,python,jetbrains
 
