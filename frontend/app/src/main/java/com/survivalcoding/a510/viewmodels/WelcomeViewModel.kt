@@ -18,7 +18,7 @@ class WelcomeViewModel : ViewModel() {
     private companion object {
 
         // 웰컴페이지 입장 후 헬스데이터 전송 및 응답 딜레이
-        const val HEALTH_DATA_DELAY = 6000L
+        const val HEALTH_DATA_DELAY = 300000L
 
         // 헬스데이터 답변 선택 기준 변수
         const val SLEEP_TIME = 300
@@ -41,7 +41,7 @@ class WelcomeViewModel : ViewModel() {
 
             try {
                 val nextIndex = DataIndexManager.getNextIndex(DummyHealthData.healthList.size)
-                val dummyHealthData = DummyHealthData.healthList[nextIndex]
+                val dummyHealthData = DummyHealthData.healthList[0]
 
                 val response = RetrofitClient.healthService.sendHealthDataWithLogging(
                     HealthRequest(

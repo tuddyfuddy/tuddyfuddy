@@ -211,9 +211,10 @@ class ChatService : Service() {
 
                             // 마지막 메시지로 ChatInfo 업데이트
                             response.body()?.getMessageList()?.lastOrNull()?.let { lastAiMessage ->
+                                val displayMessage = lastAiMessage.replace(Regex("<br\\s*/*>|<br"), " ")
                                 chatInfoDao.updateLastMessage(
                                     chatId = roomId,
-                                    message = lastAiMessage,
+                                    message = displayMessage,
                                     timestamp = System.currentTimeMillis()
                                 )
                             }
@@ -281,10 +282,10 @@ class ChatService : Service() {
 
                         // 챗API 응답으로 온 마지막 AI 메세지인 경우 ChatInfo 업데이트
                         response.body()?.getMessageList()?.lastOrNull()?.let { lastAiMessage ->
-                            // 채팅목록 페이지에서 보여질 데이터 업데이트
+                            val displayMessage = lastAiMessage.replace(Regex("<br\\s*/*>|<br"), " ")
                             chatInfoDao.updateLastMessage(
                                 chatId = roomId,
-                                message = lastAiMessage,
+                                message = displayMessage,
                                 timestamp = System.currentTimeMillis()
                             )
 
