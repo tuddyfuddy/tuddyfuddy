@@ -22,4 +22,6 @@ interface ChatInfoDao {
 
     @Query("SELECT COUNT(*) FROM chat_info")
     suspend fun getChatCount(): Int
+
+
 }

@@ -17,6 +17,6 @@ class GlobalApplication : Application() {
 
         RetrofitClient.initialize(this)
         ImageCleanupWorker.schedule(this)
-        DataIndexManager.init(this)
+//        DataIndexManager.init(this)
     }
 }

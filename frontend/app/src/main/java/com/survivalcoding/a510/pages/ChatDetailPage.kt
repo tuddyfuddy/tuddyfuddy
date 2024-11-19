@@ -45,6 +45,7 @@ import android.os.Build
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import com.survivalcoding.a510.R
+import androidx.compose.material.icons.filled.Add
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -225,6 +226,17 @@ fun ChatDetailPage(
                             contentDescription = "검색"
                         )
                     }
+
+                    // 예시 채팅 추가용 버튼
+//                    IconButton(
+//                        onClick = { viewModel.addExampleMessages() },
+//                        modifier = Modifier.offset(y = 6.dp)
+//                    ) {
+//                        Icon(
+//                            imageVector = Icons.Default.Add,
+//                            contentDescription = "예시 메시지 추가"
+//                        )
+//                    }
                 }
 
                 Box {

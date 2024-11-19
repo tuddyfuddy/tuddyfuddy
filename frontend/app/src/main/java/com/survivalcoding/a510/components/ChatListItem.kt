@@ -13,6 +13,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 
 
@@ -26,6 +27,11 @@ fun ChatListItem(
     unreadCount: Int = 0, // 안읽은 메세지 개수
     onClick: () -> Unit
 ) {
+    // <br> 태그를 제거하는 처리 추가
+    val displayMessage = remember(message) {
+        message.replace(Regex("<br\\s*/*>|<br"), " ")
+    }
+
     Row(
         modifier = modifier
             .clickable(onClick = onClick)
