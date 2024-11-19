@@ -180,7 +180,7 @@
 
 
 ## 소개 영상
-[![Watch the video](https://img.youtube.com/vi/비디오ID/0.jpg)](https://s3.youm.me/tuddyfuddy/UCC.mp4)
+[![Watch the video](https://img.youtube.com/vi/비디오ID/0.jpg)](https://s3.youm.me/tuddyfuddy/ucc.mp4)
 
 ---
 
