@@ -150,39 +150,5 @@ pipeline {
                 docker system prune -f
             '''
         }
-        success {
-            script {
-                def Author_ID = sh(script: "git show -s --pretty=%an", returnStdout: true).trim()
-                def Author_Name = sh(script: "git show -s --pretty=%ae", returnStdout: true).trim()
-                mattermostSend (
-                    color: 'good', 
-                    message: """빌드 성공 :white_check_mark:
-                    * Job: ${env.JOB_NAME} 
-                    * Build: #${env.BUILD_NUMBER}
-                    * Service: ${SERVICE_NAME}
-                    * Author: ${Author_ID}(${Author_Name})
-                    * (<${env.BUILD_URL}|상세 보기>)""", 
-                    endpoint: 'https://meeting.ssafy.com/hooks/1qqg8a6fkid57dsuhq7gob3ery', 
-                    channel: 'a510_build'
-                )
-            }
-        }
-        failure {
-            script {
-                def Author_ID = sh(script: "git show -s --pretty=%an", returnStdout: true).trim()
-                def Author_Name = sh(script: "git show -s --pretty=%ae", returnStdout: true).trim()
-                mattermostSend (
-                    color: 'danger', 
-                    message: """빌드 실패 :x:
-                    * Job: ${env.JOB_NAME} 
-                    * Build: #${env.BUILD_NUMBER}
-                    * Service: ${SERVICE_NAME}
-                    * Author: ${Author_ID}(${Author_Name})
-                    * (<${env.BUILD_URL}|상세 보기>)""", 
-                    endpoint: 'https://meeting.ssafy.com/hooks/1qqg8a6fkid57dsuhq7gob3ery', 
-                    channel: 'a510_build'
-                )
-            }
-        }
     }
 }
